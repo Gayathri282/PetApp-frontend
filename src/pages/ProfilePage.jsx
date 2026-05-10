@@ -9,13 +9,14 @@ import Modal from '../components/ui/Modal';
 import Spinner from '../components/ui/Spinner';
 import { getVendorProducts, getApplicationStatus, createProduct, uploadSingleReel, deleteProduct, updateProfile } from '../api';
 
+const getFullSrc = (url) => {
+  if (!url) return '';
+  if (url.startsWith('http') || url.startsWith('blob:')) return url;
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
 export default function ProfilePage() {
-  const getFullSrc = (url) => {
-    if (!url) return '';
-    if (url.startsWith('http') || url.startsWith('blob:')) return url;
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
-  };
 
   const { user, isVendor, logout } = useAuth();
   const navigate = useNavigate();
