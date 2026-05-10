@@ -25,6 +25,16 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    // Check for token in URL (from Google redirect)
+    const params = new URLSearchParams(window.location.search);
+    const urlToken = params.get('token');
+    
+    if (urlToken) {
+      localStorage.setItem('jwt', urlToken);
+      // Clean up the URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
     fetchUser();
   }, [fetchUser]);
 
@@ -34,6 +44,7 @@ export function AuthProvider({ children }) {
     } catch {
       // ignore
     }
+    localStorage.removeItem('jwt');
     setUser(null);
   };
 

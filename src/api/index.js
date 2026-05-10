@@ -6,6 +6,15 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+// Interceptor to add token to headers
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('jwt');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // ── Auth ──────────────────────────────────────────────
 export const getMe = () => api.get('/auth/me');
 export const logout = () => api.post('/auth/logout');
