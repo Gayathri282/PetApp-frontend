@@ -10,6 +10,13 @@ import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 
 export default function ProductReelPage() {
+  const getFullSrc = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
+
   const { id } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
@@ -69,17 +76,13 @@ export default function ProductReelPage() {
 
       const { data: enqData } = await submitEnquiry({ productId: product._id, message: 'Interested in this product' });
       
-      const { data: adminData } = await getAdminUser();
-      const adminId = adminData.admin._id;
-
-      await sendMessage({ 
-        receiverId: adminId, 
-        content: `🛍️ **NEW INTEREST**\n\n**Product:** ${product.name}\n**Price:** ₹${product.price.toLocaleString()}\n**Vendor:** ${product.vendor?.name} (${product.vendor?.contactNumber || 'N/A'})\n\n**Link:** ${window.location.origin}/product/${product._id}\n\nHi Admin, I'm interested in this product!`,
-        productId: product._id,
-        enquiryId: enqData.enquiry._id
-      });
-
-      navigate(`/chat/${adminId}`);
+      // Navigate to chat using the adminId returned from backend
+      if (enqData.adminId) {
+        navigate(`/chat/${enqData.adminId}`);
+      } else {
+        toast.success('Interest registered!');
+        setShowEnquiry(false);
+      }
     } catch (err) { 
       toast.error(err.response?.data?.message || 'Failed to start chat'); 
     } finally { 
@@ -92,11 +95,12 @@ export default function ProductReelPage() {
 
   return (
     <div style={{ position:'fixed', inset:0, background:'#000' }}>
-      {/* Top bar */}
-        {/* Buy Now button moved from top to bottom left contextual area, but we can keep a back button here */}
-        <button onClick={() => navigate(-1)} style={{ background:'rgba(0,0,0,0.3)', backdropFilter:'blur(10px)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:14, padding:10, color:'#fff', cursor:'pointer', display:'flex', pointerEvents:'auto' }}>
+      {/* Top right back button */}
+      <div style={{ position:'absolute', top:24, right:16, zIndex:100 }}>
+        <button onClick={() => navigate(-1)} style={{ background:'rgba(0,0,0,0.3)', backdropFilter:'blur(10px)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:14, padding:10, color:'#fff', cursor:'pointer' }}>
           <ArrowLeft size={20} />
         </button>
+      </div>
 
       {/* Reels */}
       <div className="reel-container" style={{ height:'100dvh', overflowY:'scroll', scrollSnapType:'y mandatory' }}>
@@ -158,7 +162,7 @@ export default function ProductReelPage() {
               <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
                 <div style={{ width:44, height:44, borderRadius:'50%', border:'2px solid #818cf8', padding:2, background:'rgba(0,0,0,0.3)' }}>
                   <img 
-                    src={product.vendor?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(product.vendor?.name)}&background=6366f1&color=fff`} 
+                    src={product.vendor?.avatar ? getFullSrc(product.vendor.avatar) : `https://ui-avatars.com/api/?name=${encodeURIComponent(product.vendor?.name)}&background=6366f1&color=fff`} 
                     alt="" 
                     style={{ width:'100%', height:'100%', borderRadius:'50%', objectFit:'cover' }} 
                   />

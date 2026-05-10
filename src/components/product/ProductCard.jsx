@@ -3,6 +3,13 @@ import { Play, Tag } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 export default function ProductCard({ product, style = {} }) {
+  const getFullSrc = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
+
   const navigate = useNavigate();
   const videoRef = useRef(null);
   const [hovering, setHovering] = useState(false);
@@ -19,7 +26,7 @@ export default function ProductCard({ product, style = {} }) {
       <div style={{ width:110, minHeight:140, borderRadius:12, overflow:'hidden', position:'relative', background:'#000', flexShrink:0 }}>
         {reel ? (
           <>
-            <video ref={videoRef} src={reel.videoUrl} muted loop playsInline preload="metadata" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+            <video ref={videoRef} src={getFullSrc(reel.videoUrl)} muted loop playsInline preload="metadata" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
             {!hovering && <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,0.3)' }}><Play size={28} fill="#fff" color="#fff" /></div>}
           </>
         ) : (

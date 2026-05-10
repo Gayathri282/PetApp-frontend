@@ -60,16 +60,34 @@ export default function ChatRoomPage() {
     }
   };
 
+  const getFullSrc = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
+
   const renderContent = (text) => {
+    if (!text) return null;
+    
+    // Handle URLs
     const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const parts = text.split(urlRegex);
-    return parts.map((part, i) => 
-      urlRegex.test(part) ? (
-        <a key={i} href={part} target="_blank" rel="noopener noreferrer" style={{ color: '#818cf8', textDecoration: 'underline', wordBreak: 'break-all' }}>
-          {part}
-        </a>
-      ) : part
-    );
+    let parts = text.split(urlRegex);
+    
+    return parts.map((part, i) => {
+      if (urlRegex.test(part)) {
+        return (
+          <a key={i} href={part} target="_blank" rel="noopener noreferrer" style={{ color: '#818cf8', textDecoration: 'underline', wordBreak: 'break-all' }}>
+            {part}
+          </a>
+        );
+      }
+      
+      // Handle Bold **text**
+      const boldRegex = /\*\*(.*?)\*\*/g;
+      const subParts = part.split(boldRegex);
+      return subParts.map((sub, j) => (j % 2 === 1 ? <strong key={j}>{sub}</strong> : sub));
+    });
   };
 
   if (loading) return <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'80vh' }}><Spinner size={48} /></div>;
@@ -83,7 +101,7 @@ export default function ChatRoomPage() {
         </button>
         <div style={{ width: 40, height: 40, borderRadius: '50%', overflow: 'hidden', background: otherUser?.role === 'admin' ? '#fb923c' : '#6366f1' }}>
           {otherUser?.avatar ? (
-            <img src={otherUser.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src={getFullSrc(otherUser.avatar)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
             <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center' }}>
               <User size={20} color="#fff" />
@@ -142,6 +160,13 @@ export default function ChatRoomPage() {
                 }}
               >
                 {renderContent(m.content)}
+                
+                {/* Admin Only Content */}
+                {m.adminOnlyContent && (
+                  <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: '0.8rem', color: 'rgba(255,255,255,0.9)' }}>
+                    {renderContent(m.adminOnlyContent)}
+                  </div>
+                )}
               </div>
               <span style={{ fontSize: '0.65rem', opacity: 0.4, marginTop: 4 }}>
                 {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

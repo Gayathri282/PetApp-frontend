@@ -22,6 +22,13 @@ export default function ReelCard({ product, onLikeUpdate }) {
   const [shareAnimating, setShareAnimating] = useState(false);
   const [tempPhone, setTempPhone] = useState('');
 
+  const getFullSrc = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
+
   const reel = product.primaryReel || product.reels?.[0];
   if (!reel) return null;
 
@@ -70,20 +77,13 @@ export default function ReelCard({ product, onLikeUpdate }) {
       
       const { data: enqData } = await submitEnquiry({ productId: product._id, message: 'Interested in this product' });
       
-      // Get admin to start chat
-      const { data: adminData } = await getAdminUser();
-      const adminId = adminData.admin._id;
-      
-      // Send initial message
-      await sendMessage({ 
-        receiverId: adminId, 
-        content: `🛍️ **NEW INTEREST**\n\n**Product:** ${product.name}\n**Price:** ₹${product.price.toLocaleString()}\n**Vendor:** ${product.vendor?.name} (${product.vendor?.contactNumber || 'N/A'})\n\n**Link:** ${window.location.origin}/product/${product._id}\n\nHi Admin, I'm interested in this product!`,
-        productId: product._id,
-        enquiryId: enqData.enquiry._id
-      });
-
-      // Navigate to chat
-      navigate(`/chat/${adminId}`);
+      // Navigate to chat using the adminId returned from backend
+      if (enqData.adminId) {
+        navigate(`/chat/${enqData.adminId}`);
+      } else {
+        toast.success('Interest registered!');
+        setShowEnquiry(false);
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to start chat');
     } finally {
@@ -218,7 +218,7 @@ export default function ReelCard({ product, onLikeUpdate }) {
         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
           <div style={{ width:44, height:44, borderRadius:'50%', border:'2px solid #818cf8', padding:2, background:'rgba(0,0,0,0.3)' }}>
             <img 
-              src={product.vendor?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(product.vendor?.name)}&background=6366f1&color=fff`} 
+              src={product.vendor?.avatar ? getFullSrc(product.vendor.avatar) : `https://ui-avatars.com/api/?name=${encodeURIComponent(product.vendor?.name)}&background=6366f1&color=fff`} 
               alt="" 
               style={{ width:'100%', height:'100%', borderRadius:'50%', objectFit:'cover' }} 
             />

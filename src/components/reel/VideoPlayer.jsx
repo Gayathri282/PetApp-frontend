@@ -3,6 +3,13 @@ import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
 import { Pause, Play, Volume2, VolumeX } from 'lucide-react';
 
 export default function VideoPlayer({ src, style = {} }) {
+  const getFullSrc = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
+
   const videoRef = useRef(null);
   const [isPaused, setIsPaused] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
@@ -63,7 +70,7 @@ export default function VideoPlayer({ src, style = {} }) {
     >
       <video
         ref={videoRef}
-        src={src}
+        src={getFullSrc(src)}
         muted={isMuted}
         loop
         playsInline

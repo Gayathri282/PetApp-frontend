@@ -10,6 +10,13 @@ import Spinner from '../components/ui/Spinner';
 import { getVendorProducts, getApplicationStatus, createProduct, uploadSingleReel, deleteProduct, updateProfile } from '../api';
 
 export default function ProfilePage() {
+  const getFullSrc = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http') || url.startsWith('blob:')) return url;
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
+
   const { user, isVendor, logout } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
@@ -49,7 +56,7 @@ export default function ProfilePage() {
       {/* Profile header */}
       <div className="animate-fade-in" style={{ display:'flex', alignItems:'center', gap:16, marginBottom:28 }}>
         <div style={{ width:72, height:72, borderRadius:'50%', overflow:'hidden', border:'3px solid rgba(99,102,241,0.4)', flexShrink:0, background:'linear-gradient(135deg,#6366f1,#8b5cf6)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-          {user.avatar ? <img src={user.avatar} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : <span style={{ fontSize:28, fontWeight:800 }}>{user.name?.[0]}</span>}
+          {user.avatar ? <img src={getFullSrc(user.avatar)} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : <span style={{ fontSize:28, fontWeight:800 }}>{user.name?.[0]}</span>}
         </div>
         <div style={{ flex:1, minWidth:0 }}>
           <h1 style={{ fontSize:'1.25rem', fontWeight:800, marginBottom:2 }}>{user.name}</h1>
@@ -187,7 +194,7 @@ function EditProfileModal({ open, onClose }) {
             {file ? (
               <img src={URL.createObjectURL(file)} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
             ) : user?.avatar ? (
-              <img src={user.avatar} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+              <img src={getFullSrc(user.avatar)} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
             ) : (
               <Upload size={32} color="#64748b" />
             )}
