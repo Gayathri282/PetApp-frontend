@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="50%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#f97316"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="46" fill="none" stroke="url(#g)" stroke-width="4"/>
+  <!-- Paw pad center -->
+  <ellipse cx="50" cy="55" rx="14" ry="12" fill="url(#g)"/>
+  <!-- Paw toes -->
+  <ellipse cx="35" cy="38" rx="7" ry="8" fill="url(#g)"/>
+  <ellipse cx="50" cy="33" rx="7" ry="8" fill="url(#g)"/>
+  <ellipse cx="65" cy="38" rx="7" ry="8" fill="url(#g)"/>
+  <!-- Play triangle overlay -->
+  <polygon points="44,48 44,62 58,55" fill="#0f0d1a" opacity="0.7"/>
+</svg>
