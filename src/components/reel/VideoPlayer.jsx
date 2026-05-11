@@ -11,9 +11,35 @@ export default function VideoPlayer({ src, style = {} }) {
   };
 
   const videoRef = useRef(null);
+  const hlsRef = useRef(null);
   const [isPaused, setIsPaused] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [showControl, setShowControl] = useState(false);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !src) return;
+
+    const fullSrc = getFullSrc(src);
+
+    if (fullSrc.includes('.m3u8')) {
+      if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = fullSrc;
+      } else if (window.Hls && window.Hls.isSupported()) {
+        if (hlsRef.current) hlsRef.current.destroy();
+        const hls = new window.Hls();
+        hls.loadSource(fullSrc);
+        hls.attachMedia(video);
+        hlsRef.current = hls;
+      }
+    } else {
+      video.src = fullSrc;
+    }
+
+    return () => {
+      if (hlsRef.current) hlsRef.current.destroy();
+    };
+  }, [src]);
 
   const handleIntersect = useCallback((entry) => {
     const video = videoRef.current;
@@ -70,7 +96,6 @@ export default function VideoPlayer({ src, style = {} }) {
     >
       <video
         ref={videoRef}
-        src={getFullSrc(src)}
         muted={isMuted}
         loop
         playsInline

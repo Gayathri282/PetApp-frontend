@@ -12,8 +12,34 @@ export default function ProductCard({ product, style = {} }) {
 
   const navigate = useNavigate();
   const videoRef = useRef(null);
+  const hlsRef = useRef(null);
   const [hovering, setHovering] = useState(false);
   const reel = product.primaryReel || product.reels?.[0];
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !reel?.videoUrl || !hovering) return;
+
+    const fullSrc = getFullSrc(reel.videoUrl);
+
+    if (fullSrc.includes('.m3u8')) {
+      if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = fullSrc;
+      } else if (window.Hls && window.Hls.isSupported()) {
+        if (hlsRef.current) hlsRef.current.destroy();
+        const hls = new window.Hls();
+        hls.loadSource(fullSrc);
+        hls.attachMedia(video);
+        hlsRef.current = hls;
+      }
+    } else {
+      video.src = fullSrc;
+    }
+
+    return () => {
+      if (hlsRef.current) hlsRef.current.destroy();
+    };
+  }, [hovering, reel]);
 
   return (
     <div
@@ -26,7 +52,15 @@ export default function ProductCard({ product, style = {} }) {
       <div style={{ width:110, minHeight:140, borderRadius:12, overflow:'hidden', position:'relative', background:'#000', flexShrink:0 }}>
         {reel ? (
           <>
-            <video ref={videoRef} src={getFullSrc(reel.videoUrl)} muted loop playsInline preload="metadata" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+            <video 
+              ref={videoRef} 
+              poster={reel.thumbnail}
+              muted 
+              loop 
+              playsInline 
+              preload="metadata" 
+              style={{ width:'100%', height:'100%', objectFit:'cover' }} 
+            />
             {!hovering && <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,0.3)' }}><Play size={28} fill="#fff" color="#fff" /></div>}
           </>
         ) : (
