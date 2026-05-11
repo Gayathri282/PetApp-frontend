@@ -3,7 +3,8 @@ import ReelCard from '../components/reel/ReelCard';
 import Spinner from '../components/ui/Spinner';
 import Modal from '../components/ui/Modal';
 import { getFeed } from '../api';
-import { Smartphone } from 'lucide-react';
+import { Smartphone, Download } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function FeedPage() {
   const [products, setProducts] = useState([]);
@@ -12,6 +13,7 @@ export default function FeedPage() {
   const [loading, setLoading] = useState(true);
   const [showPWA, setShowPWA] = useState(false);
   const pwaShown = useRef(false);
+  const { canInstall, installApp } = useAuth();
 
   const loadFeed = useCallback(async (p) => {
     try {
@@ -40,8 +42,8 @@ export default function FeedPage() {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           const index = parseInt(entry.target.getAttribute('data-index'));
-          // Trigger PWA prompt on 2nd reel (index 1)
-          if (index === 1 && !pwaShown.current) {
+          // Trigger PWA prompt on 2nd reel (index 1) if installable
+          if (index === 1 && !pwaShown.current && canInstall) {
             setShowPWA(true);
             pwaShown.current = true;
           }
@@ -83,19 +85,31 @@ export default function FeedPage() {
       {loading && <div style={{ padding:20 }}><Spinner /></div>}
 
       <Modal isOpen={showPWA} onClose={() => setShowPWA(false)} title="Install PetPlace">
-        <div style={{ padding: 20, textAlign: 'center' }}>
-          <div style={{ background:'rgba(99,102,241,0.1)', width:64, height:64, borderRadius:20, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 20px' }}>
-            <Smartphone size={32} color="#818cf8" />
+        <div style={{ padding: 24, textAlign: 'center' }}>
+          <div style={{ background:'linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1))', width:80, height:80, borderRadius:24, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 24px', border:'1px solid rgba(255,255,255,0.05)' }}>
+            <Smartphone size={40} color="#818cf8" />
           </div>
-          <h3 style={{ fontSize:'1.1rem', fontWeight:700, marginBottom:10 }}>Add to Home Screen</h3>
-          <p style={{ fontSize:'0.9rem', color:'#94a3b8', marginBottom:24, lineHeight:1.5 }}>
-            Get a full-screen experience and stay updated with the latest pet reels by adding PetPlace to your home screen.
+          <h3 style={{ fontSize:'1.25rem', fontWeight:800, marginBottom:12, background: 'linear-gradient(to right, #fff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Experience PetPlace App</h3>
+          <p style={{ fontSize:'0.95rem', color:'#94a3b8', marginBottom:32, lineHeight:1.6 }}>
+            Install PetPlace on your home screen for a faster, full-screen experience and instant pet reel updates.
           </p>
-          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-            <p style={{ fontSize:'0.75rem', color:'#64748b' }}>
-              Tap the <span style={{ color:'#fff', fontWeight:600 }}>Share</span> icon in your browser and select <span style={{ color:'#fff', fontWeight:600 }}>'Add to Home Screen'</span>.
-            </p>
-            <button className="btn-primary" onClick={() => setShowPWA(false)} style={{ width:'100%', marginTop:10 }}>Got it!</button>
+          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+            <button 
+              className="btn-primary" 
+              onClick={() => {
+                installApp();
+                setShowPWA(false);
+              }} 
+              style={{ width:'100%', padding:'14px', fontSize:'1rem', fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', gap:10 }}
+            >
+              <Download size={20} /> Install Now
+            </button>
+            <button 
+              onClick={() => setShowPWA(false)} 
+              style={{ background:'none', border:'none', color:'#64748b', fontSize:'0.85rem', fontWeight:600, cursor:'pointer', padding:'8px' }}
+            >
+              Maybe Later
+            </button>
           </div>
         </div>
       </Modal>

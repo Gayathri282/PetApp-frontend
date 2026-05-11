@@ -7,38 +7,7 @@ import { useState, useEffect } from 'react';
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isAdmin, notificationCount } = useAuth();
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-
-  useEffect(() => {
-    // Don't show if already in standalone mode
-    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
-      return;
-    }
-
-    const handleBeforeInstall = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-    const handleAppInstalled = () => {
-      setDeferredPrompt(null);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
-    window.addEventListener('appinstalled', handleAppInstalled);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
-      window.removeEventListener('appinstalled', handleAppInstalled);
-    };
-  }, []);
-
-  const handleInstall = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') setDeferredPrompt(null);
-  };
+  const { user, isAdmin, notificationCount, canInstall, installApp } = useAuth();
 
   if (!user) return null;
   if (location.pathname.startsWith('/login')) return null;
@@ -67,9 +36,9 @@ export default function Navbar() {
       </div>
 
       <div style={{ display:'flex', gap:10, pointerEvents:'auto' }}>
-        {deferredPrompt && (
+        {canInstall && (
           <button 
-            onClick={handleInstall}
+            onClick={installApp}
             className="animate-pulse-glow"
             style={{ 
               cursor: 'pointer', 

@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Search, User, MessageCircle } from 'lucide-react';
+import { Home, Search, User, MessageCircle, Layers } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const tabs = [
@@ -12,7 +12,12 @@ const tabs = [
 export default function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { unreadCount } = useAuth();
+  const { unreadCount, isAdmin } = useAuth();
+
+  const finalTabs = [...tabs];
+  if (isAdmin) {
+    finalTabs.splice(2, 0, { path: '/admin', icon: Layers, label: 'Admin' });
+  }
 
   return (
     <div
@@ -22,7 +27,7 @@ export default function BottomNav() {
         bottom: 0,
         left: 0,
         right: 0,
-        zIndex: 100,
+        zIndex: 1000,
         height: 64,
         display: 'flex',
         alignItems: 'center',
@@ -31,7 +36,7 @@ export default function BottomNav() {
         borderTop: '1px solid rgba(255,255,255,0.05)',
       }}
     >
-      {tabs.map(({ path, icon: Icon, label }) => {
+      {finalTabs.map(({ path, icon: Icon, label }) => {
         const isActive =
           location.pathname === path ||
           (path === '/feed' && location.pathname === '/');

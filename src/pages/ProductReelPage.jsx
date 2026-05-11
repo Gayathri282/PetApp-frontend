@@ -91,7 +91,16 @@ export default function ProductReelPage() {
     <div style={{ position:'fixed', inset:0, background:'#000' }}>
       {/* Top Left Back Button */}
       <div style={{ position:'absolute', top:24, left:16, zIndex:100 }}>
-        <button onClick={() => navigate(-1)} style={{ background:'rgba(0,0,0,0.3)', backdropFilter:'blur(10px)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:14, padding:10, color:'#fff', cursor:'pointer' }}>
+        <button 
+          onClick={() => {
+            if (window.history.state && window.history.state.idx > 0) {
+              navigate(-1);
+            } else {
+              navigate('/feed');
+            }
+          }} 
+          style={{ background:'rgba(0,0,0,0.3)', backdropFilter:'blur(10px)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:14, padding:10, color:'#fff', cursor:'pointer' }}
+        >
           <ArrowLeft size={20} />
         </button>
       </div>

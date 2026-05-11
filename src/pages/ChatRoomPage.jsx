@@ -95,11 +95,26 @@ export default function ChatRoomPage() {
       if (i + 1 < parts.length) {
         const linkText = parts[i+1];
         const linkUrl = parts[i+2];
-        result.push(
-          <a key={`link-${i}`} href={linkUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#818cf8', textDecoration: 'underline', fontWeight: 600 }}>
-            {linkText}
-          </a>
-        );
+        const isInternal = linkUrl.startsWith(window.location.origin) || linkUrl.startsWith('/');
+        
+        if (isInternal) {
+          const path = linkUrl.replace(window.location.origin, '');
+          result.push(
+            <span 
+              key={`link-${i}`} 
+              onClick={() => navigate(path)}
+              style={{ color: '#818cf8', textDecoration: 'underline', fontWeight: 600, cursor:'pointer' }}
+            >
+              {linkText}
+            </span>
+          );
+        } else {
+          result.push(
+            <a key={`link-${i}`} href={linkUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#818cf8', textDecoration: 'underline', fontWeight: 600 }}>
+              {linkText}
+            </a>
+          );
+        }
       }
     }
     
