@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { Share2, Plus, LogOut, Film, Package, X, Upload } from 'lucide-react';
+import { Share2, Plus, LogOut, Film, Package, X, Upload, Edit2 } from 'lucide-react';
 import ProductCard from '../components/product/ProductCard';
 import ShareModal from '../components/ui/ShareModal';
 import Modal from '../components/ui/Modal';
@@ -18,7 +18,7 @@ const getFullSrc = (url) => {
 
 export default function ProfilePage() {
 
-  const { user, isVendor, logout } = useAuth();
+  const { user, isVendor, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
   const [showShare, setShowShare] = useState(false);
@@ -29,19 +29,25 @@ export default function ProfilePage() {
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [showUploadReel, setShowUploadReel] = useState(false);
   const [showUploadProduct, setShowUploadProduct] = useState(false);
+  const [showEditReel, setShowEditReel] = useState(false);
+  const [showEditProduct, setShowEditProduct] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
   const [showEditProfile, setShowEditProfile] = useState(false);
 
   useEffect(() => {
-    if (isVendor) {
+    if (isVendor || isAdmin) {
       setLoadingProducts(true);
-      getVendorProducts().then(r => setProducts(r.data.products)).catch(() => {}).finally(() => setLoadingProducts(false));
+      getVendorProducts()
+        .then(r => setProducts(r.data.products || []))
+        .catch(err => { console.error('Failed to load vendor products:', err); setProducts([]); })
+        .finally(() => setLoadingProducts(false));
     } else if (user?.role === 'user') {
       getApplicationStatus().then(r => setAppStatus(r.data.application)).catch(() => {});
     }
-  }, [isVendor, user]);
+  }, [isVendor, isAdmin, user]);
 
-  const reels = products.filter(p => !p.isOnSale && p.reels.length === 1);
-  const saleProducts = products.filter(p => p.isOnSale || p.reels.length > 1);
+  const reels = (products || []).filter(p => p.category === 'promotional' || (!p.isOnSale && p.reels?.length === 1));
+  const saleProducts = (products || []).filter(p => p.isOnSale || (p.reels?.length > 1 && p.category !== 'promotional'));
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this item?')) return;
@@ -97,8 +103,8 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Vendor dashboard */}
-      {isVendor && (
+      {/* Vendor/Admin dashboard */}
+      {(isVendor || isAdmin) && (
         <>
           {/* Tabs */}
           <div style={{ display:'flex', gap:4, marginBottom:20, background:'rgba(255,255,255,0.04)', borderRadius:14, padding:4 }}>
@@ -115,14 +121,20 @@ export default function ProfilePage() {
                 reels.length > 0 ? reels.map(p => (
                   <div key={p._id} style={{ position:'relative' }}>
                     <ProductCard product={p} />
-                    <button onClick={() => handleDelete(p._id)} style={{ position:'absolute', top:8, right:8, background:'rgba(239,68,68,0.8)', border:'none', borderRadius:8, padding:6, cursor:'pointer', color:'#fff', display:'flex', zIndex:5 }}><X size={14} /></button>
+                    <div style={{ position:'absolute', top:8, right:8, display:'flex', gap:6, zIndex:5 }}>
+                      <button onClick={() => { setEditingProduct(p); setShowEditReel(true); }} style={{ background:'rgba(34,197,94,0.85)', border:'none', borderRadius:8, padding:6, cursor:'pointer', color:'#fff', display:'flex' }}><Edit2 size={14} /></button>
+                      <button onClick={() => handleDelete(p._id)} style={{ background:'rgba(239,68,68,0.85)', border:'none', borderRadius:8, padding:6, cursor:'pointer', color:'#fff', display:'flex' }}><X size={14} /></button>
+                    </div>
                   </div>
                 )) : <p style={{ textAlign:'center', color:'#64748b', padding:40 }}>No promotional reels yet</p>
               ) : (
                 saleProducts.length > 0 ? saleProducts.map(p => (
                   <div key={p._id} style={{ position:'relative' }}>
                     <ProductCard product={p} />
-                    <button onClick={() => handleDelete(p._id)} style={{ position:'absolute', top:8, right:8, background:'rgba(239,68,68,0.8)', border:'none', borderRadius:8, padding:6, cursor:'pointer', color:'#fff', display:'flex', zIndex:5 }}><X size={14} /></button>
+                    <div style={{ position:'absolute', top:8, right:8, display:'flex', gap:6, zIndex:5 }}>
+                      <button onClick={() => { setEditingProduct(p); setShowEditProduct(true); }} style={{ background:'rgba(34,197,94,0.85)', border:'none', borderRadius:8, padding:6, cursor:'pointer', color:'#fff', display:'flex' }}><Edit2 size={14} /></button>
+                      <button onClick={() => handleDelete(p._id)} style={{ background:'rgba(239,68,68,0.85)', border:'none', borderRadius:8, padding:6, cursor:'pointer', color:'#fff', display:'flex' }}><X size={14} /></button>
+                    </div>
                   </div>
                 )) : <p style={{ textAlign:'center', color:'#64748b', padding:40 }}>No products yet</p>
               )}
@@ -149,26 +161,179 @@ export default function ProfilePage() {
       )}
 
       <ShareModal isOpen={showShare} onClose={() => setShowShare(false)} url={`${window.location.origin}/profile`} title="Share Profile" />
-      <EditProfileModal open={showEditProfile} onClose={() => setShowEditProfile(false)} />
-      <UploadReelModal open={showUploadReel} onClose={() => setShowUploadReel(false)} onSuccess={p => { setProducts(prev => [p,...prev]); setShowUploadReel(false); }} />
-      <UploadProductModal open={showUploadProduct} onClose={() => setShowUploadProduct(false)} onSuccess={p => { setProducts(prev => [p,...prev]); setShowUploadProduct(false); }} />
+      <EditProfileModal open={showEditProfile} onClose={() => setShowEditProfile(false)} user={user} />
+      <UploadReelModal open={showUploadReel} onClose={() => setShowUploadReel(false)} user={user} onSuccess={p => { setProducts(prev => [p,...prev]); setShowUploadReel(false); }} />
+      <UploadProductModal open={showUploadProduct} onClose={() => setShowUploadProduct(false)} user={user} onSuccess={p => { setProducts(prev => [p,...prev]); setShowUploadProduct(false); }} />
+      <EditProductModal open={showEditProduct} product={editingProduct} onClose={() => { setShowEditProduct(false); setEditingProduct(null); }} onSuccess={p => { setProducts(prev => prev.map(x => x._id === p._id ? p : x)); setShowEditProduct(false); }} />
+      <EditReelModal open={showEditReel} product={editingProduct} onClose={() => { setShowEditReel(false); setEditingProduct(null); }} onSuccess={p => { setProducts(prev => prev.map(x => x._id === p._id ? p : x)); setShowEditReel(false); }} />
     </div>
   );
 }
 
+/* ── Edit Product Modal ───────────────────────── */
+function EditProductModal({ open, product, onClose, onSuccess }) {
+  const toast = useToast();
+  const [form, setForm] = useState({ name: '', description: '', category: '', price: '', isOnSale: true, deliveryChargesAdditional: false });
+  const [tags, setTags] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const TAG_OPTIONS = ['dog','cat','bird','fish','reptile','rabbit','accessories','food','toys'];
+
+  useEffect(() => {
+    if (product) {
+      setForm({
+        name: product.name || '',
+        description: product.description || '',
+        category: product.category || '',
+        price: product.price || '',
+        isOnSale: product.isOnSale ?? true,
+        deliveryChargesAdditional: product.deliveryChargesAdditional ?? false
+      });
+      setTags(product.tags || []);
+    }
+  }, [product]);
+
+  const handleSubmit = async () => {
+    if (!form.name) { toast.error('Name is required'); return; }
+    setLoading(true);
+    try {
+      const { data } = await updateProduct(product._id, { ...form, tags: JSON.stringify(tags) });
+      toast.success('Product updated!');
+      onSuccess(data.product);
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Update failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal isOpen={open} onClose={onClose} title="Edit Product">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '60vh', overflowY: 'auto' }}>
+        <input className="input-field" placeholder="Product name *" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
+        <textarea className="input-field" placeholder="Description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+        <input className="input-field" placeholder="Category" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} />
+        <input className="input-field" type="number" placeholder="Price (₹)" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} />
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>For Sale</span>
+          <label className="toggle-switch"><input type="checkbox" checked={form.isOnSale} onChange={e => setForm({ ...form, isOnSale: e.target.checked })} /><span className="toggle-slider"></span></label>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Delivery Charges Additional?</span>
+          </div>
+          <label className="toggle-switch"><input type="checkbox" checked={form.deliveryChargesAdditional} onChange={e => setForm({ ...form, deliveryChargesAdditional: e.target.checked })} /><span className="toggle-slider"></span></label>
+        </div>
+
+        <div>
+          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#94a3b8', marginBottom: 8, display: 'block' }}>Tags</label>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+            {TAG_OPTIONS.map(t => (
+              <button key={t} type="button" className={`tag-pill ${tags.includes(t) ? 'active' : ''}`} onClick={() => setTags(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}>{t}</button>
+            ))}
+            {tags.filter(t => !TAG_OPTIONS.includes(t)).map(t => (
+              <button key={t} type="button" className="tag-pill active" onClick={() => setTags(prev => prev.filter(x => x !== t))}>{t} ✕</button>
+            ))}
+          </div>
+        </div>
+
+        <button className="btn-primary" onClick={handleSubmit} disabled={loading} style={{ width: '100%' }}>{loading ? 'Saving...' : 'Update Product'}</button>
+      </div>
+    </Modal>
+  );
+}
+
+/* ── Edit Reel Modal ──────────────────────────── */
+function EditReelModal({ open, product, onClose, onSuccess }) {
+  const toast = useToast();
+  const [name, setName] = useState('');
+  const [desc, setDesc] = useState('');
+  const [tags, setTags] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (product) {
+      setName(product.name || '');
+      setDesc(product.description || '');
+      setTags(product.tags || []);
+    }
+  }, [product]);
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      const { data } = await updateProduct(product._id, { name, description: desc, tags: JSON.stringify(tags) });
+      toast.success('Reel updated!');
+      onSuccess(data.product);
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Update failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal isOpen={open} onClose={onClose} title="Edit Reel">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <input className="input-field" placeholder="Reel title (optional)" value={name} onChange={e => setName(e.target.value)} />
+        <textarea className="input-field" placeholder="Description (optional)" value={desc} onChange={e => setDesc(e.target.value)} />
+        
+        <div>
+          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#94a3b8', marginBottom: 8, display: 'block' }}>Tags</label>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+            {tags.map(t => (
+              <button key={t} type="button" className="tag-pill active" onClick={() => setTags(prev => prev.filter(x => x !== t))}>{t} ✕</button>
+            ))}
+          </div>
+        </div>
+
+        <button className="btn-primary" onClick={handleSubmit} disabled={loading} style={{ width: '100%' }}>{loading ? 'Saving...' : 'Update Reel'}</button>
+      </div>
+    </Modal>
+  );
+}
+
+
 /* ── Edit Profile Modal ─────────────────────────── */
-function EditProfileModal({ open, onClose }) {
-  const { user, refreshUser } = useAuth();
+function EditProfileModal({ open, onClose, user }) {
+  const { refreshUser } = useAuth();
   const toast = useToast();
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.contactNumber || '');
+  const [address, setAddress] = useState(user?.address || '');
+  const [location, setLocation] = useState(user?.location?.coordinates || [0, 0]);
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setName(user.name || '');
+      setPhone(user.contactNumber || '');
+      setAddress(user.address || '');
+      setLocation(user.location?.coordinates || [0, 0]);
+    }
+  }, [user]);
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation not supported');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition((pos) => {
+      setLocation([pos.coords.longitude, pos.coords.latitude]);
+      toast.success('Location updated!');
+    }, () => {
+      toast.error('Location permission denied');
+    });
+  };
 
   const handleSubmit = async () => {
     const fd = new FormData();
     fd.append('name', name);
     fd.append('contactNumber', phone);
+    fd.append('address', address);
+    fd.append('location', JSON.stringify({ type: 'Point', coordinates: location }));
     if (file) fd.append('avatar', file);
 
     setLoading(true);
@@ -214,6 +379,21 @@ function EditProfileModal({ open, onClose }) {
           <input className="input-field" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Enter phone number" />
         </div>
 
+        <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+          <label style={{ fontSize:'0.75rem', fontWeight:600, color:'#94a3b8' }}>Physical Address</label>
+          <input className="input-field" value={address} onChange={e => setAddress(e.target.value)} placeholder="Street, City, Zip" />
+        </div>
+
+        <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+          <label style={{ fontSize:'0.75rem', fontWeight:600, color:'#94a3b8' }}>Geolocation</label>
+          <div style={{ display:'flex', gap:8 }}>
+            <div className="input-field" style={{ flex:1, fontSize:'0.75rem', background:'rgba(255,255,255,0.02)', display:'flex', alignItems:'center' }}>
+              {location[0] === 0 && location[1] === 0 ? 'Not set' : `${location[1].toFixed(4)}, ${location[0].toFixed(4)}`}
+            </div>
+            <button className="btn-accent" onClick={handleGetLocation} style={{ padding:'0 14px', fontSize:'0.75rem' }}>Update</button>
+          </div>
+        </div>
+
         <button className="btn-primary" onClick={handleSubmit} disabled={loading} style={{ width:'100%', marginTop:10 }}>
           {loading ? 'Saving...' : 'Save Changes'}
         </button>
@@ -223,26 +403,35 @@ function EditProfileModal({ open, onClose }) {
 }
 
 /* ── Upload Reel Modal ──────────────────────────── */
-function UploadReelModal({ open, onClose, onSuccess }) {
+function UploadReelModal({ open, onClose, onSuccess, user }) {
   const toast = useToast();
   const [file, setFile] = useState(null);
   const [name, setName] = useState('');
   const [desc, setDesc] = useState('');
+  const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
     if (!file) { toast.error('Select a video'); return; }
+    if (!user?.location?.coordinates || (user.location.coordinates[0] === 0 && user.location.coordinates[1] === 0)) {
+      toast.info('Please set your location in profile to help users find you nearby');
+      onClose();
+      // We can't directly trigger setShowEditProfile here as it's in the parent
+      // but we can assume the user will see the instruction.
+      return;
+    }
     const fd = new FormData();
     fd.append('video', file);
     fd.append('name', name || 'Promotional Reel');
     fd.append('description', desc);
-    fd.append('tags', JSON.stringify([]));
+    fd.append('tags', JSON.stringify(tags));
     setLoading(true);
     try {
       const { data } = await uploadSingleReel(fd);
       toast.success('Reel uploaded!');
       onSuccess(data.product);
-      setFile(null); setName(''); setDesc('');
+      setFile(null); setName(''); setDesc(''); setTags([]);
+      onClose();
     } catch(e) { toast.error(e.response?.data?.message || 'Upload failed'); }
     finally { setLoading(false); }
   };
@@ -250,9 +439,69 @@ function UploadReelModal({ open, onClose, onSuccess }) {
   return (
     <Modal isOpen={open} onClose={onClose} title="Upload Reel">
       <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-        <FileDropZone accept="video/*" file={file} onChange={setFile} label="Drop video here" />
+        <FileDropZone 
+          accept="video/*" 
+          onChange={files => setFile(files[0])} 
+          label="Drop video here or click to select" 
+        />
+        {file && (
+          <div style={{ padding: 10, background: 'rgba(34,197,94,0.1)', borderRadius: 12, border: '1px solid rgba(34,197,94,0.2)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ color: '#22c55e', fontSize: '0.8rem', fontWeight: 600 }}>✓ Video selected:</span>
+            <span style={{ color: '#fff', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{file.name}</span>
+          </div>
+        )}
         <input className="input-field" placeholder="Reel title (optional)" value={name} onChange={e=>setName(e.target.value)} />
         <textarea className="input-field" placeholder="Description (optional)" value={desc} onChange={e=>setDesc(e.target.value)} />
+        
+        <div>
+          <label style={{ fontSize:'0.8rem', fontWeight:600, color:'#94a3b8', marginBottom:8, display:'block' }}>Tags</label>
+          <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:12 }}>
+            {tags.map(t => (
+              <button 
+                key={t} 
+                type="button" 
+                className="tag-pill active" 
+                onClick={() => setTags(prev => prev.filter(x=>x!==t))}
+              >
+                {t} ✕
+              </button>
+            ))}
+          </div>
+          <div style={{ display:'flex', gap:8 }}>
+            <input 
+              id="reel-tag-input"
+              className="input-field" 
+              placeholder="Add tag (e.g. funny, kitten)..." 
+              style={{ flex:1, height:38, fontSize:'0.85rem' }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  const val = e.target.value.trim().toLowerCase();
+                  if (val && !tags.includes(val)) {
+                    setTags([...tags, val]);
+                    e.target.value = '';
+                  }
+                }
+              }}
+            />
+            <button 
+              type="button" 
+              className="btn-accent" 
+              style={{ padding:'0 16px', height:38, fontSize:'0.8rem' }}
+              onClick={() => {
+                const input = document.getElementById('reel-tag-input');
+                const val = input.value.trim().toLowerCase();
+                if (val && !tags.includes(val)) {
+                  setTags([...tags, val]);
+                  input.value = '';
+                }
+              }}
+            >
+              Add
+            </button>
+          </div>
+        </div>
+
         <button className="btn-primary" onClick={handleSubmit} disabled={loading} style={{ width:'100%' }}>{loading?'Uploading...':'Upload Reel'}</button>
       </div>
     </Modal>
@@ -260,9 +509,9 @@ function UploadReelModal({ open, onClose, onSuccess }) {
 }
 
 /* ── Upload Product Modal ──────────────────────── */
-function UploadProductModal({ open, onClose, onSuccess }) {
+function UploadProductModal({ open, onClose, onSuccess, user }) {
   const toast = useToast();
-  const [form, setForm] = useState({ name:'', description:'', category:'', price:'', isOnSale:true });
+  const [form, setForm] = useState({ name:'', description:'', category:'', price:'', isOnSale:true, deliveryChargesAdditional: false });
   const [tags, setTags] = useState([]);
   const [videos, setVideos] = useState([]);
   const [images, setImages] = useState([]);
@@ -272,6 +521,11 @@ function UploadProductModal({ open, onClose, onSuccess }) {
 
   const handleSubmit = async () => {
     if (!form.name || videos.length === 0) { toast.error('Name and at least one video required'); return; }
+    if (!user?.location?.coordinates || (user.location.coordinates[0] === 0 && user.location.coordinates[1] === 0)) {
+      toast.info('Please set your location in profile to help users find you nearby');
+      onClose();
+      return;
+    }
     if (videos.length > 5) { toast.error('Maximum 5 videos allowed'); return; }
     const fd = new FormData();
     videos.forEach(f => fd.append('videos', f));
@@ -281,6 +535,7 @@ function UploadProductModal({ open, onClose, onSuccess }) {
     fd.append('category', form.category);
     fd.append('price', form.price || '0');
     fd.append('isOnSale', String(form.isOnSale));
+    fd.append('deliveryChargesAdditional', String(form.deliveryChargesAdditional));
     fd.append('tags', JSON.stringify(tags));
     setLoading(true);
     try {
@@ -309,9 +564,70 @@ function UploadProductModal({ open, onClose, onSuccess }) {
           <label className="toggle-switch"><input type="checkbox" checked={form.isOnSale} onChange={e=>setForm({...form,isOnSale:e.target.checked})} /><span className="toggle-slider"></span></label>
         </div>
 
-        <div><label style={{ fontSize:'0.8rem', fontWeight:600, color:'#94a3b8', marginBottom:6, display:'block' }}>Tags</label>
-          <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-            {TAG_OPTIONS.map(t => <button key={t} type="button" className={`tag-pill ${tags.includes(t)?'active':''}`} onClick={() => setTags(prev => prev.includes(t)?prev.filter(x=>x!==t):[...prev,t])}>{t}</button>)}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <div style={{ display:'flex', flexDirection:'column' }}>
+            <span style={{ fontSize:'0.85rem', fontWeight:600 }}>Delivery Charges Additional?</span>
+            <span style={{ fontSize:'0.7rem', color:'#94a3b8' }}>Are shipping costs extra?</span>
+          </div>
+          <label className="toggle-switch"><input type="checkbox" checked={form.deliveryChargesAdditional} onChange={e=>setForm({...form,deliveryChargesAdditional:e.target.checked})} /><span className="toggle-slider"></span></label>
+        </div>
+
+        <div>
+          <label style={{ fontSize:'0.8rem', fontWeight:600, color:'#94a3b8', marginBottom:8, display:'block' }}>Tags</label>
+          <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:12 }}>
+            {TAG_OPTIONS.map(t => (
+              <button 
+                key={t} 
+                type="button" 
+                className={`tag-pill ${tags.includes(t)?'active':''}`} 
+                onClick={() => setTags(prev => prev.includes(t)?prev.filter(x=>x!==t):[...prev,t])}
+              >
+                {t}
+              </button>
+            ))}
+            {tags.filter(t => !TAG_OPTIONS.includes(t)).map(t => (
+              <button 
+                key={t} 
+                type="button" 
+                className="tag-pill active" 
+                onClick={() => setTags(prev => prev.filter(x=>x!==t))}
+              >
+                {t} ✕
+              </button>
+            ))}
+          </div>
+          <div style={{ display:'flex', gap:8 }}>
+            <input 
+              id="custom-tag-input"
+              className="input-field" 
+              placeholder="Add custom tag..." 
+              style={{ flex:1, height:38, fontSize:'0.85rem' }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  const val = e.target.value.trim().toLowerCase();
+                  if (val && !tags.includes(val)) {
+                    setTags([...tags, val]);
+                    e.target.value = '';
+                  }
+                }
+              }}
+            />
+            <button 
+              type="button" 
+              className="btn-accent" 
+              style={{ padding:'0 16px', height:38, fontSize:'0.8rem' }}
+              onClick={() => {
+                const input = document.getElementById('custom-tag-input');
+                const val = input.value.trim().toLowerCase();
+                if (val && !tags.includes(val)) {
+                  setTags([...tags, val]);
+                  input.value = '';
+                }
+              }}
+            >
+              Add
+            </button>
           </div>
         </div>
 

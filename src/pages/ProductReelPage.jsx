@@ -74,17 +74,11 @@ export default function ProductReelPage() {
         await refreshUser();
       }
 
-      const { data: enqData } = await submitEnquiry({ productId: product._id, message: 'Interested in this product' });
-      
-      // Navigate to chat using the adminId returned from backend
-      if (enqData.adminId) {
-        navigate(`/chat/${enqData.adminId}`);
-      } else {
-        toast.success('Interest registered!');
-        setShowEnquiry(false);
-      }
+      await submitEnquiry({ productId: product._id, message: 'Interested in this product' });
+      toast.success('Interest registered! Admin will contact you.');
+      setShowEnquiry(false);
     } catch (err) { 
-      toast.error(err.response?.data?.message || 'Failed to start chat'); 
+      toast.error(err.response?.data?.message || 'Failed to register interest'); 
     } finally { 
       setSending(false); 
     }
@@ -95,13 +89,12 @@ export default function ProductReelPage() {
 
   return (
     <div style={{ position:'fixed', inset:0, background:'#000' }}>
-      {/* Top right back button */}
-      <div style={{ position:'absolute', top:24, right:16, zIndex:100 }}>
+      {/* Top Left Back Button */}
+      <div style={{ position:'absolute', top:24, left:16, zIndex:100 }}>
         <button onClick={() => navigate(-1)} style={{ background:'rgba(0,0,0,0.3)', backdropFilter:'blur(10px)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:14, padding:10, color:'#fff', cursor:'pointer' }}>
           <ArrowLeft size={20} />
         </button>
       </div>
-
       {/* Reels */}
       <div className="reel-container" style={{ height:'100dvh', overflowY:'scroll', scrollSnapType:'y mandatory' }}>
         {product.reels.map((reel, i) => (
@@ -113,6 +106,14 @@ export default function ProductReelPage() {
 
             {/* Actions (Right Side) */}
             <div style={{ position:'absolute', right:16, bottom:120, display:'flex', flexDirection:'column', gap:24, zIndex:20, alignItems:'center' }}>
+              
+              <button onClick={() => navigate(-1)} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4, background:'none', border:'none', cursor:'pointer', color:'#fff', padding:0 }}>
+                <div style={{ display:'flex', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>
+                  <Layers size={26} strokeWidth={2.2} />
+                </div>
+                <span style={{ fontSize:'0.7rem', fontWeight:700, textShadow:'0 2px 4px rgba(0,0,0,0.5)' }}>More</span>
+              </button>
+
               <button onClick={() => handleLike(i)} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4, background:'none', border:'none', cursor:'pointer', color:'#fff', padding:0 }}>
                 <div style={{ display:'flex', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} className={likeAnimating === i ? 'animate-icon-tap' : ''}>
                   <Heart size={26} fill={reel.isLiked?'#ef4444':'none'} color={reel.isLiked?'#ef4444':'#fff'} strokeWidth={2.2} />
@@ -120,8 +121,6 @@ export default function ProductReelPage() {
                 <span style={{ fontSize:'0.7rem', fontWeight:700, textShadow:'0 2px 4px rgba(0,0,0,0.5)' }}>{reel.isLiked ? product.likeCount : (product.likeCount || 0)}</span>
               </button>
 
-
-              
               <button onClick={handleShare} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4, background:'none', border:'none', cursor:'pointer', color:'#fff', padding:0 }}>
                 <div style={{ display:'flex', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} className={shareAnimating ? 'animate-send-fly' : ''}>
                   <Send size={24} strokeWidth={2.2} />

@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, MessageSquare, Package, BarChart3, Check, X, Trash2, Clock, CheckCircle, Phone, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Users, MessageSquare, Package, BarChart3, Check, X, Trash2, Clock, CheckCircle, Phone, MessageCircle, Play as PlayIcon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import Spinner from '../../components/ui/Spinner';
+import Modal from '../../components/ui/Modal';
+import VideoPlayer from '../../components/reel/VideoPlayer';
 import { getAdminStats, getApplications, reviewApplication, getEnquiries, updateEnquiry, adminDeleteProduct } from '../../api';
 
 export default function AdminPanel() {
@@ -13,8 +15,16 @@ export default function AdminPanel() {
   const [tab, setTab] = useState('stats');
   const [stats, setStats] = useState(null);
   const [apps, setApps] = useState([]);
-  const [enquiries, setEnquiries] = useState([]);
+  const [pendingProducts, setPendingProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [previewVideo, setPreviewVideo] = useState(null);
+
+  const getFullSrc = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
 
   useEffect(() => { if(!isAdmin) navigate('/feed'); }, [isAdmin]);
 
@@ -22,7 +32,11 @@ export default function AdminPanel() {
     setLoading(true);
     if (tab === 'stats') getAdminStats().then(r => setStats(r.data.stats)).catch(()=>{}).finally(()=>setLoading(false));
     else if (tab === 'apps') getApplications().then(r => setApps(r.data.applications)).catch(()=>{}).finally(()=>setLoading(false));
-    else if (tab === 'enquiries') getEnquiries().then(r => setEnquiries(r.data.enquiries)).catch(()=>{}).finally(()=>setLoading(false));
+    else if (tab === 'moderate') {
+      import('../../api').then(({ getPendingProducts }) => {
+        getPendingProducts().then(r => setPendingProducts(r.data.products)).catch(()=>{}).finally(()=>setLoading(false));
+      });
+    }
     else setLoading(false);
   }, [tab]);
 
@@ -34,17 +48,22 @@ export default function AdminPanel() {
     } catch { toast.error('Failed'); }
   };
 
-  const handleEnquiryStatus = async (id, status) => {
+  const handleProductReview = async (id, status) => {
+    const reason = status === 'rejected' ? prompt('Reason for rejection:') : '';
+    if (status === 'rejected' && reason === null) return;
     try {
-      await updateEnquiry(id, status);
-      setEnquiries(prev => prev.map(e => e._id===id?{...e,status}:e));
-      toast.success('Updated');
-    } catch { toast.error('Failed'); }
+      const { reviewProduct } = await import('../../api');
+      await reviewProduct(id, status, reason);
+      setPendingProducts(prev => prev.filter(p => p._id !== id));
+      toast.success(`Product ${status}`);
+      if (previewVideo && previewVideo.id === id) setPreviewVideo(null);
+    } catch { toast.error('Failed to review product'); }
   };
 
   const tabs = [
     { key:'stats', icon:BarChart3, label:'Dashboard' },
     { key:'apps', icon:Users, label:'Applications' },
+    { key:'moderate', icon:CheckCircle, label:'Moderate' },
   ];
 
   return (
@@ -94,7 +113,7 @@ export default function AdminPanel() {
                 <div key={app._id} className="glass" style={{ padding:16, borderRadius:16 }}>
                   <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
                     <div style={{ width:40, height:40, borderRadius:'50%', overflow:'hidden', background:'linear-gradient(135deg,#6366f1,#8b5cf6)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                      {app.applicant?.avatar ? <img src={app.applicant.avatar} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : <span style={{ fontWeight:700 }}>{app.applicant?.name?.[0]}</span>}
+                      {app.applicant?.avatar ? <img src={getFullSrc(app.applicant.avatar)} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : <span style={{ fontWeight:700 }}>{app.applicant?.name?.[0]}</span>}
                     </div>
                     <div style={{ flex:1, minWidth:0 }}>
                       <p style={{ fontWeight:700, fontSize:'0.9rem' }}>{app.applicant?.name}</p>
@@ -116,9 +135,56 @@ export default function AdminPanel() {
             </div>
           )}
 
-
+          {/* Moderate Products */}
+          {tab === 'moderate' && (
+            <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+              {pendingProducts.length === 0 && <p style={{ textAlign:'center', color:'#64748b', padding:40 }}>No pending products</p>}
+              {pendingProducts.map(p => (
+                <div key={p._id} className="glass" style={{ padding:16, borderRadius:16 }}>
+                  <div style={{ display:'flex', gap:12, marginBottom:16 }}>
+                    <div 
+                      onClick={() => setPreviewVideo({ id: p._id, url: p.reels[0].videoUrl, name: p.name })}
+                      style={{ width:80, height:120, borderRadius:10, overflow:'hidden', background:'#000', flexShrink:0, cursor:'pointer', position:'relative' }}
+                    >
+                      <video src={getFullSrc(p.reels[0].videoUrl)} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                      <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                        <PlayIcon size={20} color="#fff" fill="#fff" />
+                      </div>
+                    </div>
+                    <div style={{ flex:1 }}>
+                      <p style={{ fontWeight:700, fontSize:'0.95rem', marginBottom:4 }}>{p.name}</p>
+                      <p style={{ fontSize:'0.8rem', color:'#94a3b8', marginBottom:8, lineClamp:2, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>{p.description}</p>
+                      <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                        <div style={{ width:20, height:20, borderRadius:'50%', overflow:'hidden' }}>
+                          <img src={getFullSrc(p.vendor.avatar)} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                        </div>
+                        <span style={{ fontSize:'0.75rem', fontWeight:600 }}>{p.vendor.name}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display:'flex', gap:8 }}>
+                    <button className="btn-primary" style={{ flex:1, padding:'8px 0', fontSize:'0.8rem' }} onClick={() => handleProductReview(p._id,'approved')}><Check size={15} /> Approve</button>
+                    <button className="btn-danger" style={{ flex:1, padding:'8px 0', fontSize:'0.8rem' }} onClick={() => handleProductReview(p._id,'rejected')}><X size={15} /> Reject</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
+
+      {/* Video Preview Modal */}
+      <Modal isOpen={!!previewVideo} onClose={() => setPreviewVideo(null)} title={previewVideo?.name || 'Preview'}>
+        <div style={{ width:'100%', aspectRatio:'9/16', maxHeight:'70vh', borderRadius:16, overflow:'hidden', background:'#000' }}>
+          {previewVideo && <VideoPlayer src={previewVideo.url} />}
+        </div>
+        <div style={{ display:'flex', gap:10, marginTop:20 }}>
+          <button className="btn-primary" style={{ flex:1 }} onClick={() => handleProductReview(previewVideo.id, 'approved')}>Approve Now</button>
+          <button className="btn-danger" style={{ flex:1 }} onClick={() => handleProductReview(previewVideo.id, 'rejected')}>Reject</button>
+        </div>
+      </Modal>
     </div>
   );
 }
+
+

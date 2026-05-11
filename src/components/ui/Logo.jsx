@@ -31,7 +31,7 @@ export default function Logo({ size = 36, showText = true }) {
           }}
           className="gradient-text"
         >
-          FurReel
+          PetPlace
         </span>
       )}
     </div>

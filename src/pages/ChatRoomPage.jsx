@@ -8,7 +8,7 @@ import Spinner from '../components/ui/Spinner';
 export default function ChatRoomPage() {
   const { userId } = useParams();
   const navigate = useNavigate();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, updateUnread } = useAuth();
   const [messages, setMessages] = useState([]);
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(true);
@@ -16,10 +16,11 @@ export default function ChatRoomPage() {
   const scrollRef = useRef(null);
 
   useEffect(() => {
-    (async () => {
+    const fetchMessages = async () => {
       try {
         const { data } = await getChatMessages(userId);
         setMessages(data.messages);
+        updateUnread();
         
         if (data.messages.length > 0) {
           const firstOther = data.messages.find(m => m.sender._id === userId);
@@ -30,8 +31,12 @@ export default function ChatRoomPage() {
       } finally {
         setLoading(false);
       }
-    })();
-  }, [userId]);
+    };
+
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 3000);
+    return () => clearInterval(interval);
+  }, [userId, updateUnread]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -70,24 +75,51 @@ export default function ChatRoomPage() {
   const renderContent = (text) => {
     if (!text) return null;
     
-    // Handle URLs
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    let parts = text.split(urlRegex);
+    // First, handle markdown links [text](url)
+    const mdLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+    let parts = text.split(mdLinkRegex);
     
-    return parts.map((part, i) => {
-      if (urlRegex.test(part)) {
-        return (
-          <a key={i} href={part} target="_blank" rel="noopener noreferrer" style={{ color: '#818cf8', textDecoration: 'underline', wordBreak: 'break-all' }}>
-            {part}
+    // This will give us: [plain, text, url, plain, text, url, ...]
+    let result = [];
+    for (let i = 0; i < parts.length; i += 3) {
+      // Plain text part
+      const plain = parts[i];
+      if (plain) {
+        // Handle bold in plain text
+        const boldRegex = /\*\*(.*?)\*\*/g;
+        const subParts = plain.split(boldRegex);
+        result.push(...subParts.map((sub, j) => (j % 2 === 1 ? <strong key={`${i}-${j}`}>{sub}</strong> : sub)));
+      }
+      
+      // Link part (text and url)
+      if (i + 1 < parts.length) {
+        const linkText = parts[i+1];
+        const linkUrl = parts[i+2];
+        result.push(
+          <a key={`link-${i}`} href={linkUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#818cf8', textDecoration: 'underline', fontWeight: 600 }}>
+            {linkText}
           </a>
         );
       }
-      
-      // Handle Bold **text**
-      const boldRegex = /\*\*(.*?)\*\*/g;
-      const subParts = part.split(boldRegex);
-      return subParts.map((sub, j) => (j % 2 === 1 ? <strong key={j}>{sub}</strong> : sub));
-    });
+    }
+    
+    // Fallback for raw URLs not in markdown format
+    if (result.length === 1 && typeof result[0] === 'string') {
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      let urlParts = result[0].split(urlRegex);
+      return urlParts.map((part, i) => {
+        if (urlRegex.test(part)) {
+          return (
+            <a key={i} href={part} target="_blank" rel="noopener noreferrer" style={{ color: '#818cf8', textDecoration: 'underline', wordBreak: 'break-all' }}>
+              {part}
+            </a>
+          );
+        }
+        return part;
+      });
+    }
+
+    return result;
   };
 
   if (loading) return <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'80vh' }}><Spinner size={48} /></div>;

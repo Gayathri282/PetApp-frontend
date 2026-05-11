@@ -66,6 +66,10 @@ export const getChatMessages = (otherUserId) => api.get(`/api/chat/messages/${ot
 export const getConversations = () => api.get('/api/chat/conversations');
 export const getAdminUser = () => api.get('/api/chat/admin-user');
 
+// ── Notifications ─────────────────────────────────────
+export const getNotifications = () => api.get('/api/notifications');
+export const markNotificationsRead = () => api.put('/api/notifications/read');
+
 // ── Admin ─────────────────────────────────────────────
 export const getAdminStats = () => api.get('/api/admin/stats');
 export const getApplications = (status = '') =>
@@ -76,5 +80,9 @@ export const getEnquiries = () => api.get('/api/admin/enquiries');
 export const updateEnquiry = (id, status) =>
   api.put(`/api/admin/enquiries/${id}`, { status });
 export const adminDeleteProduct = (id) => api.delete(`/api/admin/products/${id}`);
+
+export const getPendingProducts = () => api.get('/api/admin/products/pending');
+export const reviewProduct = (id, status, reason = '') => 
+  api.put(`/api/admin/products/${id}/review`, { status, reason });
 
 export default api;

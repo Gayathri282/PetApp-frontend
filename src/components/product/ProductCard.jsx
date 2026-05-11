@@ -1,18 +1,17 @@
 import { useNavigate } from 'react-router-dom';
 import { Play, Tag } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 export default function ProductCard({ product, style = {} }) {
   const getFullSrc = (url) => {
     if (!url) return '';
-    if (url.startsWith('http')) return url;
+    if (url.startsWith('http') || url.startsWith('blob:')) return url;
     const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
     return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
   };
 
   const navigate = useNavigate();
   const videoRef = useRef(null);
-  const hlsRef = useRef(null);
   const [hovering, setHovering] = useState(false);
   const reel = product.primaryReel || product.reels?.[0];
 
@@ -21,26 +20,10 @@ export default function ProductCard({ product, style = {} }) {
     if (!video || !reel?.videoUrl || !hovering) return;
 
     const fullSrc = getFullSrc(reel.videoUrl);
-
-    if (fullSrc.includes('.m3u8')) {
-      if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = fullSrc;
-      } else if (window.Hls && window.Hls.isSupported()) {
-        if (hlsRef.current) hlsRef.current.destroy();
-        const hls = new window.Hls();
-        hls.loadSource(fullSrc);
-        hls.attachMedia(video);
-        hlsRef.current = hls;
-      } else {
-        // Fallback for browsers that support neither HLS natively nor Hls.js
-        video.src = fullSrc;
-      }
-    } else {
-      video.src = fullSrc;
-    }
+    video.src = fullSrc;
 
     return () => {
-      if (hlsRef.current) hlsRef.current.destroy();
+      video.src = '';
     };
   }, [hovering, reel]);
 
@@ -57,7 +40,7 @@ export default function ProductCard({ product, style = {} }) {
           <>
             <video 
               ref={videoRef} 
-              poster={reel.thumbnail}
+              poster={reel.thumbnail ? getFullSrc(reel.thumbnail) : undefined}
               muted 
               loop 
               playsInline 

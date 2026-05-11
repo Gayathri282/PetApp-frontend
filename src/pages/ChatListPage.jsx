@@ -3,24 +3,28 @@ import { useNavigate } from 'react-router-dom';
 import { getConversations } from '../api';
 import { MessageCircle, Search, ChevronRight, User } from 'lucide-react';
 import Spinner from '../components/ui/Spinner';
+import { useAuth } from '../context/AuthContext';
 
 export default function ChatListPage() {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const { updateUnread } = useAuth();
+
   useEffect(() => {
     (async () => {
       try {
         const { data } = await getConversations();
         setConversations(data.conversations);
+        updateUnread();
       } catch (err) {
         console.error(err);
       } finally {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [updateUnread]);
 
   if (loading) return <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'80vh' }}><Spinner size={48} /></div>;
 

@@ -19,7 +19,7 @@ export default function ReelCard({ product, onLikeUpdate }) {
   const [showShare, setShowShare] = useState(false);
   const [showEnquiry, setShowEnquiry] = useState(false);
   const [sending, setSending] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
   const [shareAnimating, setShareAnimating] = useState(false);
   const [tempPhone, setTempPhone] = useState('');
 
@@ -260,6 +260,7 @@ export default function ReelCard({ product, onLikeUpdate }) {
             <div style={{ display: 'flex', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>
               <Layers size={24} strokeWidth={2.2} />
             </div>
+            <span style={{ fontSize: '0.7rem', fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>More</span>
           </button>
         )}
 
