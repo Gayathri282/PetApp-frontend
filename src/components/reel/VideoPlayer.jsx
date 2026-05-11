@@ -3,7 +3,7 @@ import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
 import { Pause, Play, Volume2, VolumeX } from 'lucide-react';
 import Hls from 'hls.js'; // ✅ FIX #1: proper npm import, not window.Hls
 
-export default function VideoPlayer({ src, style = {} }) {
+export default function VideoPlayer({ src, muted = true, style = {} }) {
   const getFullSrc = (url) => {
     if (!url) return '';
     if (url.startsWith('http')) return url;
@@ -14,7 +14,6 @@ export default function VideoPlayer({ src, style = {} }) {
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
   const [isPaused, setIsPaused] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
   const [showControl, setShowControl] = useState(false);
   const [hasError, setHasError] = useState(false);
 
@@ -116,10 +115,7 @@ export default function VideoPlayer({ src, style = {} }) {
     setTimeout(() => setShowControl(false), 1200);
   };
 
-  const toggleMute = (e) => {
-    e.stopPropagation();
-    setIsMuted((m) => !m);
-  };
+
 
   return (
     <div
@@ -137,7 +133,7 @@ export default function VideoPlayer({ src, style = {} }) {
     >
       <video
         ref={videoRef}
-        muted={isMuted}
+        muted={muted}
         loop
         playsInline
         preload="auto"
@@ -200,32 +196,7 @@ export default function VideoPlayer({ src, style = {} }) {
         </div>
       )}
 
-      {/* Mute toggle — bottom right only */}
-      <button
-        onClick={toggleMute}
-        style={{
-          position: 'absolute',
-          bottom: 24,
-          right: 24,
-          background: 'rgba(0,0,0,0.3)',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderRadius: 14,
-          padding: '8px 14px',
-          color: '#fff',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          zIndex: 25,
-          transition: 'all 0.2s',
-        }}
-      >
-        {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-        <span style={{ fontSize: '0.7rem', fontWeight: 700 }}>
-          {isMuted ? 'MUTED' : 'SOUND ON'}
-        </span>
-      </button>
+
     </div>
   );
 }

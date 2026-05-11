@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Send, Zap, Layers } from 'lucide-react';
+import { Heart, Send, Zap, Layers, Volume2, VolumeX } from 'lucide-react';
 import VideoPlayer from './VideoPlayer';
 import ShareModal from '../ui/ShareModal';
 import Modal from '../ui/Modal';
@@ -19,6 +19,7 @@ export default function ReelCard({ product, onLikeUpdate }) {
   const [showShare, setShowShare] = useState(false);
   const [showEnquiry, setShowEnquiry] = useState(false);
   const [sending, setSending] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const [shareAnimating, setShareAnimating] = useState(false);
   const [tempPhone, setTempPhone] = useState('');
 
@@ -118,7 +119,7 @@ export default function ReelCard({ product, onLikeUpdate }) {
         overflow: 'hidden',
       }}
     >
-      <VideoPlayer src={reel.videoUrl} />
+      <VideoPlayer src={reel.videoUrl} muted={isMuted} />
 
       {/* Bottom gradient overlay */}
       <div
@@ -208,6 +209,32 @@ export default function ReelCard({ product, onLikeUpdate }) {
             }}
           >
             Share
+          </span>
+        </button>
+
+        {/* Sound Toggle */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsMuted(!isMuted);
+          }}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 4,
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: '#fff',
+            padding: 0,
+          }}
+        >
+          <div style={{ display: 'flex', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>
+            {isMuted ? <VolumeX size={24} strokeWidth={2.2} /> : <Volume2 size={24} strokeWidth={2.2} />}
+          </div>
+          <span style={{ fontSize: '0.7rem', fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+            {isMuted ? 'Mute' : 'Sound'}
           </span>
         </button>
 
