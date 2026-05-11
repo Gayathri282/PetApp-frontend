@@ -77,13 +77,8 @@ export default function ReelCard({ product, onLikeUpdate }) {
       
       const { data: enqData } = await submitEnquiry({ productId: product._id, message: 'Interested in this product' });
       
-      // Navigate to chat using the adminId returned from backend
-      if (enqData.adminId) {
-        navigate(`/chat/${enqData.adminId}`);
-      } else {
-        toast.success('Interest registered!');
-        setShowEnquiry(false);
-      }
+      toast.success('Interest registered! Admin will contact you.');
+      setShowEnquiry(false);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to start chat');
     } finally {

@@ -31,6 +31,9 @@ export default function ProductCard({ product, style = {} }) {
         hls.loadSource(fullSrc);
         hls.attachMedia(video);
         hlsRef.current = hls;
+      } else {
+        // Fallback for browsers that support neither HLS natively nor Hls.js
+        video.src = fullSrc;
       }
     } else {
       video.src = fullSrc;

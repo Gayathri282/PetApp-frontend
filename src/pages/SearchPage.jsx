@@ -55,8 +55,8 @@ export default function SearchPage() {
       {/* Results */}
       {loading ? <Spinner /> : (
         <div className="stagger-children" style={{ display:'flex', flexDirection:'column', gap:12 }}>
-          {results.map(p => <ProductCard key={p._id} product={p} />)}
-          {searched && !loading && results.length === 0 && (
+          {Array.isArray(results) && results.map(p => <ProductCard key={p._id} product={p} />)}
+          {searched && !loading && (!results || results.length === 0) && (
             <div style={{ textAlign:'center', padding:40, color:'#64748b' }}>
               <div style={{ fontSize:48, marginBottom:12 }}>🔍</div>
               <p>No results found. Try different keywords or tags.</p>

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Layout from './components/layout/Layout';
@@ -20,6 +21,13 @@ function ProtectedRoute({ children }) {
 }
 
 export default function App() {
+  useEffect(() => {
+    // Wake up the Render backend
+    import('./api').then(({ default: api }) => {
+      api.get('/api/health').catch(() => {});
+    });
+  }, []);
+
   return (
     <Layout>
       <Routes>

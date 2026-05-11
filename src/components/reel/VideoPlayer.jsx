@@ -100,6 +100,7 @@ export default function VideoPlayer({ src, style = {} }) {
         loop
         playsInline
         preload="auto"
+        onClick={togglePlay}
         style={{
           width: '100%',
           height: '100%',
@@ -108,6 +109,15 @@ export default function VideoPlayer({ src, style = {} }) {
         onPlay={() => setIsPaused(false)}
         onPause={() => setIsPaused(true)}
       />
+
+      {/* Mute/Unmute Overlay */}
+      <button 
+        onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}
+        style={{ position:'absolute', top:24, left:16, zIndex:30, background:'rgba(0,0,0,0.3)', backdropFilter:'blur(10px)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:14, padding:10, color:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:8 }}
+      >
+        {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+        <span style={{ fontSize:'0.7rem', fontWeight:700 }}>{isMuted ? 'MUTED' : 'SOUND ON'}</span>
+      </button>
 
       {/* Control overlay */}
       {(showControl || isPaused) && (
