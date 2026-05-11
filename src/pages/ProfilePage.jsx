@@ -194,9 +194,13 @@ function EditProductModal({ open, product, onClose, onSuccess }) {
 
   const handleSubmit = async () => {
     if (!form.name) { toast.error('Name is required'); return; }
+    const fd = new FormData();
+    Object.keys(form).forEach(key => fd.append(key, form[key]));
+    fd.append('tags', JSON.stringify(tags));
+
     setLoading(true);
     try {
-      const { data } = await updateProduct(product._id, { ...form, tags: JSON.stringify(tags) });
+      const { data } = await updateProduct(product._id, fd);
       toast.success('Product updated!');
       onSuccess(data.product);
     } catch (e) {
@@ -261,9 +265,14 @@ function EditReelModal({ open, product, onClose, onSuccess }) {
   }, [product]);
 
   const handleSubmit = async () => {
+    const fd = new FormData();
+    fd.append('name', name);
+    fd.append('description', desc);
+    fd.append('tags', JSON.stringify(tags));
+
     setLoading(true);
     try {
-      const { data } = await updateProduct(product._id, { name, description: desc, tags: JSON.stringify(tags) });
+      const { data } = await updateProduct(product._id, fd);
       toast.success('Reel updated!');
       onSuccess(data.product);
     } catch (e) {
