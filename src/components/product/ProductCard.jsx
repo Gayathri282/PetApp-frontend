@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { Play, Tag } from 'lucide-react';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, memo } from 'react';
 
-export default function ProductCard({ product, style = {} }) {
+const ProductCard = memo(({ product, style = {} }) => {
   const getFullSrc = (url) => {
     if (!url) return '';
     if (url.startsWith('http') || url.startsWith('blob:')) return url;
@@ -70,4 +70,6 @@ export default function ProductCard({ product, style = {} }) {
       </div>
     </div>
   );
-}
+});
+
+export default ProductCard;

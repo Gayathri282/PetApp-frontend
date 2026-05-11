@@ -77,6 +77,9 @@ export default function VideoPlayer({ src, muted = false, style = {} }) {
     };
 
     video.src = fullSrc;
+    video.setAttribute('webkit-playsinline', 'true');
+    video.setAttribute('playsinline', 'true');
+    video.setAttribute('x5-playsinline', 'true');
     video.addEventListener('error', onError, { once: true });
     video.addEventListener('loadeddata', onDataLoaded);
 
@@ -103,7 +106,7 @@ export default function VideoPlayer({ src, muted = false, style = {} }) {
   );
 
   const containerRef = useIntersectionObserver(handleIntersect, {
-    threshold: 0.6,
+    threshold: 0.5,
   });
 
   const togglePlay = (e) => {

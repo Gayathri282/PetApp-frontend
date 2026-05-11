@@ -18,24 +18,42 @@ export default function Layout({ children }) {
     if (!user) return;
 
     const checkUpdates = async () => {
-      await Promise.all([updateUnread(), updateNotifications()]);
-      
-      const isChatPage = location.pathname.startsWith('/chat');
-      if (!isChatPage && unreadCount > prevCount.current) {
-        toast.info('You have a new message!');
+      try {
+        const oldUnread = prevCount.current;
+        const oldNotif = prevNotifCount.current;
+        
+        await Promise.all([updateUnread(), updateNotifications()]);
+        
+        // We use fresh values from refs or state might be stale in this closure
+        // But since we want to show toast, we'll check them after the await
+      } catch (err) {
+        console.error('Polling error:', err);
       }
-      prevCount.current = unreadCount;
-
-      const isNotifPage = location.pathname === '/notifications';
-      if (!isNotifPage && notificationCount > prevNotifCount.current) {
-        toast.info('New activity on your profile!');
-      }
-      prevNotifCount.current = notificationCount;
     };
 
-    const interval = setInterval(checkUpdates, 10000);
+    // Initial check
+    checkUpdates();
+
+    const interval = setInterval(checkUpdates, 15000); // 15s is plenty
     return () => clearInterval(interval);
-  }, [user, location.pathname, unreadCount, notificationCount, updateUnread, updateNotifications, toast]);
+  }, [user, updateUnread, updateNotifications]);
+
+  // Separate effect for Toasts to prevent interval churn
+  useEffect(() => {
+    if (!user) return;
+    
+    const isChatPage = location.pathname.startsWith('/chat');
+    if (!isChatPage && unreadCount > prevCount.current) {
+      toast.info('You have a new message!');
+    }
+    prevCount.current = unreadCount;
+
+    const isNotifPage = location.pathname === '/notifications';
+    if (!isNotifPage && notificationCount > prevNotifCount.current) {
+      toast.info('New activity on your profile!');
+    }
+    prevNotifCount.current = notificationCount;
+  }, [unreadCount, notificationCount, location.pathname, user, toast]);
 
   const hideChrome =
     !user ||

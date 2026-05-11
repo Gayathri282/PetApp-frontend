@@ -47,14 +47,16 @@ export default function BottomNav() {
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              width: 60,
-              height: 48,
+              width: 64,
+              height: 52,
               background: 'none',
               border: 'none',
               cursor: 'pointer',
               color: isActive ? '#fff' : '#64748b',
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               position: 'relative',
+              touchAction: 'manipulation',
+              WebkitTapHighlightColor: 'transparent',
             }}
           >
             <div 
@@ -62,7 +64,8 @@ export default function BottomNav() {
                 marginBottom: 2, 
                 transition: 'transform 0.3s ease',
                 transform: isActive ? 'translateY(-2px)' : 'none',
-                position: 'relative'
+                position: 'relative',
+                pointerEvents: 'none'
               }}
             >
               <Icon 

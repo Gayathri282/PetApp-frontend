@@ -149,11 +149,12 @@ export default function AdminPanel() {
                       <video src={getFullSrc(p.reels[0].videoUrl)} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
                       <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
                         <PlayIcon size={20} color="#fff" fill="#fff" />
+                        {p.reels.length > 1 && <span style={{ position:'absolute', top:4, right:4, background:'rgba(0,0,0,0.6)', color:'#fff', fontSize:'0.6rem', padding:'2px 4px', borderRadius:4, fontWeight:700 }}>+{p.reels.length-1}</span>}
                       </div>
                     </div>
                     <div style={{ flex:1 }}>
                       <p style={{ fontWeight:700, fontSize:'0.95rem', marginBottom:4 }}>{p.name}</p>
-                      <p style={{ fontSize:'0.8rem', color:'#94a3b8', marginBottom:8, lineClamp:2, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>{p.description}</p>
+                      <p style={{ fontSize:'0.8rem', color:'#94a3b8', marginBottom:8 }}>{p.reels.length} video(s) • {p.category}</p>
                       <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                         <div style={{ width:20, height:20, borderRadius:'50%', overflow:'hidden' }}>
                           <img src={getFullSrc(p.vendor.avatar)} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
@@ -174,12 +175,48 @@ export default function AdminPanel() {
       )}
 
       {/* Video Preview Modal */}
-      <Modal isOpen={!!previewVideo} onClose={() => setPreviewVideo(null)} title={previewVideo?.name || 'Preview'}>
-        <div style={{ width:'100%', aspectRatio:'9/16', maxHeight:'70vh', borderRadius:16, overflow:'hidden', background:'#000' }}>
-          {previewVideo && <VideoPlayer src={previewVideo.url} />}
+      <Modal 
+        isOpen={!!previewVideo} 
+        onClose={() => setPreviewVideo(null)} 
+        title={previewVideo ? `${previewVideo.name} (${(previewVideo.index || 0) + 1}/${pendingProducts.find(x=>x._id===previewVideo.id)?.reels.length})` : 'Preview'}
+      >
+        <div style={{ position:'relative', width:'100%', aspectRatio:'9/16', maxHeight:'65vh', borderRadius:16, overflow:'hidden', background:'#000' }}>
+          {previewVideo && (
+            <>
+              <VideoPlayer src={previewVideo.url} />
+              
+              {/* Navigation */}
+              {pendingProducts.find(x=>x._id===previewVideo.id)?.reels.length > 1 && (
+                <div style={{ position:'absolute', bottom:20, left:0, right:0, display:'flex', justifyContent:'center', gap:20, zIndex:100 }}>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const p = pendingProducts.find(x=>x._id===previewVideo.id);
+                      const newIdx = ((previewVideo.index || 0) - 1 + p.reels.length) % p.reels.length;
+                      setPreviewVideo({ ...previewVideo, index: newIdx, url: p.reels[newIdx].videoUrl });
+                    }}
+                    style={{ background:'rgba(255,255,255,0.2)', backdropFilter:'blur(10px)', border:'none', borderRadius:99, width:40, height:40, color:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}
+                  >
+                    <ArrowLeft size={20} />
+                  </button>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const p = pendingProducts.find(x=>x._id===previewVideo.id);
+                      const newIdx = ((previewVideo.index || 0) + 1) % p.reels.length;
+                      setPreviewVideo({ ...previewVideo, index: newIdx, url: p.reels[newIdx].videoUrl });
+                    }}
+                    style={{ background:'rgba(255,255,255,0.2)', backdropFilter:'blur(10px)', border:'none', borderRadius:99, width:40, height:40, color:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}
+                  >
+                    <ArrowLeft style={{ transform:'rotate(180deg)' }} size={20} />
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
         <div style={{ display:'flex', gap:10, marginTop:20 }}>
-          <button className="btn-primary" style={{ flex:1 }} onClick={() => handleProductReview(previewVideo.id, 'approved')}>Approve Now</button>
+          <button className="btn-primary" style={{ flex:1 }} onClick={() => handleProductReview(previewVideo.id, 'approved')}>Approve Product</button>
           <button className="btn-danger" style={{ flex:1 }} onClick={() => handleProductReview(previewVideo.id, 'rejected')}>Reject</button>
         </div>
       </Modal>
