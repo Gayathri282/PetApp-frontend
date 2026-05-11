@@ -7,12 +7,27 @@ import { useState, useEffect } from 'react';
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isAdmin, notificationCount, canInstall, installApp } = useAuth();
+  const { user, isAdmin, notificationCount, canInstall, installApp, isStandalone, wasInstalled } = useAuth();
 
   if (!user) return null;
   if (location.pathname.startsWith('/login')) return null;
 
   return (
+    <>
+    {!isStandalone && wasInstalled && !canInstall && (
+      <div style={{ position:'fixed', top:60, left:0, right:0, zIndex:99, background:'linear-gradient(to right, #6366f1, #8b5cf6)', padding:'10px 20px', display:'flex', alignItems:'center', justifyContent:'space-between', boxShadow:'0 4px 15px rgba(0,0,0,0.2)' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <Smartphone size={20} color="#fff" />
+          <span style={{ color:'#fff', fontSize:'0.85rem', fontWeight:600 }}>Better experience in the PetPlace app</span>
+        </div>
+        <button 
+          onClick={() => window.location.reload()} 
+          style={{ background:'#fff', color:'#6366f1', border:'none', padding:'6px 14px', borderRadius:8, fontSize:'0.8rem', fontWeight:700, cursor:'pointer' }}
+        >
+          Open App
+        </button>
+      </div>
+    )}
     <nav
       style={{
         position: 'fixed',

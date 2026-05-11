@@ -86,6 +86,7 @@ export function AuthProvider({ children }) {
     const handleAppInstalled = () => {
       setDeferredPrompt(null);
       setCanInstall(false);
+      localStorage.setItem('pwa_installed', 'true');
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
@@ -121,6 +122,8 @@ export function AuthProvider({ children }) {
 
   const isVendor = user?.role === 'vendor';
   const isAdmin = user?.role === 'admin';
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  const wasInstalled = localStorage.getItem('pwa_installed') === 'true';
 
   return (
     <AuthContext.Provider
@@ -129,7 +132,8 @@ export function AuthProvider({ children }) {
         unreadCount, updateUnread, 
         notificationCount, updateNotifications, 
         logout, refreshUser,
-        canInstall, installApp
+        canInstall, installApp,
+        isStandalone, wasInstalled
       }}
     >
       {children}
