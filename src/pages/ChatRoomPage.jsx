@@ -140,7 +140,7 @@ export default function ChatRoomPage() {
   if (loading) return <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'80vh' }}><Spinner size={48} /></div>;
 
   return (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: '#0f0d1a', position:'fixed', inset:0, zIndex:200 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', background: '#0f0d1a', position:'fixed', top:0, left:0, right:0, bottom:68, zIndex:200 }}>
       {/* Header */}
       <div style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(15,13,26,0.8)', backdropFilter:'blur(20px)' }}>
         <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
