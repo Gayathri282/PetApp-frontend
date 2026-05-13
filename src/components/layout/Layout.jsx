@@ -55,10 +55,12 @@ export default function Layout({ children }) {
     prevNotifCount.current = notificationCount;
   }, [unreadCount, notificationCount, location.pathname, user, toast]);
 
+  const isChatRoom = location.pathname.startsWith('/chat/');
   const hideChrome =
     !user ||
     location.pathname === '/login' ||
-    location.pathname.startsWith('/product/');
+    location.pathname.startsWith('/product/') ||
+    isChatRoom;
 
   return (
     <>
