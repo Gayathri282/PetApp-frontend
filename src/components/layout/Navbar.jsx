@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Search, Bell, Download } from 'lucide-react';
+import { Search, Bell, Download, Smartphone } from 'lucide-react';
 import Logo from '../ui/Logo';
 import { useAuth } from '../../context/AuthContext';
 import { useState, useEffect } from 'react';
@@ -113,5 +113,6 @@ export default function Navbar() {
         </div>
       </div>
     </nav>
+    </>
   );
 }
