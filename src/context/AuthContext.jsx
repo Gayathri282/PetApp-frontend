@@ -61,8 +61,9 @@ export function AuthProvider({ children }) {
     
     if (urlToken) {
       localStorage.setItem('jwt', urlToken);
-      // Clean up the URL
-      window.history.replaceState({}, document.title, window.location.pathname);
+      // Clean up the URL with a fresh navigation to ensure correct viewport rendering on mobile
+      window.location.replace(window.location.pathname);
+      return; // Stop execution here as the page will reload
     }
     
     fetchUser();
