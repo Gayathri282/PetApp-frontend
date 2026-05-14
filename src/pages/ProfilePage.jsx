@@ -7,7 +7,7 @@ import ProductCard from '../components/product/ProductCard';
 import ShareModal from '../components/ui/ShareModal';
 import Modal from '../components/ui/Modal';
 import Spinner from '../components/ui/Spinner';
-import { getVendorProducts, getApplicationStatus, createProduct, uploadSingleReel, deleteProduct, updateProfile } from '../api';
+import { getVendorProducts, getApplicationStatus, createProduct, uploadSingleReel, deleteProduct, updateProfile, uploadToCloudinary, updateProduct } from '../api';
 
 const getFullSrc = (url) => {
   if (!url) return '';
@@ -338,20 +338,27 @@ function EditProfileModal({ open, onClose, user }) {
   };
 
   const handleSubmit = async () => {
-    const fd = new FormData();
-    fd.append('name', name);
-    fd.append('contactNumber', phone);
-    fd.append('address', address);
-    fd.append('location', JSON.stringify({ type: 'Point', coordinates: location }));
-    if (file) fd.append('avatar', file);
-
     setLoading(true);
     try {
-      await updateProfile(fd);
+      let avatarUrl = '';
+      if (file) {
+        toast.info('Uploading avatar...');
+        avatarUrl = await uploadToCloudinary(file);
+      }
+
+      await updateProfile({
+        name,
+        contactNumber: phone,
+        address,
+        location: JSON.stringify({ type: 'Point', coordinates: location }),
+        avatarUrl
+      });
+      
       await refreshUser();
       toast.success('Profile updated!');
       onClose();
     } catch(e) {
+      console.error('Profile update error:', e);
       toast.error(e.response?.data?.message || 'Update failed');
     } finally {
       setLoading(false);
@@ -425,24 +432,36 @@ function UploadReelModal({ open, onClose, onSuccess, user }) {
     if (!user?.location?.coordinates || (user.location.coordinates[0] === 0 && user.location.coordinates[1] === 0)) {
       toast.info('Please set your location in profile to help users find you nearby');
       onClose();
-      // We can't directly trigger setShowEditProfile here as it's in the parent
-      // but we can assume the user will see the instruction.
       return;
     }
-    const fd = new FormData();
-    fd.append('video', file);
-    fd.append('name', name || 'Promotional Reel');
-    fd.append('description', desc);
-    fd.append('tags', JSON.stringify(tags));
+    
     setLoading(true);
     try {
-      const { data } = await uploadSingleReel(fd);
+      // 1. Upload directly to Cloudinary to bypass server timeouts
+      toast.info('Uploading video to secure storage...');
+      const videoUrl = await uploadToCloudinary(file, (progress) => {
+        // You could add a progress bar here if you want
+        console.log(`Upload progress: ${progress}%`);
+      });
+
+      // 2. Send only the URL to our backend
+      const { data } = await uploadSingleReel({
+        videoUrl,
+        name: name || 'Promotional Reel',
+        description: desc,
+        tags: JSON.stringify(tags)
+      });
+
       toast.success('Reel uploaded!');
       onSuccess(data.product);
       setFile(null); setName(''); setDesc(''); setTags([]);
       onClose();
-    } catch(e) { toast.error(e.response?.data?.message || 'Upload failed'); }
-    finally { setLoading(false); }
+    } catch(e) { 
+      console.error('Upload error:', e);
+      toast.error(e.response?.data?.message || 'Upload failed'); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   return (
@@ -536,24 +555,41 @@ function UploadProductModal({ open, onClose, onSuccess, user }) {
       return;
     }
     if (videos.length > 5) { toast.error('Maximum 5 videos allowed'); return; }
-    const fd = new FormData();
-    videos.forEach(f => fd.append('videos', f));
-    images.forEach(f => fd.append('images', f));
-    fd.append('name', form.name);
-    fd.append('description', form.description);
-    fd.append('category', form.category);
-    fd.append('price', form.price || '0');
-    fd.append('isOnSale', String(form.isOnSale));
-    fd.append('deliveryChargesAdditional', String(form.deliveryChargesAdditional));
-    fd.append('tags', JSON.stringify(tags));
+    
     setLoading(true);
     try {
-      const { data } = await createProduct(fd);
+      // 1. Upload all videos to Cloudinary
+      toast.info(`Uploading ${videos.length} video(s)...`);
+      const videoUrls = await Promise.all(
+        videos.map(v => uploadToCloudinary(v))
+      );
+
+      // 2. Upload images to Cloudinary
+      let imageUrls = [];
+      if (images.length > 0) {
+        toast.info(`Uploading ${images.length} image(s)...`);
+        imageUrls = await Promise.all(
+          images.map(img => uploadToCloudinary(img))
+        );
+      }
+
+      // 3. Send URLs to backend
+      const { data } = await createProduct({
+        ...form,
+        videoUrls,
+        imageUrls,
+        tags: JSON.stringify(tags)
+      });
+
       toast.success('Product created!');
       onSuccess(data.product);
       setForm({ name:'', description:'', category:'', price:'', isOnSale:true }); setTags([]); setVideos([]); setImages([]);
-    } catch(e) { toast.error(e.response?.data?.message || 'Failed'); }
-    finally { setLoading(false); }
+    } catch(e) { 
+      console.error('Upload error:', e);
+      toast.error(e.response?.data?.message || 'Failed to create product'); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   const removeVideo = (index) => {

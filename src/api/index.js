@@ -18,10 +18,7 @@ api.interceptors.request.use((config) => {
 // ── Auth ──────────────────────────────────────────────
 export const getMe = () => api.get('/auth/me');
 export const logout = () => api.post('/auth/logout');
-export const updateProfile = (formData) =>
-  api.put('/auth/me', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+export const updateProfile = (data) => api.put('/auth/me', data);
 
 // ── Feed ──────────────────────────────────────────────
 export const getFeed = (page = 1, limit = 10) =>
@@ -32,15 +29,9 @@ export const getProduct = (id) => api.get(`/api/products/${id}`);
 export const searchProducts = (q = '', tags = '') =>
   api.get(`/api/products/search?q=${encodeURIComponent(q)}&tags=${tags}`);
 
-export const createProduct = (formData) =>
-  api.post('/api/products', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+export const createProduct = (data) => api.post('/api/products', data);
 
-export const updateProduct = (id, formData) =>
-  api.put(`/api/products/${id}`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+export const updateProduct = (id, data) => api.put(`/api/products/${id}`, data);
 
 export const deleteProduct = (id) => api.delete(`/api/products/${id}`);
 
@@ -52,10 +43,7 @@ export const toggleLike = (productId, reelIndex = 0) =>
 export const applyVendor = (data) => api.post('/api/vendor/apply', data);
 export const getApplicationStatus = () => api.get('/api/vendor/application-status');
 export const getVendorProducts = () => api.get('/api/vendor/products');
-export const uploadSingleReel = (formData) =>
-  api.post('/api/vendor/reel', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+export const uploadSingleReel = (data) => api.post('/api/vendor/reel', data);
 
 // ── Enquiries ─────────────────────────────────────────
 export const submitEnquiry = (data) => api.post('/api/enquiries', data);
@@ -84,5 +72,33 @@ export const adminDeleteProduct = (id) => api.delete(`/api/admin/products/${id}`
 export const getPendingProducts = () => api.get('/api/admin/products/pending');
 export const reviewProduct = (id, status, reason = '') => 
   api.put(`/api/admin/products/${id}/review`, { status, reason });
+
+// ── Media / Cloudinary ────────────────────────────────
+export const getCloudinarySignature = () => api.get('/api/media/cloudinary-signature');
+
+export const uploadToCloudinary = async (file, onProgress) => {
+  const { data } = await getCloudinarySignature();
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('timestamp', data.timestamp);
+  formData.append('signature', data.signature);
+  formData.append('api_key', data.apiKey);
+  formData.append('folder', data.folder);
+
+  const res = await axios.post(
+    `https://api.cloudinary.com/v1_1/${data.cloudName}/${file.type.startsWith('video/') ? 'video' : 'image'}/upload`,
+    formData,
+    {
+      onUploadProgress: (progressEvent) => {
+        if (onProgress) {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          onProgress(percentCompleted);
+        }
+      },
+    }
+  );
+
+  return res.data.secure_url;
+};
 
 export default api;
