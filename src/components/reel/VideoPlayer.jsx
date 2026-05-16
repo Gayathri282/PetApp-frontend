@@ -38,7 +38,7 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !src) return;
+    if (!video || !src || !isNearView) return;
 
     let retryCount = 0;
     const maxRetries = 3;
@@ -101,7 +101,7 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
       video.removeEventListener('loadeddata', onDataLoaded);
       video.pause();
     };
-  }, [src, playVideo]);
+  }, [src, playVideo, isNearView]);
 
   const handleIntersect = useCallback(
     (entry) => {
@@ -130,16 +130,14 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
     threshold: [0.1, 0.6],
   });
 
-  // Near-view observer to trigger preloading before the video is fully in view
+  // Near-view observer to trigger preloading and resource cleanup
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
     const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting) {
-        setIsNearView(true);
-        observer.disconnect(); // Once near, stay near
-      }
+      // We use isIntersecting with a large margin to know if it's "near"
+      setIsNearView(entries[0].isIntersecting);
     }, { rootMargin: '100% 0px' }); // 1 viewport ahead/behind
 
     observer.observe(container);
