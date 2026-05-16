@@ -32,7 +32,15 @@ export default function ProductReelPage() {
   const [tempPhone, setTempPhone] = useState('');
 
   const containerRef = useRef(null);
-  const isRestoring = useRef(false);
+  const isRestoring = useRef((() => {
+    try {
+      const raw = sessionStorage.getItem(`reel_pos_${id}`);
+      if (!raw) return false;
+      const parsed = JSON.parse(raw);
+      const FIVE_MIN = 5 * 60 * 1000;
+      return (Date.now() - parsed.ts <= FIVE_MIN) && parsed.i > 0;
+    } catch { return false; }
+  })());
 
   useEffect(() => {
     (async () => {
@@ -57,7 +65,10 @@ export default function ProductReelPage() {
     hasRestored.current = true;
 
     const raw = sessionStorage.getItem(`reel_pos_${id}`);
-    if (!raw) return;
+    if (!raw) {
+      isRestoring.current = false;
+      return;
+    }
 
     let index = 0;
     try {
@@ -65,6 +76,7 @@ export default function ProductReelPage() {
       const FIVE_MIN = 5 * 60 * 1000;
       if (Date.now() - parsed.ts > FIVE_MIN) {
         sessionStorage.removeItem(`reel_pos_${id}`);
+        isRestoring.current = false;
         return;
       }
       index = parsed.i;
@@ -73,11 +85,15 @@ export default function ProductReelPage() {
       index = parseInt(raw);
       if (isNaN(index)) {
         sessionStorage.removeItem(`reel_pos_${id}`);
+        isRestoring.current = false;
         return;
       }
     }
 
-    if (index === 0) return;
+    if (index === 0) {
+      isRestoring.current = false;
+      return;
+    }
     let attempts = 0;
     const MAX_ATTEMPTS = 60;
 

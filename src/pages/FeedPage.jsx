@@ -16,10 +16,23 @@ export default function FeedPage() {
   const { canInstall, installApp } = useAuth();
 
   const containerRef = useRef(null);
-  const isRestoring = useRef(false);
+  const isFetching = useRef(false);
   const restorationAttempted = useRef(false);
 
-  const isFetching = useRef(false);
+  // Initialize isRestoring to true if we have a valid saved position to restore.
+  // This prevents the IntersectionObserver from overwriting the saved pos with '0'
+  // during the initial render before the restoration effect has had a chance to run.
+  const isRestoring = useRef((() => {
+    try {
+      const raw = sessionStorage.getItem('feed_pos');
+      if (!raw) return false;
+      const parsed = JSON.parse(raw);
+      const FIVE_MIN = 5 * 60 * 1000;
+      return (Date.now() - parsed.ts <= FIVE_MIN) && parsed.i > 0;
+    } catch {
+      return false;
+    }
+  })());
 
   const loadFeed = useCallback(async (p) => {
     if (isFetching.current) return;
@@ -95,6 +108,7 @@ export default function FeedPage() {
         // Cache expired — start fresh
         sessionStorage.removeItem('feed_pos');
         restorationAttempted.current = true;
+        isRestoring.current = false;
         return;
       }
       index = parsed.i;
@@ -102,11 +116,13 @@ export default function FeedPage() {
       // Legacy plain number format or corrupt — discard
       sessionStorage.removeItem('feed_pos');
       restorationAttempted.current = true;
+      isRestoring.current = false;
       return;
     }
 
     if (index === 0) {
       restorationAttempted.current = true;
+      isRestoring.current = false;
       return;
     }
 
