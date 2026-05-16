@@ -152,6 +152,7 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
       }}
     >
       <video
+        key={src}
         ref={videoRef}
         muted={muted}
         loop
@@ -182,11 +183,28 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
         <div style={{
           position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center',
-          background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: '0.8rem',
-          gap: 8, zIndex: 40,
+          background: 'rgba(0,0,0,0.8)', color: '#fff', fontSize: '0.85rem',
+          gap: 12, zIndex: 40, padding: 20, textAlign: 'center'
         }}>
-          <span style={{ fontSize: '1.5rem' }}>⚠️</span>
-          <span>Video failed to load</span>
+          <span style={{ fontSize: '2rem' }}>⚠️</span>
+          <span style={{ fontWeight: 600 }}>Video failed to load</span>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              const video = videoRef.current;
+              if (video) {
+                setHasError(false);
+                video.load();
+              }
+            }}
+            style={{
+              background: '#818cf8', border: 'none', borderRadius: 12,
+              padding: '10px 20px', color: '#fff', fontWeight: 700,
+              cursor: 'pointer', fontSize: '0.8rem', marginTop: 8
+            }}
+          >
+            Retry
+          </button>
         </div>
       )}
 
