@@ -39,36 +39,44 @@ export default function ProductReelPage() {
       try {
         const { data } = await getProduct(id);
         setProduct(data.product);
-        
-        // Restore scroll position after data is loaded and DOM is rendered
-        let attempts = 0;
-        const MAX_ATTEMPTS = 50;
-
-        const tryRestore = () => {
-          const savedIndex = sessionStorage.getItem(`reel_pos_${id}`);
-          if (!savedIndex) return;
-
-          const index = parseInt(savedIndex);
-          const container = containerRef.current;
-          const target = container?.querySelector(`[data-index="${index}"]`);
-
-          if (target || attempts >= MAX_ATTEMPTS) {
-            if (target) {
-              isRestoring.current = true;
-              target.scrollIntoView({ block: 'start', behavior: 'auto' });
-              setTimeout(() => { isRestoring.current = false; }, 500);
-            }
-          } else {
-            attempts++;
-            requestAnimationFrame(tryRestore);
-          }
-        };
-
-        requestAnimationFrame(tryRestore);
       } catch { toast.error('Product not found'); navigate(-1); }
       finally { setLoading(false); }
     })();
+
+    // Clear saved reel position when leaving so re-entry always starts fresh
+    return () => {
+      sessionStorage.removeItem(`reel_pos_${id}`);
+    };
   }, [id]);
+
+  // ─── Restore scroll AFTER product renders (loading = false + DOM ready) ────
+  const hasRestored = useRef(false);
+  useEffect(() => {
+    if (loading || !product) return;
+    if (hasRestored.current) return;
+    hasRestored.current = true;
+
+    const savedIndex = sessionStorage.getItem(`reel_pos_${id}`);
+    if (!savedIndex || savedIndex === '0') return;
+
+    const index = parseInt(savedIndex);
+    let attempts = 0;
+    const MAX_ATTEMPTS = 60;
+
+    const tryRestore = () => {
+      const container = containerRef.current;
+      const target = container?.querySelector(`[data-index="${index}"]`);
+      if (target) {
+        isRestoring.current = true;
+        target.scrollIntoView({ block: 'start', behavior: 'auto' });
+        setTimeout(() => { isRestoring.current = false; }, 500);
+      } else if (attempts < MAX_ATTEMPTS) {
+        attempts++;
+        requestAnimationFrame(tryRestore);
+      }
+    };
+    requestAnimationFrame(tryRestore);
+  }, [loading, product, id]);
 
   // Track scroll position
   useEffect(() => {
@@ -160,21 +168,14 @@ export default function ProductReelPage() {
       {/* Reels */}
       <div className="reel-container" ref={containerRef} style={{ height:'100dvh', overflowY:'scroll', scrollSnapType:'y mandatory' }}>
         {product.reels.map((reel, i) => (
-          <div key={i} className="reel-item" data-index={i} style={{ position:'relative', height:'100dvh', scrollSnapAlign:'start', overflow:'hidden' }}>
-            <VideoPlayer src={reel.videoUrl} />
+          <div key={`${product._id}-${i}`} className="reel-item" data-index={i} style={{ position:'relative', height:'100dvh', scrollSnapAlign:'start', overflow:'hidden' }}>
+            <VideoPlayer key={`${product._id}-reel-${i}`} src={reel.videoUrl} />
             
             {/* Bottom Gradient Overlay */}
             <div style={{ position:'absolute', bottom:0, left:0, right:0, height:'40%', background:'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', pointerEvents:'none', zIndex:5 }} />
 
             {/* Actions (Right Side) */}
             <div style={{ position:'absolute', right:16, bottom:120, display:'flex', flexDirection:'column', gap:24, zIndex:20, alignItems:'center' }}>
-              
-              <button onClick={() => navigate(-1)} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4, background:'none', border:'none', cursor:'pointer', color:'#fff', padding:0 }}>
-                <div style={{ display:'flex', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>
-                  <Layers size={26} strokeWidth={2.2} />
-                </div>
-                <span style={{ fontSize:'0.7rem', fontWeight:700, textShadow:'0 2px 4px rgba(0,0,0,0.5)' }}>More</span>
-              </button>
 
               <button onClick={() => handleLike(i)} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4, background:'none', border:'none', cursor:'pointer', color:'#fff', padding:0 }}>
                 <div style={{ display:'flex', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} className={likeAnimating === i ? 'animate-icon-tap' : ''}>

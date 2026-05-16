@@ -11,9 +11,11 @@ export default function VideoPlayer({ src, muted = false, style = {} }) {
   };
 
   const videoRef = useRef(null);
-  // ✅ Tracks whether the USER manually paused while in viewport
-  // Reset to false when video leaves viewport — so coming back always auto-plays
+  // Tracks whether the USER manually paused while in viewport
   const manuallyPaused = useRef(false);
+  // Tracks whether this player is currently visible — used to fix the
+  // race where IntersectionObserver fires before video.src is set
+  const isInView = useRef(false);
 
   const [isPaused, setIsPaused] = useState(false);
   const [showControl, setShowControl] = useState(false);
@@ -22,7 +24,7 @@ export default function VideoPlayer({ src, muted = false, style = {} }) {
 
   const playVideo = useCallback(async () => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !video.src) return; // Guard: don't play if no src yet
     try {
       video.muted = muted;
       await video.play();
@@ -39,11 +41,20 @@ export default function VideoPlayer({ src, muted = false, style = {} }) {
     const fullSrc = getFullSrc(src);
     setHasError(false);
     setShowNoAudioNotice(false);
-    manuallyPaused.current = false; // ✅ reset on src change
+    manuallyPaused.current = false;
 
     const onError = () => {
       console.error('[VideoPlayer] Failed to load source:', fullSrc);
       setHasError(true);
+    };
+
+    const onCanPlay = () => {
+      // If the element is already in view when the video becomes ready, play it.
+      // This handles the race where the IntersectionObserver already fired
+      // before video.src was set — so play never happened.
+      if (isInView.current && !manuallyPaused.current) {
+        playVideo();
+      }
     };
 
     const onDataLoaded = () => {
@@ -62,17 +73,24 @@ export default function VideoPlayer({ src, muted = false, style = {} }) {
     };
 
     video.src = fullSrc;
+    video.load(); // Force browser to re-fetch
     video.setAttribute('webkit-playsinline', 'true');
     video.setAttribute('playsinline', 'true');
     video.setAttribute('x5-playsinline', 'true');
     video.addEventListener('error', onError, { once: true });
+    video.addEventListener('canplaythrough', onCanPlay, { once: true });
     video.addEventListener('loadeddata', onDataLoaded);
 
     return () => {
       video.removeEventListener('error', onError);
+      video.removeEventListener('canplaythrough', onCanPlay);
       video.removeEventListener('loadeddata', onDataLoaded);
+      // Fully release the video resource when the component unmounts
+      video.pause();
+      video.removeAttribute('src');
+      video.load();
     };
-  }, [src]);
+  }, [src, playVideo]);
 
   const handleIntersect = useCallback(
     (entry) => {
@@ -80,13 +98,13 @@ export default function VideoPlayer({ src, muted = false, style = {} }) {
       if (!video) return;
 
       if (entry.isIntersecting) {
-        // ✅ Only auto-play if user hasn't manually paused in this viewport session
-        if (!manuallyPaused.current) {
+        isInView.current = true;
+        // Only auto-play if user hasn't manually paused AND video has a src
+        if (!manuallyPaused.current && video.src) {
           playVideo();
         }
       } else {
-        // ✅ Leaving viewport: pause + RESET manual pause flag
-        // So next scroll-back always auto-plays regardless of previous manual pause
+        isInView.current = false;
         video.pause();
         video.currentTime = 0;
         manuallyPaused.current = false;
@@ -105,12 +123,10 @@ export default function VideoPlayer({ src, muted = false, style = {} }) {
     if (!video) return;
 
     if (video.paused) {
-      // ✅ User manually resumed — clear the flag
       manuallyPaused.current = false;
       video.play().catch(() => { });
       setIsPaused(false);
     } else {
-      // ✅ User manually paused — set flag so intersection doesn't override it
       manuallyPaused.current = true;
       video.pause();
       setIsPaused(true);
@@ -139,7 +155,6 @@ export default function VideoPlayer({ src, muted = false, style = {} }) {
         muted={muted}
         loop
         playsInline
-        autoPlay
         preload="auto"
         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         onPlay={() => setIsPaused(false)}
