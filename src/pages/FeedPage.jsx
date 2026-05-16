@@ -78,27 +78,41 @@ export default function FeedPage() {
     }
 
     const index = parseInt(savedIndex);
+
+    // If we don't have enough products loaded yet, wait for more
+    if (index >= products.length) {
+      if (hasMore) setPage(p => p + 1);
+      return;
+    }
+
     const container = containerRef.current;
     if (!container) return;
 
-    const reels = container.querySelectorAll('.reel-wrapper');
+    restorationAttempted.current = true;
+    isRestoring.current = true;
 
-    if (reels[index]) {
-      // ✅ Use direct scrollTop instead of scrollIntoView
-      // scrollIntoView is unreliable on scroll-snap containers
-      restorationAttempted.current = true;
-      isRestoring.current = true;
+    const targetScrollTop = index * window.innerHeight;
 
-      setTimeout(() => {
-        const vh = window.innerHeight;
-        container.scrollTop = index * vh;
+    // Poll until the container's scrollHeight is large enough to reach the target.
+    // This is the only reliable way to handle slow paints / devices.
+    let attempts = 0;
+    const MAX_ATTEMPTS = 30; // max ~600ms
+
+    const tryScroll = () => {
+      const container = containerRef.current;
+      if (!container) { isRestoring.current = false; return; }
+
+      if (container.scrollHeight >= targetScrollTop + window.innerHeight || attempts >= MAX_ATTEMPTS) {
+        container.scrollTop = targetScrollTop;
         setTimeout(() => { isRestoring.current = false; }, 300);
-      }, 100);
+      } else {
+        attempts++;
+        requestAnimationFrame(tryScroll);
+      }
+    };
 
-    } else if (hasMore && index >= products.length) {
-      // Need to paginate to reach saved index — keep loading
-      setPage(p => p + 1);
-    }
+    // Start after a single frame to let React finish painting
+    requestAnimationFrame(tryScroll);
   }, [products.length, hasMore]);
 
   // ─── Render ──────────────────────────────────────────────────────────────────
