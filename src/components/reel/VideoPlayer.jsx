@@ -2,7 +2,7 @@ import { useRef, useState, useCallback, useEffect } from 'react';
 import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
 import { Pause, Play, VolumeX } from 'lucide-react';
 
-export default function VideoPlayer({ src, muted = false, style = {} }) {
+export default function VideoPlayer({ src, muted = false, style = {}, externalRef = null }) {
   const getFullSrc = (url) => {
     if (!url) return '';
     if (url.startsWith('http') || url.startsWith('blob:')) return url;
@@ -10,11 +10,12 @@ export default function VideoPlayer({ src, muted = false, style = {} }) {
     return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
   };
 
-  const videoRef = useRef(null);
+  const internalRef = useRef(null);
+  // Use the external ref if provided (e.g. from ReelCard for imperative iOS audio unlock)
+  const videoRef = externalRef || internalRef;
   // Tracks whether the USER manually paused while in viewport
   const manuallyPaused = useRef(false);
-  // Tracks whether this player is currently visible — used to fix the
-  // race where IntersectionObserver fires before video.src is set
+  // Tracks whether this player is currently visible
   const isInView = useRef(false);
 
   const [isPaused, setIsPaused] = useState(false);

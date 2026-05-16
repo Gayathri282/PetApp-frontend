@@ -52,8 +52,8 @@ export default function FeedPage() {
         if (entry.isIntersecting) {
           const index = parseInt(entry.target.getAttribute('data-index'));
 
-          // Save current position
-          sessionStorage.setItem('feed_pos', index);
+          // Save position with a timestamp for 15-min TTL
+          sessionStorage.setItem('feed_pos', JSON.stringify({ i: index, ts: Date.now() }));
 
           // PWA prompt on 2nd reel
           if (index === 1 && !pwaShown.current && canInstall) {
@@ -81,13 +81,34 @@ export default function FeedPage() {
   useEffect(() => {
     if (products.length === 0 || restorationAttempted.current) return;
 
-    const savedIndex = sessionStorage.getItem('feed_pos');
-    if (savedIndex === null) {
+    const raw = sessionStorage.getItem('feed_pos');
+    if (!raw) {
       restorationAttempted.current = true;
       return;
     }
 
-    const index = parseInt(savedIndex);
+    let index = 0;
+    try {
+      const parsed = JSON.parse(raw);
+      const FIFTEEN_MIN = 15 * 60 * 1000;
+      if (Date.now() - parsed.ts > FIFTEEN_MIN) {
+        // Cache expired — start fresh
+        sessionStorage.removeItem('feed_pos');
+        restorationAttempted.current = true;
+        return;
+      }
+      index = parsed.i;
+    } catch {
+      // Legacy plain number format or corrupt — discard
+      sessionStorage.removeItem('feed_pos');
+      restorationAttempted.current = true;
+      return;
+    }
+
+    if (index === 0) {
+      restorationAttempted.current = true;
+      return;
+    }
 
     // If we don't have enough products loaded yet, wait for more
     if (index >= products.length) {
@@ -99,22 +120,24 @@ export default function FeedPage() {
     if (!container) return;
 
     restorationAttempted.current = true;
+    // Block the observer from overwriting feed_pos immediately
     isRestoring.current = true;
 
-    // Poll until the element is actually in the DOM and ready
+    // Use scrollTop directly — scrollIntoView fights with CSS scroll-snap on
+    // position:fixed containers and gets overridden, snapping back to index 0.
+    const targetScrollTop = index * window.innerHeight;
+
     let attempts = 0;
-    const MAX_ATTEMPTS = 50; 
+    const MAX_ATTEMPTS = 50;
 
     const tryScroll = () => {
-      const container = containerRef.current;
-      const target = container?.querySelector(`[data-index="${index}"]`);
-      
-      if (target || attempts >= MAX_ATTEMPTS) {
-        if (target) {
-          target.scrollIntoView({ block: 'start', behavior: 'auto' });
-        }
-        // Small delay to ensure snap-scroll doesn't fight the manual scroll
-        setTimeout(() => { isRestoring.current = false; }, 400);
+      const c = containerRef.current;
+      if (!c) { isRestoring.current = false; return; }
+
+      if (c.scrollHeight >= targetScrollTop + window.innerHeight || attempts >= MAX_ATTEMPTS) {
+        c.scrollTop = targetScrollTop;
+        // Release the guard after the snap engine has settled
+        setTimeout(() => { isRestoring.current = false; }, 500);
       } else {
         attempts++;
         requestAnimationFrame(tryScroll);

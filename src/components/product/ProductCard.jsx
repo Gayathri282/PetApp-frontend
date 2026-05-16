@@ -1,6 +1,23 @@
 import { useNavigate } from 'react-router-dom';
-import { Play, Tag } from 'lucide-react';
+import { Play, Clock, XCircle } from 'lucide-react';
 import { useRef, useState, useEffect, memo } from 'react';
+
+const STATUS_CONFIG = {
+  pending: {
+    label: 'Under Review',
+    icon: Clock,
+    bg: 'rgba(251,146,60,0.92)',
+    color: '#fff',
+    pulse: true,
+  },
+  rejected: {
+    label: 'Rejected',
+    icon: XCircle,
+    bg: 'rgba(239,68,68,0.92)',
+    color: '#fff',
+    pulse: false,
+  },
+};
 
 const ProductCard = memo(({ product, style = {} }) => {
   const getFullSrc = (url) => {
@@ -14,6 +31,10 @@ const ProductCard = memo(({ product, style = {} }) => {
   const videoRef = useRef(null);
   const [hovering, setHovering] = useState(false);
   const reel = product.primaryReel || product.reels?.[0];
+
+  const status = product.status; // 'pending' | 'approved' | 'rejected'
+  const statusCfg = STATUS_CONFIG[status] || null;
+  const isClickable = status === 'approved';
 
   useEffect(() => {
     const video = videoRef.current;
@@ -29,32 +50,62 @@ const ProductCard = memo(({ product, style = {} }) => {
 
   return (
     <div
-      onClick={() => navigate(`/product/${product._id}`)}
-      onMouseEnter={() => { setHovering(true); videoRef.current?.play().catch(()=>{}); }}
+      onClick={() => isClickable && navigate(`/product/${product._id}`)}
+      onMouseEnter={() => { if (isClickable) { setHovering(true); videoRef.current?.play().catch(()=>{}); } }}
       onMouseLeave={() => { setHovering(false); if(videoRef.current){videoRef.current.pause();videoRef.current.currentTime=0;} }}
       className="glass animate-fade-in"
-      style={{ display:'flex', gap:14, padding:12, borderRadius:16, cursor:'pointer', transition:'all 0.25s', transform: hovering?'translateY(-2px)':'none', boxShadow: hovering?'0 12px 40px rgba(99,102,241,0.15)':'0 2px 8px rgba(0,0,0,0.2)', ...style }}
+      style={{
+        display:'flex', gap:14, padding:12, borderRadius:16,
+        cursor: isClickable ? 'pointer' : 'default',
+        transition:'all 0.25s',
+        transform: hovering ? 'translateY(-2px)' : 'none',
+        boxShadow: hovering ? '0 12px 40px rgba(99,102,241,0.15)' : '0 2px 8px rgba(0,0,0,0.2)',
+        opacity: statusCfg ? 0.85 : 1,
+        ...style,
+      }}
     >
       <div style={{ width:110, minHeight:140, borderRadius:12, overflow:'hidden', position:'relative', background:'#000', flexShrink:0 }}>
         {reel ? (
           <>
-            <video 
-              ref={videoRef} 
+            <video
+              ref={videoRef}
               poster={reel.thumbnail ? getFullSrc(reel.thumbnail) : undefined}
-              muted 
-              loop 
-              playsInline 
-              preload="metadata" 
-              style={{ width:'100%', height:'100%', objectFit:'cover' }} 
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              style={{ width:'100%', height:'100%', objectFit:'cover' }}
             />
             {!hovering && <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,0.3)' }}><Play size={28} fill="#fff" color="#fff" /></div>}
           </>
         ) : (
           <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', background:'linear-gradient(135deg,#1a1625,#252136)' }}><Play size={28} color="#64748b" /></div>
         )}
+
+        {/* Status badge overlay on thumbnail */}
+        {statusCfg && (
+          <div style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0,
+            background: statusCfg.bg,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+            padding: '4px 6px',
+            backdropFilter: 'blur(4px)',
+          }}>
+            <statusCfg.icon size={11} color={statusCfg.color} />
+            <span style={{
+              fontSize: '0.6rem', fontWeight: 700, color: statusCfg.color, letterSpacing: 0.3,
+              animation: statusCfg.pulse ? 'pulse 2s infinite' : 'none',
+            }}>
+              {statusCfg.label}
+            </span>
+          </div>
+        )}
       </div>
+
       <div style={{ flex:1, display:'flex', flexDirection:'column', gap:6, minWidth:0 }}>
-        <h3 style={{ fontSize:'0.95rem', fontWeight:700, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{product.name}</h3>
+        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          <h3 style={{ fontSize:'0.95rem', fontWeight:700, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{product.name}</h3>
+        </div>
         {product.vendor?.name && <p style={{ fontSize:'0.78rem', color:'#818cf8', fontWeight:500 }}>{product.vendor.name}</p>}
         {product.description && <p style={{ fontSize:'0.8rem', color:'#94a3b8', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden', lineHeight:1.4 }}>{product.description}</p>}
         {product.tags?.length > 0 && (

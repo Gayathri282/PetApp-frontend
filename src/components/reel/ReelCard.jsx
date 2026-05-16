@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart, Send, Zap, Layers, Volume2, VolumeX } from 'lucide-react';
 import VideoPlayer from './VideoPlayer';
@@ -7,6 +7,7 @@ import Modal from '../ui/Modal';
 import { toggleLike, submitEnquiry, updateProfile } from '../../api';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
+import { getSoundPreference, setSoundPreference } from '../../hooks/useSoundPreference';
 
 export default function ReelCard({ product, onLikeUpdate }) {
   const navigate = useNavigate();
@@ -19,9 +20,12 @@ export default function ReelCard({ product, onLikeUpdate }) {
   const [showShare, setShowShare] = useState(false);
   const [showEnquiry, setShowEnquiry] = useState(false);
   const [sending, setSending] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  // Default muted=true for iOS autoplay compatibility.
+  // Read from global preference — if user previously unmuted, respect that.
+  const [isMuted, setIsMuted] = useState(!getSoundPreference());
   const [shareAnimating, setShareAnimating] = useState(false);
   const [tempPhone, setTempPhone] = useState('');
+  const videoRef = useRef(null);
 
   const getFullSrc = (url) => {
     if (!url) return '';
@@ -119,7 +123,7 @@ export default function ReelCard({ product, onLikeUpdate }) {
         overflow: 'hidden',
       }}
     >
-      <VideoPlayer src={reel.videoUrl} muted={isMuted} />
+      <VideoPlayer src={reel.videoUrl} muted={isMuted} externalRef={videoRef} />
 
       {/* Bottom gradient overlay */}
       <div
@@ -216,7 +220,22 @@ export default function ReelCard({ product, onLikeUpdate }) {
         <button
           onClick={(e) => {
             e.stopPropagation();
-            setIsMuted(!isMuted);
+            const newMuted = !isMuted;
+            setIsMuted(newMuted);
+            setSoundPreference(!newMuted); // persist: unmuted=true means sound on
+
+            // Imperatively set video.muted — required on iOS where only a direct
+            // user gesture can unlock audio. React prop → useEffect is too async.
+            if (videoRef.current) {
+              videoRef.current.muted = newMuted;
+              // If unmuting and video is paused (stalled due to mute), try resume
+              if (!newMuted && videoRef.current.paused) {
+                videoRef.current.play().catch(() => {
+                  videoRef.current.muted = true;
+                  setIsMuted(true);
+                });
+              }
+            }
           }}
           style={{
             display: 'flex',
@@ -234,7 +253,7 @@ export default function ReelCard({ product, onLikeUpdate }) {
             {isMuted ? <VolumeX size={24} strokeWidth={2.2} /> : <Volume2 size={24} strokeWidth={2.2} />}
           </div>
           <span style={{ fontSize: '0.7rem', fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
-            {isMuted ? 'Mute' : 'Sound'}
+            {isMuted ? 'Unmute' : 'Mute'}
           </span>
         </button>
 
