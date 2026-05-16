@@ -136,31 +136,32 @@ export default function FeedPage() {
     if (!container) return;
 
     restorationAttempted.current = true;
-    // Block the observer from overwriting feed_pos immediately
     isRestoring.current = true;
-
-    // Use scrollTop directly — scrollIntoView fights with CSS scroll-snap on
-    // position:fixed containers and gets overridden, snapping back to index 0.
-    const targetScrollTop = index * window.innerHeight;
-
-    let attempts = 0;
-    const MAX_ATTEMPTS = 50;
 
     const tryScroll = () => {
       const c = containerRef.current;
       if (!c) { isRestoring.current = false; return; }
 
-      if (c.scrollHeight >= targetScrollTop + window.innerHeight || attempts >= MAX_ATTEMPTS) {
-        c.scrollTop = targetScrollTop;
-        // Release the guard after the snap engine has settled
-        setTimeout(() => { isRestoring.current = false; }, 500);
+      const target = c.querySelector(`[data-index="${index}"]`);
+      if (target) {
+        // Temporarily disable scroll snap to allow smooth/accurate positioning
+        const originalSnap = c.style.scrollSnapType;
+        c.style.scrollSnapType = 'none';
+        
+        target.scrollIntoView();
+        
+        // Brief timeout to let the browser settle before re-enabling snap
+        setTimeout(() => {
+          if (c) c.style.scrollSnapType = originalSnap;
+          isRestoring.current = false;
+        }, 100);
       } else {
-        attempts++;
-        requestAnimationFrame(tryScroll);
+        // If target disappeared or didn't mount, release guard
+        isRestoring.current = false;
       }
     };
 
-    requestAnimationFrame(tryScroll);
+    tryScroll();
   }, [products.length, hasMore]);
 
   // ─── Render ──────────────────────────────────────────────────────────────────
