@@ -33,11 +33,12 @@ export default function FeedPage() {
     if (page > 1) loadFeed(page);
   }, [page, loadFeed]);
 
+  const containerRef = useRef(null);
   const isRestoring = useRef(false);
 
   // Handle scroll tracking for 2nd reel & infinite scroll
   useEffect(() => {
-    const container = document.querySelector('.reel-container');
+    const container = containerRef.current;
     if (!container) return;
 
     const observer = new IntersectionObserver((entries) => {
@@ -74,23 +75,29 @@ export default function FeedPage() {
   useEffect(() => {
     if (products.length > 0 && !restorationAttempted.current) {
       const savedIndex = sessionStorage.getItem('feed_pos');
-      if (savedIndex) {
+      if (savedIndex !== null) {
         const index = parseInt(savedIndex);
-        const container = document.querySelector('.reel-container');
+        const container = containerRef.current;
         if (container) {
           const reels = container.querySelectorAll('.reel-wrapper');
           if (reels[index]) {
             restorationAttempted.current = true;
             isRestoring.current = true;
-            reels[index].scrollIntoView();
-            setTimeout(() => { isRestoring.current = false; }, 500);
+            // Add a small delay to ensure DOM is fully painted
+            setTimeout(() => {
+              reels[index].scrollIntoView({ behavior: 'auto', block: 'start' });
+              setTimeout(() => { isRestoring.current = false; }, 500);
+            }, 100);
+          } else if (hasMore && index >= products.length) {
+            // We need to load more pages to reach the saved index
+            setPage(p => p + 1);
           }
         }
       } else {
         restorationAttempted.current = true;
       }
     }
-  }, [products.length]);
+  }, [products.length, hasMore]);
 
   if (loading && products.length === 0) {
     return <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'80vh' }}><Spinner size={48} /></div>;
@@ -107,7 +114,7 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="reel-container" style={{ position:'fixed', inset:0, overflowY:'scroll', scrollSnapType:'y mandatory' }}>
+    <div className="reel-container" ref={containerRef} style={{ position:'fixed', inset:0, overflowY:'scroll', scrollSnapType:'y mandatory' }}>
       {products.map((product, i) => (
         <div key={product._id} className="reel-wrapper" data-index={i} style={{ height:'100dvh', scrollSnapAlign:'start' }}>
           <ReelCard product={product} />

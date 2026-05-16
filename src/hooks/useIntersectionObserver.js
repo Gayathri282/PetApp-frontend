@@ -14,7 +14,7 @@ export function useIntersectionObserver(callback, options = {}) {
 
     observer.observe(element);
     return () => observer.disconnect();
-  }, [callback, options]);
+  }, [callback, JSON.stringify(options)]);
 
   return ref;
 }
