@@ -25,7 +25,7 @@ export default function FeedPage() {
     if (isFetching.current) return;
     isFetching.current = true;
     if (p > 1) setLoading(true);
-    
+
     try {
       const { data } = await getFeed(p, 5); // Reverted to 5 per user request
       setProducts(prev => p === 1 ? data.products : [...prev, ...data.products]);
@@ -64,7 +64,7 @@ export default function FeedPage() {
           // Load more when on 2nd reel of current batch or near end
           const isNearEnd = index >= products.length - 2;
           const isBatchTrigger = (index % 5) === 1;
-          
+
           if ((isBatchTrigger || isNearEnd) && hasMore && !isFetching.current) {
             setPage(p => p + 1);
           }
