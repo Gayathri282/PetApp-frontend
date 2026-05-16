@@ -69,6 +69,9 @@ export const updateEnquiry = (id, status) =>
   api.put(`/api/admin/enquiries/${id}`, { status });
 export const adminDeleteProduct = (id) => api.delete(`/api/admin/products/${id}`);
 
+export const getAllAdminProducts = (status = '', q = '') =>
+  api.get(`/api/admin/products?status=${status}&q=${q}`);
+
 export const getPendingProducts = () => api.get('/api/admin/products/pending');
 export const reviewProduct = (id, status, reason = '') => 
   api.put(`/api/admin/products/${id}/review`, { status, reason });

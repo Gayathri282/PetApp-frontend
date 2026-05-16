@@ -95,9 +95,7 @@ export default function VideoPlayer({ src, muted = false, style = {} }) {
       if (!video) return;
 
       if (entry.isIntersecting) {
-        if (!isPaused) {
-          playVideo();
-        }
+        playVideo();
       } else {
         video.pause();
       }

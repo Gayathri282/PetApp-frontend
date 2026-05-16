@@ -16,8 +16,10 @@ export default function AdminPanel() {
   const [stats, setStats] = useState(null);
   const [apps, setApps] = useState([]);
   const [pendingProducts, setPendingProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [previewVideo, setPreviewVideo] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const getFullSrc = (url) => {
     if (!url) return '';
@@ -37,8 +39,13 @@ export default function AdminPanel() {
         getPendingProducts().then(r => setPendingProducts(r.data.products)).catch(()=>{}).finally(()=>setLoading(false));
       });
     }
+    else if (tab === 'manage') {
+      import('../../api').then(({ getAllAdminProducts }) => {
+        getAllAdminProducts('', searchQuery).then(r => setAllProducts(r.data.products)).catch(()=>{}).finally(()=>setLoading(false));
+      });
+    }
     else setLoading(false);
-  }, [tab]);
+  }, [tab, searchQuery]);
 
   const handleReview = async (id, status) => {
     try {
@@ -49,21 +56,36 @@ export default function AdminPanel() {
   };
 
   const handleProductReview = async (id, status) => {
-    const reason = status === 'rejected' ? prompt('Reason for rejection:') : '';
+    const reason = status === 'rejected' ? prompt('Reason for taking down / rejecting:') : '';
     if (status === 'rejected' && reason === null) return;
     try {
       const { reviewProduct } = await import('../../api');
       await reviewProduct(id, status, reason);
+      
+      // Update local state for both tabs
       setPendingProducts(prev => prev.filter(p => p._id !== id));
+      setAllProducts(prev => prev.map(p => p._id === id ? { ...p, status } : p));
+      
       toast.success(`Product ${status}`);
       if (previewVideo && previewVideo.id === id) setPreviewVideo(null);
-    } catch { toast.error('Failed to review product'); }
+    } catch { toast.error('Failed to update product status'); }
+  };
+
+  const handleDeleteProduct = async (id) => {
+    if (!confirm('Permanently delete this product and all its videos?')) return;
+    try {
+      await adminDeleteProduct(id);
+      setPendingProducts(prev => prev.filter(p => p._id !== id));
+      setAllProducts(prev => prev.filter(p => p._id !== id));
+      toast.success('Product deleted');
+    } catch { toast.error('Failed to delete'); }
   };
 
   const tabs = [
     { key:'stats', icon:BarChart3, label:'Dashboard' },
     { key:'apps', icon:Users, label:'Applications' },
     { key:'moderate', icon:CheckCircle, label:'Moderate' },
+    { key:'manage', icon:Package, label:'Manage All' },
   ];
 
   return (
@@ -135,40 +157,73 @@ export default function AdminPanel() {
             </div>
           )}
 
-          {/* Moderate Products */}
-          {tab === 'moderate' && (
-            <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-              {pendingProducts.length === 0 && <p style={{ textAlign:'center', color:'#64748b', padding:40 }}>No pending products</p>}
-              {pendingProducts.map(p => (
-                <div key={p._id} className="glass" style={{ padding:16, borderRadius:16 }}>
-                  <div style={{ display:'flex', gap:12, marginBottom:16 }}>
-                    <div 
-                      onClick={() => setPreviewVideo({ id: p._id, url: p.reels[0].videoUrl, name: p.name })}
-                      style={{ width:80, height:120, borderRadius:10, overflow:'hidden', background:'#000', flexShrink:0, cursor:'pointer', position:'relative' }}
-                    >
-                      <video src={getFullSrc(p.reels[0].videoUrl)} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-                      <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                        <PlayIcon size={20} color="#fff" fill="#fff" />
-                        {p.reels.length > 1 && <span style={{ position:'absolute', top:4, right:4, background:'rgba(0,0,0,0.6)', color:'#fff', fontSize:'0.6rem', padding:'2px 4px', borderRadius:4, fontWeight:700 }}>+{p.reels.length-1}</span>}
-                      </div>
-                    </div>
-                    <div style={{ flex:1 }}>
-                      <p style={{ fontWeight:700, fontSize:'0.95rem', marginBottom:4 }}>{p.name}</p>
-                      <p style={{ fontSize:'0.8rem', color:'#94a3b8', marginBottom:8 }}>{p.reels.length} video(s) • {p.category}</p>
-                      <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                        <div style={{ width:20, height:20, borderRadius:'50%', overflow:'hidden' }}>
-                          <img src={getFullSrc(p.vendor.avatar)} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-                        </div>
-                        <span style={{ fontSize:'0.75rem', fontWeight:600 }}>{p.vendor.name}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ display:'flex', gap:8 }}>
-                    <button className="btn-primary" style={{ flex:1, padding:'8px 0', fontSize:'0.8rem' }} onClick={() => handleProductReview(p._id,'approved')}><Check size={15} /> Approve</button>
-                    <button className="btn-danger" style={{ flex:1, padding:'8px 0', fontSize:'0.8rem' }} onClick={() => handleProductReview(p._id,'rejected')}><X size={15} /> Reject</button>
-                  </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Manage All Products */}
+          {tab === 'manage' && (
+            <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+              <div style={{ display:'flex', gap:8 }}>
+                <input 
+                  className="input-field" 
+                  placeholder="Search products by name..." 
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  style={{ flex:1 }}
+                />
+              </div>
+
+              <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+                {allProducts.length === 0 && <p style={{ textAlign:'center', color:'#64748b', padding:40 }}>No products found</p>}
+                {allProducts.map(p => (
+                  <div key={p._id} className="glass" style={{ padding:16, borderRadius:16, border: p.status === 'rejected' ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display:'flex', gap:12, marginBottom:16 }}>
+                      <div 
+                        onClick={() => setPreviewVideo({ id: p._id, url: p.reels[0].videoUrl, name: p.name, source: 'all' })}
+                        style={{ width:64, height:96, borderRadius:8, overflow:'hidden', background:'#000', flexShrink:0, cursor:'pointer', position:'relative' }}
+                      >
+                        <video src={getFullSrc(p.reels[0].videoUrl)} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                        <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                          <PlayIcon size={16} color="#fff" fill="#fff" />
+                        </div>
+                      </div>
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
+                          <p style={{ fontWeight:700, fontSize:'0.9rem', textOverflow:'ellipsis', overflow:'hidden', whiteSpace:'nowrap' }}>{p.name}</p>
+                          <span style={{ fontSize:'0.65rem', padding:'2px 8px', borderRadius:99, fontWeight:700, background: p.status==='approved'?'rgba(34,197,94,0.1)':'rgba(239,68,68,0.1)', color: p.status==='approved'?'#22c55e':'#ef4444' }}>{p.status}</span>
+                        </div>
+                        <p style={{ fontSize:'0.75rem', color:'#94a3b8', marginBottom:6 }}>By {p.vendor?.name} • {p.category}</p>
+                        
+                        <div style={{ display:'flex', gap:8 }}>
+                          {p.status === 'approved' ? (
+                            <button 
+                              onClick={() => handleProductReview(p._id, 'rejected')}
+                              style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.2)', color:'#ef4444', borderRadius:8, padding:'4px 10px', fontSize:'0.7rem', fontWeight:600, cursor:'pointer' }}
+                            >
+                              Take Down
+                            </button>
+                          ) : p.status === 'rejected' && (
+                            <button 
+                              onClick={() => handleProductReview(p._id, 'approved')}
+                              style={{ background:'rgba(34,197,94,0.1)', border:'1px solid rgba(34,197,94,0.2)', color:'#22c55e', borderRadius:8, padding:'4px 10px', fontSize:'0.7rem', fontWeight:600, cursor:'pointer' }}
+                            >
+                              Restore
+                            </button>
+                          )}
+                          <button 
+                            onClick={() => handleDeleteProduct(p._id)}
+                            style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', color:'#94a3b8', borderRadius:8, padding:'4px 10px', fontSize:'0.7rem', fontWeight:600, cursor:'pointer' }}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -186,32 +241,36 @@ export default function AdminPanel() {
               <VideoPlayer src={previewVideo.url} />
               
               {/* Navigation */}
-              {pendingProducts.find(x=>x._id===previewVideo.id)?.reels.length > 1 && (
-                <div style={{ position:'absolute', bottom:20, left:0, right:0, display:'flex', justifyContent:'center', gap:20, zIndex:100 }}>
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const p = pendingProducts.find(x=>x._id===previewVideo.id);
-                      const newIdx = ((previewVideo.index || 0) - 1 + p.reels.length) % p.reels.length;
-                      setPreviewVideo({ ...previewVideo, index: newIdx, url: p.reels[newIdx].videoUrl });
-                    }}
-                    style={{ background:'rgba(255,255,255,0.2)', backdropFilter:'blur(10px)', border:'none', borderRadius:99, width:40, height:40, color:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}
-                  >
-                    <ArrowLeft size={20} />
-                  </button>
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const p = pendingProducts.find(x=>x._id===previewVideo.id);
-                      const newIdx = ((previewVideo.index || 0) + 1) % p.reels.length;
-                      setPreviewVideo({ ...previewVideo, index: newIdx, url: p.reels[newIdx].videoUrl });
-                    }}
-                    style={{ background:'rgba(255,255,255,0.2)', backdropFilter:'blur(10px)', border:'none', borderRadius:99, width:40, height:40, color:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}
-                  >
-                    <ArrowLeft style={{ transform:'rotate(180deg)' }} size={20} />
-                  </button>
-                </div>
-              )}
+              {(() => {
+                const currentList = previewVideo.source === 'all' ? allProducts : pendingProducts;
+                const p = currentList.find(x => x._id === previewVideo.id);
+                if (!p || p.reels.length <= 1) return null;
+                
+                return (
+                  <div style={{ position:'absolute', bottom:20, left:0, right:0, display:'flex', justifyContent:'center', gap:20, zIndex:100 }}>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const newIdx = ((previewVideo.index || 0) - 1 + p.reels.length) % p.reels.length;
+                        setPreviewVideo({ ...previewVideo, index: newIdx, url: p.reels[newIdx].videoUrl });
+                      }}
+                      style={{ background:'rgba(255,255,255,0.2)', backdropFilter:'blur(10px)', border:'none', borderRadius:99, width:40, height:40, color:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}
+                    >
+                      <ArrowLeft size={20} />
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const newIdx = ((previewVideo.index || 0) + 1) % p.reels.length;
+                        setPreviewVideo({ ...previewVideo, index: newIdx, url: p.reels[newIdx].videoUrl });
+                      }}
+                      style={{ background:'rgba(255,255,255,0.2)', backdropFilter:'blur(10px)', border:'none', borderRadius:99, width:40, height:40, color:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}
+                    >
+                      <ArrowLeft style={{ transform:'rotate(180deg)' }} size={20} />
+                    </button>
+                  </div>
+                );
+              })()}
             </>
           )}
         </div>

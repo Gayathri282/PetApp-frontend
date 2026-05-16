@@ -33,15 +33,22 @@ export default function FeedPage() {
     if (page > 1) loadFeed(page);
   }, [page, loadFeed]);
 
+  const isRestoring = useRef(false);
+
   // Handle scroll tracking for 2nd reel & infinite scroll
   useEffect(() => {
     const container = document.querySelector('.reel-container');
     if (!container) return;
 
     const observer = new IntersectionObserver((entries) => {
+      if (isRestoring.current) return;
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           const index = parseInt(entry.target.getAttribute('data-index'));
+          
+          // Save scroll position
+          sessionStorage.setItem('feed_pos', index);
+
           // Trigger PWA prompt on 2nd reel (index 1) if installable
           if (index === 1 && !pwaShown.current && canInstall) {
             setShowPWA(true);
@@ -59,7 +66,31 @@ export default function FeedPage() {
     reels.forEach(r => observer.observe(r));
 
     return () => observer.disconnect();
-  }, [products.length, hasMore, loading]);
+  }, [products.length, hasMore, loading, canInstall]);
+
+  const restorationAttempted = useRef(false);
+
+  // Restore scroll position
+  useEffect(() => {
+    if (products.length > 0 && !restorationAttempted.current) {
+      const savedIndex = sessionStorage.getItem('feed_pos');
+      if (savedIndex) {
+        const index = parseInt(savedIndex);
+        const container = document.querySelector('.reel-container');
+        if (container) {
+          const reels = container.querySelectorAll('.reel-wrapper');
+          if (reels[index]) {
+            restorationAttempted.current = true;
+            isRestoring.current = true;
+            reels[index].scrollIntoView();
+            setTimeout(() => { isRestoring.current = false; }, 500);
+          }
+        }
+      } else {
+        restorationAttempted.current = true;
+      }
+    }
+  }, [products.length]);
 
   if (loading && products.length === 0) {
     return <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'80vh' }}><Spinner size={48} /></div>;

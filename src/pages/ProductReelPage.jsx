@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Heart, Send, Zap, Layers, ArrowLeft, ShoppingBag } from 'lucide-react';
 import VideoPlayer from '../components/reel/VideoPlayer';
@@ -31,15 +31,56 @@ export default function ProductReelPage() {
   const [shareAnimating, setShareAnimating] = useState(false);
   const [tempPhone, setTempPhone] = useState('');
 
+  const containerRef = useRef(null);
+  const isRestoring = useRef(false);
+
   useEffect(() => {
     (async () => {
       try {
         const { data } = await getProduct(id);
         setProduct(data.product);
+        
+        // Restore scroll position after data is loaded and DOM is rendered
+        setTimeout(() => {
+          const savedIndex = sessionStorage.getItem(`reel_pos_${id}`);
+          if (savedIndex && containerRef.current) {
+            const index = parseInt(savedIndex);
+            const items = containerRef.current.querySelectorAll('.reel-item');
+            if (items[index]) {
+              isRestoring.current = true;
+              items[index].scrollIntoView();
+              setTimeout(() => { isRestoring.current = false; }, 500);
+            }
+          }
+        }, 100);
       } catch { toast.error('Product not found'); navigate(-1); }
       finally { setLoading(false); }
     })();
   }, [id]);
+
+  // Track scroll position
+  useEffect(() => {
+    if (loading || !product) return;
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (isRestoring.current) return;
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const index = entry.target.getAttribute('data-index');
+          if (index !== null) {
+            sessionStorage.setItem(`reel_pos_${id}`, index);
+          }
+        }
+      });
+    }, { threshold: 0.6 });
+
+    const items = container.querySelectorAll('.reel-item');
+    items.forEach(item => observer.observe(item));
+
+    return () => observer.disconnect();
+  }, [loading, product, id]);
 
   const handleLike = async (reelIndex) => {
     setLikeAnimating(reelIndex);
@@ -105,9 +146,9 @@ export default function ProductReelPage() {
         </button>
       </div>
       {/* Reels */}
-      <div className="reel-container" style={{ height:'100dvh', overflowY:'scroll', scrollSnapType:'y mandatory' }}>
+      <div className="reel-container" ref={containerRef} style={{ height:'100dvh', overflowY:'scroll', scrollSnapType:'y mandatory' }}>
         {product.reels.map((reel, i) => (
-          <div key={i} className="reel-item" style={{ position:'relative', height:'100dvh', scrollSnapAlign:'start', overflow:'hidden' }}>
+          <div key={i} className="reel-item" data-index={i} style={{ position:'relative', height:'100dvh', scrollSnapAlign:'start', overflow:'hidden' }}>
             <VideoPlayer src={reel.videoUrl} />
             
             {/* Bottom Gradient Overlay */}
