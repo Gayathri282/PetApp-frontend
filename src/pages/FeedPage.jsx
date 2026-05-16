@@ -19,28 +19,30 @@ export default function FeedPage() {
   const isFetching = useRef(false);
   const restorationAttempted = useRef(false);
 
-  // Initialize isRestoring to true if we have a valid saved position to restore.
-  // This prevents the IntersectionObserver from overwriting the saved pos with '0'
-  // during the initial render before the restoration effect has had a chance to run.
-  const isRestoring = useRef((() => {
+  // Helper to check if a valid scroll position exists in sessionStorage
+  const getSavedPos = () => {
     try {
       const raw = sessionStorage.getItem('feed_pos');
-      if (!raw) return false;
+      if (!raw) return null;
       const parsed = JSON.parse(raw);
       const FIVE_MIN = 5 * 60 * 1000;
-      return (Date.now() - parsed.ts <= FIVE_MIN) && parsed.i > 0;
-    } catch {
-      return false;
-    }
-  })());
+      if (Date.now() - parsed.ts <= FIVE_MIN && parsed.i > 0) return parsed;
+      return null;
+    } catch { return null; }
+  };
 
-  const loadFeed = useCallback(async (p) => {
+  const initialPos = getSavedPos();
+  const [isRestoringState, setIsRestoringState] = useState(!!initialPos);
+  const isRestoring = useRef(!!initialPos);
+
+  const loadFeed = useCallback(async (p, customLimit) => {
     if (isFetching.current) return;
     isFetching.current = true;
-    if (p > 1) setLoading(true);
+    if (p > 1 || (customLimit && customLimit > 5)) setLoading(true);
 
     try {
-      const { data } = await getFeed(p, 5); // Reverted to 5 per user request
+      const limit = customLimit || 5;
+      const { data } = await getFeed(p, limit);
       setProducts(prev => p === 1 ? data.products : [...prev, ...data.products]);
       setHasMore(data.hasMore);
     } catch (e) {
@@ -51,7 +53,22 @@ export default function FeedPage() {
     }
   }, []);
 
-  useEffect(() => { loadFeed(1); }, [loadFeed]);
+  useEffect(() => { 
+    let initialLimit = 5;
+    try {
+      const raw = sessionStorage.getItem('feed_pos');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const FIVE_MIN = 5 * 60 * 1000;
+        if (Date.now() - parsed.ts <= FIVE_MIN && parsed.i >= 5) {
+          // Fetch exactly enough to reach the saved index in one go
+          initialLimit = parsed.i + 5; 
+        }
+      }
+    } catch {}
+    loadFeed(1, initialLimit); 
+  }, [loadFeed]);
+
   useEffect(() => { if (page > 1) loadFeed(page); }, [page, loadFeed]);
 
   // ─── Scroll tracking + infinite scroll ──────────────────────────────────────
@@ -109,6 +126,7 @@ export default function FeedPage() {
         sessionStorage.removeItem('feed_pos');
         restorationAttempted.current = true;
         isRestoring.current = false;
+        setIsRestoringState(false);
         return;
       }
       index = parsed.i;
@@ -117,12 +135,14 @@ export default function FeedPage() {
       sessionStorage.removeItem('feed_pos');
       restorationAttempted.current = true;
       isRestoring.current = false;
+      setIsRestoringState(false);
       return;
     }
 
     if (index === 0) {
       restorationAttempted.current = true;
       isRestoring.current = false;
+      setIsRestoringState(false);
       return;
     }
 
@@ -154,10 +174,12 @@ export default function FeedPage() {
         setTimeout(() => {
           if (c) c.style.scrollSnapType = originalSnap;
           isRestoring.current = false;
+          setIsRestoringState(false);
         }, 100);
       } else {
         // If target disappeared or didn't mount, release guard
         isRestoring.current = false;
+        setIsRestoringState(false);
       }
     };
 
@@ -187,7 +209,15 @@ export default function FeedPage() {
     <div
       className="reel-container"
       ref={containerRef}
-      style={{ position: 'fixed', inset: 0, overflowY: 'scroll', scrollSnapType: 'y mandatory' }}
+      style={{ 
+        position: 'fixed', 
+        inset: 0, 
+        overflowY: 'scroll', 
+        scrollSnapType: 'y mandatory',
+        // Hide content while restoring to prevent the "flash" of the first video
+        opacity: isRestoringState ? 0 : 1,
+        transition: 'opacity 0.2s ease-in-out'
+      }}
     >
       {products.map((product, i) => (
         <div
