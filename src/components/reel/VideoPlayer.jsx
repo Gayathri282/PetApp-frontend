@@ -22,6 +22,7 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
   const [showControl, setShowControl] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [showNoAudioNotice, setShowNoAudioNotice] = useState(false);
+  const [isNearView, setIsNearView] = useState(false);
 
   const playVideo = useCallback(async () => {
     const video = videoRef.current;
@@ -39,22 +40,26 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
     const video = videoRef.current;
     if (!video || !src) return;
 
-    const fullSrc = getFullSrc(src);
     let retryCount = 0;
-    let loadTimer = null;
+    const maxRetries = 3;
 
     setHasError(false);
     setShowNoAudioNotice(false);
     manuallyPaused.current = false;
 
     const onError = () => {
-      if (retryCount < 1) {
+      if (retryCount < maxRetries) {
         retryCount++;
-        console.warn('[VideoPlayer] Initial load failed, retrying once...', fullSrc);
-        video.src = fullSrc;
-        video.load();
+        const delay = retryCount * 1000;
+        console.warn(`[VideoPlayer] Load failed, retrying in ${delay}ms...`, src);
+        setTimeout(() => {
+          if (video) {
+            setHasError(false);
+            video.load();
+          }
+        }, delay);
       } else {
-        console.error('[VideoPlayer] Failed to load source after retry:', fullSrc);
+        console.error('[VideoPlayer] Permanent load failure after retries:', src);
         setHasError(true);
       }
     };
@@ -80,27 +85,20 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
       }, 1000);
     };
 
-    // DEBOUNCED LOADING: Wait 300ms before actually starting the load.
-    // This prevents "failed to load" errors caused by rapid scrolling hammering the browser.
-    loadTimer = setTimeout(() => {
-      video.src = fullSrc;
-      video.load();
-      video.setAttribute('webkit-playsinline', 'true');
-      video.setAttribute('playsinline', 'true');
-      video.setAttribute('x5-playsinline', 'true');
-      video.addEventListener('error', onError, { once: false }); // Allow multiple errors for retry
-      video.addEventListener('canplaythrough', onCanPlay, { once: true });
-      video.addEventListener('loadeddata', onDataLoaded);
-    }, 300);
+    video.addEventListener('error', onError);
+    video.addEventListener('canplaythrough', onCanPlay, { once: true });
+    video.addEventListener('loadeddata', onDataLoaded);
+
+    // Initial check: if already in view, try playing
+    if (isInView.current && !manuallyPaused.current && video.readyState >= 2) {
+      playVideo();
+    }
 
     return () => {
-      if (loadTimer) clearTimeout(loadTimer);
       video.removeEventListener('error', onError);
       video.removeEventListener('canplaythrough', onCanPlay);
       video.removeEventListener('loadeddata', onDataLoaded);
       video.pause();
-      video.removeAttribute('src');
-      video.load();
     };
   }, [src, playVideo]);
 
@@ -128,6 +126,22 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
   const containerRef = useIntersectionObserver(handleIntersect, {
     threshold: 0.6,
   });
+
+  // Near-view observer to trigger preloading before the video is fully in view
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        setIsNearView(true);
+        observer.disconnect(); // Once near, stay near
+      }
+    }, { rootMargin: '100% 0px' }); // 1 viewport ahead/behind
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [containerRef]);
 
   const togglePlay = (e) => {
     e.stopPropagation();
@@ -165,10 +179,14 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
       <video
         key={src}
         ref={videoRef}
+        src={isNearView ? getFullSrc(src) : ''}
         muted={muted}
         loop
         playsInline
-        preload="auto"
+        webkit-playsinline="true"
+        x5-playsinline="true"
+        crossOrigin="anonymous"
+        preload={isNearView ? "auto" : "none"}
         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         onPlay={() => setIsPaused(false)}
         onPause={() => setIsPaused(true)}
@@ -199,6 +217,9 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
         }}>
           <span style={{ fontSize: '2rem' }}>⚠️</span>
           <span style={{ fontWeight: 600 }}>Video failed to load</span>
+          <div style={{ fontSize: '0.65rem', opacity: 0.5, wordBreak: 'break-all', maxWidth: '100%' }}>
+            {getFullSrc(src)}
+          </div>
           <button 
             onClick={(e) => {
               e.stopPropagation();

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Heart, Send, Zap, Layers, ArrowLeft, ShoppingBag } from 'lucide-react';
 import VideoPlayer from '../components/reel/VideoPlayer';
 import ShareModal from '../components/ui/ShareModal';
@@ -19,6 +19,7 @@ export default function ProductReelPage() {
 
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const toast = useToast();
   const { user, refreshUser } = useAuth();
   const [product, setProduct] = useState(null);
@@ -188,7 +189,10 @@ export default function ProductReelPage() {
       <div style={{ position: 'absolute', top: 24, left: 16, zIndex: 100 }}>
         <button
           onClick={() => {
-            if (window.history.length > 1) {
+            const fromChat = location.state?.from === 'chat';
+            if (fromChat) {
+              navigate(-1);
+            } else if (window.history.length > 1) {
               navigate(-1);
             } else {
               navigate('/feed');

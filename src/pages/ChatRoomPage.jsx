@@ -115,7 +115,7 @@ export default function ChatRoomPage() {
           result.push(
             <span 
               key={`link-${i}`} 
-              onClick={() => navigate(path)}
+              onClick={() => navigate(path, { state: { from: 'chat' } })}
               style={{ color: '#818cf8', textDecoration: 'underline', fontWeight: 600, cursor:'pointer' }}
             >
               {linkText}
