@@ -157,11 +157,6 @@ export default function AdminPanel() {
             </div>
           )}
 
-                </div>
-              ))}
-            </div>
-          )}
-
           {/* Manage All Products */}
           {tab === 'manage' && (
             <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
