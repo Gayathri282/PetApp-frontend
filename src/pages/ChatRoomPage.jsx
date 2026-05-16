@@ -95,10 +95,23 @@ export default function ChatRoomPage() {
       if (i + 1 < parts.length) {
         const linkText = parts[i+1];
         const linkUrl = parts[i+2];
-        const isInternal = linkUrl.startsWith(window.location.origin) || linkUrl.startsWith('/');
+        const isInternal = linkUrl.startsWith(window.location.origin) || 
+                          linkUrl.startsWith('/') || 
+                          linkUrl.includes('/product/') || 
+                          linkUrl.includes('/feed');
         
         if (isInternal) {
-          const path = linkUrl.replace(window.location.origin, '');
+          // Extract path if it's a full URL
+          let path = linkUrl;
+          if (linkUrl.startsWith('http')) {
+            try {
+              const url = new URL(linkUrl);
+              path = url.pathname + url.search;
+            } catch {
+              path = linkUrl;
+            }
+          }
+          
           result.push(
             <span 
               key={`link-${i}`} 

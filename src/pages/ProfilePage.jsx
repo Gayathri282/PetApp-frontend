@@ -236,6 +236,7 @@ function EditProductModal({ open, product, onClose, onSuccess }) {
   const [form, setForm] = useState({ name: '', description: '', category: '', price: '', isOnSale: true, deliveryChargesAdditional: false });
   const [tags, setTags] = useState([]);
   const [newVideos, setNewVideos] = useState([]);
+  const [replaceVideos, setReplaceVideos] = useState(false);
   const [loading, setLoading] = useState(false);
   const TAG_OPTIONS = ['dog','cat','bird','fish','reptile','rabbit','accessories','food','toys'];
 
@@ -251,6 +252,7 @@ function EditProductModal({ open, product, onClose, onSuccess }) {
       });
       setTags(product.tags || []);
       setNewVideos([]);
+      setReplaceVideos(false);
     }
   }, [product]);
 
@@ -267,6 +269,7 @@ function EditProductModal({ open, product, onClose, onSuccess }) {
         toast.info(`Uploading ${newVideos.length} video(s)...`);
         const videoUrls = await Promise.all(newVideos.map(v => uploadToCloudinary(v)));
         fd.append('videoUrls', JSON.stringify(videoUrls));
+        fd.append('replaceVideos', replaceVideos);
       }
 
       const { data } = await updateProduct(product._id, fd);
@@ -314,7 +317,25 @@ function EditProductModal({ open, product, onClose, onSuccess }) {
         {/* Add replacement videos */}
         <div>
           <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#94a3b8', marginBottom: 6, display: 'block' }}>Add / Replace Videos</label>
-          <p style={{ fontSize: '0.72rem', color: '#64748b', marginBottom: 8 }}>Existing videos: {product?.reels?.length || 0}. New uploads will be added alongside them.</p>
+          <p style={{ fontSize: '0.72rem', color: '#64748b', marginBottom: 12 }}>Existing videos: {product?.reels?.length || 0}</p>
+          
+          <div style={{ background: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 12, marginBottom: 14, border: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <span style={{ fontSize: '0.8rem', fontWeight: 600, display: 'block' }}>Keep previous videos?</span>
+                <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>If off, new videos will replace existing ones</span>
+              </div>
+              <label className="toggle-switch">
+                <input 
+                  type="checkbox" 
+                  checked={!replaceVideos} 
+                  onChange={e => setReplaceVideos(!e.target.checked)} 
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
           <FileDropZone accept="video/*" multiple onChange={files => setNewVideos(prev => [...prev, ...files].slice(0, 5))} label="Drop replacement videos here" />
           {newVideos.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8 }}>
@@ -345,6 +366,7 @@ function EditReelModal({ open, product, onClose, onSuccess }) {
   const [desc, setDesc] = useState('');
   const [tags, setTags] = useState([]);
   const [newVideo, setNewVideo] = useState(null);
+  const [replaceVideos, setReplaceVideos] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -353,6 +375,7 @@ function EditReelModal({ open, product, onClose, onSuccess }) {
       setDesc(product.description || '');
       setTags(product.tags || []);
       setNewVideo(null);
+      setReplaceVideos(false);
     }
   }, [product]);
 
@@ -369,6 +392,7 @@ function EditReelModal({ open, product, onClose, onSuccess }) {
         toast.info('Uploading new video...');
         const videoUrl = await uploadToCloudinary(newVideo);
         fd.append('videoUrls', JSON.stringify([videoUrl]));
+        fd.append('replaceVideos', replaceVideos);
       }
 
       const { data } = await updateProduct(product._id, fd);
@@ -399,7 +423,25 @@ function EditReelModal({ open, product, onClose, onSuccess }) {
         {/* Replacement video */}
         <div>
           <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#94a3b8', marginBottom: 6, display: 'block' }}>Replace Video (optional)</label>
-          <FileDropZone accept="video/*" onChange={files => setNewVideo(files[0])} label="Drop a new video to replace the existing one" />
+          
+          <div style={{ background: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 12, marginBottom: 14, border: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <span style={{ fontSize: '0.8rem', fontWeight: 600, display: 'block' }}>Keep previous video?</span>
+                <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>If off, new video will replace existing one</span>
+              </div>
+              <label className="toggle-switch">
+                <input 
+                  type="checkbox" 
+                  checked={!replaceVideos} 
+                  onChange={e => setReplaceVideos(!e.target.checked)} 
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <FileDropZone accept="video/*" onChange={files => setNewVideo(files[0])} label="Drop a new video here" />
           {newVideo && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(34,197,94,0.08)', padding: '6px 12px', borderRadius: 8, marginTop: 6, fontSize: '0.75rem' }}>
               <span style={{ color: '#22c55e' }}>✓ {newVideo.name}</span>

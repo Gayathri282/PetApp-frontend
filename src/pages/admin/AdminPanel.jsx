@@ -198,12 +198,16 @@ export default function AdminPanel() {
                       </div>
                     </div>
                     <div style={{ flex:1, minWidth:0 }}>
-                      <p style={{ fontWeight:700, fontSize:'0.9rem', marginBottom:4 }}>{p.name}</p>
-                      <p style={{ fontSize:'0.75rem', color:'#94a3b8', marginBottom:12 }}>By {p.vendor?.name} • {p.category}</p>
-                      <div style={{ display:'flex', gap:8 }}>
-                        <button onClick={() => handleProductReview(p._id, 'approved')} style={{ background:'rgba(34,197,94,0.1)', border:'1px solid rgba(34,197,94,0.2)', color:'#22c55e', borderRadius:8, padding:'4px 12px', fontSize:'0.7rem', fontWeight:600, cursor:'pointer' }}>Approve</button>
-                        <button onClick={() => openTakedownModal(p._id, p.name)} style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.2)', color:'#ef4444', borderRadius:8, padding:'4px 12px', fontSize:'0.7rem', fontWeight:600, cursor:'pointer' }}>Reject</button>
-                        <button onClick={() => handleDeleteProduct(p._id, p.name)} style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', color:'#94a3b8', borderRadius:8, padding:'4px 12px', fontSize:'0.7rem', fontWeight:600, cursor:'pointer' }}>Delete</button>
+                      <p style={{ fontWeight:700, fontSize:'0.9rem', marginBottom:2 }}>{p.name}</p>
+                      <p style={{ fontSize:'0.75rem', color:'#94a3b8', marginBottom:4 }}>By {p.vendor?.name} • {p.category}</p>
+                      <p style={{ fontSize:'0.8rem', fontWeight:700, color:'#818cf8', marginBottom:6 }}>₹{p.price}</p>
+                      {p.description && (
+                        <p style={{ fontSize:'0.7rem', color:'#64748b', marginBottom:10, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>{p.description}</p>
+                      )}
+                      <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                        <button onClick={() => handleProductReview(p._id, 'approved')} style={{ background:'rgba(34,197,94,0.1)', border:'1px solid rgba(34,197,94,0.2)', color:'#22c55e', borderRadius:8, padding:'6px 12px', fontSize:'0.7rem', fontWeight:600, cursor:'pointer' }}>Approve</button>
+                        <button onClick={() => openTakedownModal(p._id, p.name)} style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.2)', color:'#ef4444', borderRadius:8, padding:'6px 12px', fontSize:'0.7rem', fontWeight:600, cursor:'pointer' }}>Reject</button>
+                        <button onClick={() => handleDeleteProduct(p._id, p.name)} style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', color:'#94a3b8', borderRadius:8, padding:'6px 12px', fontSize:'0.7rem', fontWeight:600, cursor:'pointer' }}>Delete</button>
                       </div>
                     </div>
                   </div>
@@ -319,53 +323,72 @@ export default function AdminPanel() {
         onClose={() => setPreviewVideo(null)} 
         title={previewVideo ? `${previewVideo.name} (${(previewVideo.index || 0) + 1}/${pendingProducts.find(x=>x._id===previewVideo.id)?.reels.length})` : 'Preview'}
       >
-        <div style={{ position:'relative', width:'100%', aspectRatio:'9/16', maxHeight:'65vh', borderRadius:16, overflow:'hidden', background:'#000' }}>
+        <div style={{ position:'relative', width:'100%', aspectRatio:'9/16', maxHeight:'55vh', borderRadius:16, overflow:'hidden', background:'#000' }}>
           {previewVideo && (
             <>
               <VideoPlayer src={previewVideo.url} />
-              
-              {/* Navigation */}
+              {/* Navigation overlay remains same */}
               {(() => {
                 const currentList = previewVideo.source === 'all' ? allProducts : pendingProducts;
                 const p = currentList.find(x => x._id === previewVideo.id);
                 if (!p || p.reels.length <= 1) return null;
-                
                 return (
                   <div style={{ position:'absolute', bottom:20, left:0, right:0, display:'flex', justifyContent:'center', gap:20, zIndex:100 }}>
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const newIdx = ((previewVideo.index || 0) - 1 + p.reels.length) % p.reels.length;
-                        setPreviewVideo({ ...previewVideo, index: newIdx, url: p.reels[newIdx].videoUrl });
-                      }}
-                      style={{ background:'rgba(255,255,255,0.2)', backdropFilter:'blur(10px)', border:'none', borderRadius:99, width:40, height:40, color:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}
-                    >
-                      <ArrowLeft size={20} />
-                    </button>
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const newIdx = ((previewVideo.index || 0) + 1) % p.reels.length;
-                        setPreviewVideo({ ...previewVideo, index: newIdx, url: p.reels[newIdx].videoUrl });
-                      }}
-                      style={{ background:'rgba(255,255,255,0.2)', backdropFilter:'blur(10px)', border:'none', borderRadius:99, width:40, height:40, color:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}
-                    >
-                      <ArrowLeft style={{ transform:'rotate(180deg)' }} size={20} />
-                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); const newIdx = ((previewVideo.index || 0) - 1 + p.reels.length) % p.reels.length; setPreviewVideo({ ...previewVideo, index: newIdx, url: p.reels[newIdx].videoUrl }); }} style={{ background:'rgba(255,255,255,0.2)', backdropFilter:'blur(10px)', border:'none', borderRadius:99, width:40, height:40, color:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><ArrowLeft size={20} /></button>
+                    <button onClick={(e) => { e.stopPropagation(); const newIdx = ((previewVideo.index || 0) + 1) % p.reels.length; setPreviewVideo({ ...previewVideo, index: newIdx, url: p.reels[newIdx].videoUrl }); }} style={{ background:'rgba(255,255,255,0.2)', backdropFilter:'blur(10px)', border:'none', borderRadius:99, width:40, height:40, color:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><ArrowLeft style={{ transform:'rotate(180deg)' }} size={20} /></button>
                   </div>
                 );
               })()}
             </>
           )}
         </div>
-        <div style={{ display:'flex', gap:10, marginTop:20 }}>
-          <button className="btn-primary" style={{ flex:1, padding:'10px 0' }} onClick={() => handleProductReview(previewVideo.id, 'approved')}>Approve</button>
-          <button className="btn-danger" style={{ flex:1, padding:'10px 0' }} onClick={() => openTakedownModal(previewVideo.id, previewVideo.name)}>Take Down</button>
+
+        {/* Product Details Section */}
+        {previewVideo && (() => {
+          const currentList = previewVideo.source === 'all' ? allProducts : pendingProducts;
+          const p = currentList.find(x => x._id === previewVideo.id);
+          if (!p) return null;
+          return (
+            <div style={{ marginTop: 16, maxHeight: '25vh', overflowY: 'auto', padding: '0 4px' }} className="custom-scrollbar">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                <div>
+                  <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#fff', marginBottom: 4 }}>{p.name}</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#94a3b8', fontSize: '0.8rem' }}>
+                    <Package size={14} />
+                    <span>{p.category} • By {p.vendor?.name}</span>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <p style={{ fontSize: '1.15rem', fontWeight: 800, color: '#818cf8', marginBottom: 2 }}>₹{p.price}</p>
+                  {p.isOnSale && <span style={{ fontSize: '0.6rem', padding: '3px 8px', borderRadius: 6, background: 'rgba(34,197,94,0.15)', color: '#22c55e', fontWeight: 700, letterSpacing: '0.05em' }}>ON SALE</span>}
+                </div>
+              </div>
+
+              {p.description && (
+                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)', marginBottom: 16 }}>
+                  <p style={{ fontSize: '0.85rem', color: '#cbd5e1', lineHeight: 1.6 }}>{p.description}</p>
+                </div>
+              )}
+
+              {p.tags && p.tags.length > 0 && (
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 4 }}>
+                  {p.tags.map(t => (
+                    <span key={t} style={{ fontSize: '0.65rem', padding: '4px 10px', borderRadius: 8, background: 'rgba(129,140,248,0.08)', color: '#a5b4fc', border: '1px solid rgba(129,140,246,0.1)', fontWeight: 600 }}>#{t}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+        <div style={{ display:'flex', gap:8, marginTop:20, flexWrap: 'wrap' }}>
+          <button className="btn-primary" style={{ flex:1, padding:'12px 0', minWidth: 100 }} onClick={() => handleProductReview(previewVideo.id, 'approved')}>Approve</button>
+          <button className="btn-danger" style={{ flex:1, padding:'12px 0', minWidth: 100 }} onClick={() => openTakedownModal(previewVideo.id, previewVideo.name)}>Reject</button>
           <button 
             onClick={() => handleDeleteProduct(previewVideo.id, previewVideo.name)}
-            style={{ flex:0.6, background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', color:'#94a3b8', borderRadius:12, fontSize:'0.8rem', fontWeight:600, cursor:'pointer' }}
+            style={{ flex: '0 0 auto', padding: '0 16px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', color:'#ef4444', borderRadius:12, fontSize:'0.8rem', fontWeight:600, cursor:'pointer' }}
           >
-            Delete
+            <Trash2 size={16} />
           </button>
         </div>
       </Modal>

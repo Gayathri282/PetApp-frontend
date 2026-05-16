@@ -41,18 +41,30 @@ export default function ProductReelPage() {
         setProduct(data.product);
         
         // Restore scroll position after data is loaded and DOM is rendered
-        setTimeout(() => {
+        let attempts = 0;
+        const MAX_ATTEMPTS = 50;
+
+        const tryRestore = () => {
           const savedIndex = sessionStorage.getItem(`reel_pos_${id}`);
-          if (savedIndex && containerRef.current) {
-            const index = parseInt(savedIndex);
-            const items = containerRef.current.querySelectorAll('.reel-item');
-            if (items[index]) {
+          if (!savedIndex) return;
+
+          const index = parseInt(savedIndex);
+          const container = containerRef.current;
+          const target = container?.querySelector(`[data-index="${index}"]`);
+
+          if (target || attempts >= MAX_ATTEMPTS) {
+            if (target) {
               isRestoring.current = true;
-              items[index].scrollIntoView();
+              target.scrollIntoView({ block: 'start', behavior: 'auto' });
               setTimeout(() => { isRestoring.current = false; }, 500);
             }
+          } else {
+            attempts++;
+            requestAnimationFrame(tryRestore);
           }
-        }, 100);
+        };
+
+        requestAnimationFrame(tryRestore);
       } catch { toast.error('Product not found'); navigate(-1); }
       finally { setLoading(false); }
     })();
@@ -134,7 +146,7 @@ export default function ProductReelPage() {
       <div style={{ position:'absolute', top:24, left:16, zIndex:100 }}>
         <button 
           onClick={() => {
-            if (window.history.state && window.history.state.idx > 0) {
+            if (window.history.length > 1) {
               navigate(-1);
             } else {
               navigate('/feed');

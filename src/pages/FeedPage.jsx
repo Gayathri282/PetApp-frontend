@@ -19,15 +19,22 @@ export default function FeedPage() {
   const isRestoring = useRef(false);
   const restorationAttempted = useRef(false);
 
+  const isFetching = useRef(false);
+
   const loadFeed = useCallback(async (p) => {
+    if (isFetching.current) return;
+    isFetching.current = true;
+    if (p > 1) setLoading(true);
+    
     try {
-      const { data } = await getFeed(p, 5);
+      const { data } = await getFeed(p, 5); // Reverted to 5 per user request
       setProducts(prev => p === 1 ? data.products : [...prev, ...data.products]);
       setHasMore(data.hasMore);
     } catch (e) {
       console.error('Feed error:', e);
     } finally {
       setLoading(false);
+      isFetching.current = false;
     }
   }, []);
 
@@ -54,8 +61,11 @@ export default function FeedPage() {
             pwaShown.current = true;
           }
 
-          // Load more when near end
-          if (index >= products.length - 2 && hasMore && !loading) {
+          // Load more when on 2nd reel of current batch or near end
+          const isNearEnd = index >= products.length - 2;
+          const isBatchTrigger = (index % 5) === 1;
+          
+          if ((isBatchTrigger || isNearEnd) && hasMore && !isFetching.current) {
             setPage(p => p + 1);
           }
         }
@@ -81,7 +91,7 @@ export default function FeedPage() {
 
     // If we don't have enough products loaded yet, wait for more
     if (index >= products.length) {
-      if (hasMore) setPage(p => p + 1);
+      if (hasMore && !isFetching.current) setPage(p => p + 1);
       return;
     }
 
@@ -91,27 +101,26 @@ export default function FeedPage() {
     restorationAttempted.current = true;
     isRestoring.current = true;
 
-    const targetScrollTop = index * window.innerHeight;
-
-    // Poll until the container's scrollHeight is large enough to reach the target.
-    // This is the only reliable way to handle slow paints / devices.
+    // Poll until the element is actually in the DOM and ready
     let attempts = 0;
-    const MAX_ATTEMPTS = 30; // max ~600ms
+    const MAX_ATTEMPTS = 50; 
 
     const tryScroll = () => {
       const container = containerRef.current;
-      if (!container) { isRestoring.current = false; return; }
-
-      if (container.scrollHeight >= targetScrollTop + window.innerHeight || attempts >= MAX_ATTEMPTS) {
-        container.scrollTop = targetScrollTop;
-        setTimeout(() => { isRestoring.current = false; }, 300);
+      const target = container?.querySelector(`[data-index="${index}"]`);
+      
+      if (target || attempts >= MAX_ATTEMPTS) {
+        if (target) {
+          target.scrollIntoView({ block: 'start', behavior: 'auto' });
+        }
+        // Small delay to ensure snap-scroll doesn't fight the manual scroll
+        setTimeout(() => { isRestoring.current = false; }, 400);
       } else {
         attempts++;
         requestAnimationFrame(tryScroll);
       }
     };
 
-    // Start after a single frame to let React finish painting
     requestAnimationFrame(tryScroll);
   }, [products.length, hasMore]);
 
