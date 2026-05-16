@@ -22,17 +22,14 @@ function ProtectedRoute({ children }) {
 }
 
 export default function App() {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => !localStorage.getItem('app_loaded'));
 
   useEffect(() => {
-    // Skip splash if already loaded in this session
-    const loaded = sessionStorage.getItem('app_loaded');
-    if (loaded) {
-      setIsLoading(false);
-    } else {
+    // Ensure the flag is set even if we skipped the timer
+    if (!localStorage.getItem('app_loaded')) {
       setTimeout(() => {
         setIsLoading(false);
-        sessionStorage.setItem('app_loaded', 'true');
+        localStorage.setItem('app_loaded', 'true');
       }, 1200);
     }
 

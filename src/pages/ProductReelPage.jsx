@@ -180,7 +180,15 @@ export default function ProductReelPage() {
     }
   };
 
-  if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh' }}><Spinner size={48} /></div>;
+  if (loading) {
+    const isFromChat = location.state?.from === 'chat';
+    // If we're already in the app (especially from chat), don't show the full-page spinner
+    // Just show a clean dark background while the product data loads
+    if (isFromChat || window.history.length > 1) {
+      return <div style={{ background: '#000', height: '100dvh' }} />;
+    }
+    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh' }}><Spinner size={48} /></div>;
+  }
   if (!product) return null;
 
   return (

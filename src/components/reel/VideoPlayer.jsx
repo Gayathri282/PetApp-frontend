@@ -65,6 +65,7 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
     };
 
     const onCanPlay = () => {
+      setHasError(false); // Clear any previous errors if we can now play
       if (isInView.current && !manuallyPaused.current) {
         playVideo();
       }
@@ -107,13 +108,15 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
       const video = videoRef.current;
       if (!video) return;
 
-      if (entry.isIntersecting) {
+      // Play when at least 60% visible
+      if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
         isInView.current = true;
-        // Only auto-play if user hasn't manually paused AND video has a src
         if (!manuallyPaused.current && video.src) {
           playVideo();
         }
-      } else {
+      } 
+      // Pause only when visibility drops below 10% (Hysteresis)
+      else if (entry.intersectionRatio < 0.1) {
         isInView.current = false;
         video.pause();
         video.currentTime = 0;
@@ -124,7 +127,7 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
   );
 
   const containerRef = useIntersectionObserver(handleIntersect, {
-    threshold: 0.6,
+    threshold: [0.1, 0.6],
   });
 
   // Near-view observer to trigger preloading before the video is fully in view
