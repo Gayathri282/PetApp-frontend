@@ -40,19 +40,26 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
     if (!video || !src) return;
 
     const fullSrc = getFullSrc(src);
+    let retryCount = 0;
+    let loadTimer = null;
+
     setHasError(false);
     setShowNoAudioNotice(false);
     manuallyPaused.current = false;
 
     const onError = () => {
-      console.error('[VideoPlayer] Failed to load source:', fullSrc);
-      setHasError(true);
+      if (retryCount < 1) {
+        retryCount++;
+        console.warn('[VideoPlayer] Initial load failed, retrying once...', fullSrc);
+        video.src = fullSrc;
+        video.load();
+      } else {
+        console.error('[VideoPlayer] Failed to load source after retry:', fullSrc);
+        setHasError(true);
+      }
     };
 
     const onCanPlay = () => {
-      // If the element is already in view when the video becomes ready, play it.
-      // This handles the race where the IntersectionObserver already fired
-      // before video.src was set — so play never happened.
       if (isInView.current && !manuallyPaused.current) {
         playVideo();
       }
@@ -73,20 +80,24 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
       }, 1000);
     };
 
-    video.src = fullSrc;
-    video.load(); // Force browser to re-fetch
-    video.setAttribute('webkit-playsinline', 'true');
-    video.setAttribute('playsinline', 'true');
-    video.setAttribute('x5-playsinline', 'true');
-    video.addEventListener('error', onError, { once: true });
-    video.addEventListener('canplaythrough', onCanPlay, { once: true });
-    video.addEventListener('loadeddata', onDataLoaded);
+    // DEBOUNCED LOADING: Wait 300ms before actually starting the load.
+    // This prevents "failed to load" errors caused by rapid scrolling hammering the browser.
+    loadTimer = setTimeout(() => {
+      video.src = fullSrc;
+      video.load();
+      video.setAttribute('webkit-playsinline', 'true');
+      video.setAttribute('playsinline', 'true');
+      video.setAttribute('x5-playsinline', 'true');
+      video.addEventListener('error', onError, { once: false }); // Allow multiple errors for retry
+      video.addEventListener('canplaythrough', onCanPlay, { once: true });
+      video.addEventListener('loadeddata', onDataLoaded);
+    }, 300);
 
     return () => {
+      if (loadTimer) clearTimeout(loadTimer);
       video.removeEventListener('error', onError);
       video.removeEventListener('canplaythrough', onCanPlay);
       video.removeEventListener('loadeddata', onDataLoaded);
-      // Fully release the video resource when the component unmounts
       video.pause();
       video.removeAttribute('src');
       video.load();
