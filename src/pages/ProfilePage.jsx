@@ -7,7 +7,7 @@ import ProductCard from '../components/product/ProductCard';
 import ShareModal from '../components/ui/ShareModal';
 import Modal from '../components/ui/Modal';
 import Spinner from '../components/ui/Spinner';
-import { getVendorProducts, getApplicationStatus, createProduct, uploadSingleReel, deleteProduct, updateProfile, uploadToCloudinary, updateProduct } from '../api';
+import { getVendorProducts, getApplicationStatus, createProduct, uploadSingleReel, deleteProduct, updateProfile, uploadToCloudinary, updateProduct, deleteMyAccount } from '../api';
 
 const getFullSrc = (url) => {
   if (!url) return '';
@@ -33,6 +33,9 @@ export default function ProfilePage() {
   const [showEditProduct, setShowEditProduct] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   useEffect(() => {
     if (isVendor || isAdmin) {
@@ -52,6 +55,20 @@ export default function ProfilePage() {
   const handleDelete = async (id) => {
     if (!confirm('Delete this item?')) return;
     try { await deleteProduct(id); setProducts(prev => prev.filter(p => p._id !== id)); toast.success('Deleted'); } catch { toast.error('Failed to delete'); }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'DELETE') return;
+    setDeletingAccount(true);
+    try {
+      await deleteMyAccount();
+      localStorage.removeItem('jwt');
+      await logout();
+      navigate('/login');
+    } catch {
+      toast.error('Failed to delete account. Please try again.');
+      setDeletingAccount(false);
+    }
   };
 
   const handleLogout = async () => { await logout(); navigate('/login'); };
@@ -160,21 +177,65 @@ export default function ProfilePage() {
         </>
       )}
 
+      {/* Danger Zone — Delete Account */}
+      {(isVendor || user.role === 'user') && (
+        <div style={{ marginTop: 32, padding: '16px 20px', borderRadius: 16, border: '1px solid rgba(239,68,68,0.25)', background: 'rgba(239,68,68,0.04)' }}>
+          <p style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ef4444', marginBottom: 4 }}>Danger Zone</p>
+          <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: 12 }}>Permanently delete your account and all your reels/products. This cannot be undone.</p>
+          <button
+            onClick={() => { setDeleteConfirmText(''); setShowDeleteAccount(true); }}
+            style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', borderRadius: 10, padding: '8px 18px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}
+          >
+            Delete My Account
+          </button>
+        </div>
+      )}
+
       <ShareModal isOpen={showShare} onClose={() => setShowShare(false)} url={`${window.location.origin}/profile`} title="Share Profile" />
       <EditProfileModal open={showEditProfile} onClose={() => setShowEditProfile(false)} user={user} />
       <UploadReelModal open={showUploadReel} onClose={() => setShowUploadReel(false)} user={user} onSuccess={p => { setProducts(prev => [p,...prev]); setShowUploadReel(false); }} />
       <UploadProductModal open={showUploadProduct} onClose={() => setShowUploadProduct(false)} user={user} onSuccess={p => { setProducts(prev => [p,...prev]); setShowUploadProduct(false); }} />
       <EditProductModal open={showEditProduct} product={editingProduct} onClose={() => { setShowEditProduct(false); setEditingProduct(null); }} onSuccess={p => { setProducts(prev => prev.map(x => x._id === p._id ? p : x)); setShowEditProduct(false); }} />
       <EditReelModal open={showEditReel} product={editingProduct} onClose={() => { setShowEditReel(false); setEditingProduct(null); }} onSuccess={p => { setProducts(prev => prev.map(x => x._id === p._id ? p : x)); setShowEditReel(false); }} />
+
+      {/* Delete Account Confirmation Modal */}
+      <Modal isOpen={showDeleteAccount} onClose={() => setShowDeleteAccount(false)} title="Delete Account">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 4 }}>
+          <div style={{ padding: '12px 16px', background: 'rgba(239,68,68,0.08)', borderRadius: 12, border: '1px solid rgba(239,68,68,0.2)' }}>
+            <p style={{ fontSize: '0.85rem', color: '#fca5a5', lineHeight: 1.6 }}>
+              ⚠️ This will <strong>permanently delete</strong> your account, all your reels, products, and messages. <strong>This cannot be undone.</strong>
+            </p>
+          </div>
+          <div>
+            <label style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: 8, display: 'block' }}>Type <strong style={{ color: '#ef4444' }}>DELETE</strong> to confirm</label>
+            <input
+              className="input-field"
+              placeholder="Type DELETE here"
+              value={deleteConfirmText}
+              onChange={e => setDeleteConfirmText(e.target.value)}
+              style={{ borderColor: deleteConfirmText === 'DELETE' ? 'rgba(239,68,68,0.5)' : undefined }}
+            />
+          </div>
+          <button
+            onClick={handleDeleteAccount}
+            disabled={deleteConfirmText !== 'DELETE' || deletingAccount}
+            style={{ background: deleteConfirmText === 'DELETE' ? 'rgba(239,68,68,0.8)' : 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', color: '#fff', borderRadius: 12, padding: '12px 0', fontWeight: 700, cursor: deleteConfirmText === 'DELETE' ? 'pointer' : 'not-allowed', fontSize: '0.9rem', transition: 'all 0.2s' }}
+          >
+            {deletingAccount ? 'Deleting...' : 'Permanently Delete My Account'}
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }
+
 
 /* ── Edit Product Modal ───────────────────────── */
 function EditProductModal({ open, product, onClose, onSuccess }) {
   const toast = useToast();
   const [form, setForm] = useState({ name: '', description: '', category: '', price: '', isOnSale: true, deliveryChargesAdditional: false });
   const [tags, setTags] = useState([]);
+  const [newVideos, setNewVideos] = useState([]);
   const [loading, setLoading] = useState(false);
   const TAG_OPTIONS = ['dog','cat','bird','fish','reptile','rabbit','accessories','food','toys'];
 
@@ -189,19 +250,27 @@ function EditProductModal({ open, product, onClose, onSuccess }) {
         deliveryChargesAdditional: product.deliveryChargesAdditional ?? false
       });
       setTags(product.tags || []);
+      setNewVideos([]);
     }
   }, [product]);
 
   const handleSubmit = async () => {
     if (!form.name) { toast.error('Name is required'); return; }
-    const fd = new FormData();
-    Object.keys(form).forEach(key => fd.append(key, form[key]));
-    fd.append('tags', JSON.stringify(tags));
-
     setLoading(true);
     try {
+      const fd = new FormData();
+      Object.keys(form).forEach(key => fd.append(key, form[key]));
+      fd.append('tags', JSON.stringify(tags));
+
+      // Upload any new videos to Cloudinary first
+      if (newVideos.length > 0) {
+        toast.info(`Uploading ${newVideos.length} video(s)...`);
+        const videoUrls = await Promise.all(newVideos.map(v => uploadToCloudinary(v)));
+        fd.append('videoUrls', JSON.stringify(videoUrls));
+      }
+
       const { data } = await updateProduct(product._id, fd);
-      toast.success('Product updated!');
+      toast.success('Product updated! Sent to admin for review.');
       onSuccess(data.product);
     } catch (e) {
       toast.error(e.response?.data?.message || 'Update failed');
@@ -212,7 +281,7 @@ function EditProductModal({ open, product, onClose, onSuccess }) {
 
   return (
     <Modal isOpen={open} onClose={onClose} title="Edit Product">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '60vh', overflowY: 'auto' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '65vh', overflowY: 'auto' }}>
         <input className="input-field" placeholder="Product name *" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
         <textarea className="input-field" placeholder="Description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
         <input className="input-field" placeholder="Category" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} />
@@ -242,6 +311,27 @@ function EditProductModal({ open, product, onClose, onSuccess }) {
           </div>
         </div>
 
+        {/* Add replacement videos */}
+        <div>
+          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#94a3b8', marginBottom: 6, display: 'block' }}>Add / Replace Videos</label>
+          <p style={{ fontSize: '0.72rem', color: '#64748b', marginBottom: 8 }}>Existing videos: {product?.reels?.length || 0}. New uploads will be added alongside them.</p>
+          <FileDropZone accept="video/*" multiple onChange={files => setNewVideos(prev => [...prev, ...files].slice(0, 5))} label="Drop replacement videos here" />
+          {newVideos.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8 }}>
+              {newVideos.map((v, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(34,197,94,0.08)', padding: '5px 10px', borderRadius: 8, fontSize: '0.72rem' }}>
+                  <span style={{ color: '#22c55e', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>✓ {v.name}</span>
+                  <button onClick={() => setNewVideos(prev => prev.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 2 }}><X size={12} /></button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div style={{ padding: '10px 14px', background: 'rgba(251,146,60,0.08)', border: '1px solid rgba(251,146,60,0.2)', borderRadius: 10, fontSize: '0.75rem', color: '#fb923c' }}>
+          ⚠️ After updating, your product will go to <strong>admin review</strong> before going live again.
+        </div>
+
         <button className="btn-primary" onClick={handleSubmit} disabled={loading} style={{ width: '100%' }}>{loading ? 'Saving...' : 'Update Product'}</button>
       </div>
     </Modal>
@@ -254,6 +344,7 @@ function EditReelModal({ open, product, onClose, onSuccess }) {
   const [name, setName] = useState('');
   const [desc, setDesc] = useState('');
   const [tags, setTags] = useState([]);
+  const [newVideo, setNewVideo] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -261,19 +352,27 @@ function EditReelModal({ open, product, onClose, onSuccess }) {
       setName(product.name || '');
       setDesc(product.description || '');
       setTags(product.tags || []);
+      setNewVideo(null);
     }
   }, [product]);
 
   const handleSubmit = async () => {
-    const fd = new FormData();
-    fd.append('name', name);
-    fd.append('description', desc);
-    fd.append('tags', JSON.stringify(tags));
-
     setLoading(true);
     try {
+      const fd = new FormData();
+      fd.append('name', name);
+      fd.append('description', desc);
+      fd.append('tags', JSON.stringify(tags));
+
+      // Upload replacement video to Cloudinary if provided
+      if (newVideo) {
+        toast.info('Uploading new video...');
+        const videoUrl = await uploadToCloudinary(newVideo);
+        fd.append('videoUrls', JSON.stringify([videoUrl]));
+      }
+
       const { data } = await updateProduct(product._id, fd);
-      toast.success('Reel updated!');
+      toast.success('Reel updated! Sent to admin for review.');
       onSuccess(data.product);
     } catch (e) {
       toast.error(e.response?.data?.message || 'Update failed');
@@ -297,7 +396,23 @@ function EditReelModal({ open, product, onClose, onSuccess }) {
           </div>
         </div>
 
-        <button className="btn-primary" onClick={handleSubmit} disabled={loading} style={{ width: '100%' }}>{loading ? 'Saving...' : 'Update Reel'}</button>
+        {/* Replacement video */}
+        <div>
+          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#94a3b8', marginBottom: 6, display: 'block' }}>Replace Video (optional)</label>
+          <FileDropZone accept="video/*" onChange={files => setNewVideo(files[0])} label="Drop a new video to replace the existing one" />
+          {newVideo && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(34,197,94,0.08)', padding: '6px 12px', borderRadius: 8, marginTop: 6, fontSize: '0.75rem' }}>
+              <span style={{ color: '#22c55e' }}>✓ {newVideo.name}</span>
+              <button onClick={() => setNewVideo(null)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><X size={14} /></button>
+            </div>
+          )}
+        </div>
+
+        <div style={{ padding: '10px 14px', background: 'rgba(251,146,60,0.08)', border: '1px solid rgba(251,146,60,0.2)', borderRadius: 10, fontSize: '0.75rem', color: '#fb923c' }}>
+          ⚠️ After updating, your reel will go to <strong>admin review</strong> before going live again.
+        </div>
+
+        <button className="btn-primary" onClick={handleSubmit} disabled={loading} style={{ width: '100%' }}>{loading ? (newVideo ? 'Uploading...' : 'Saving...') : 'Update Reel'}</button>
       </div>
     </Modal>
   );

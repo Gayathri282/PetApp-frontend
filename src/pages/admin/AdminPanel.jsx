@@ -6,7 +6,7 @@ import { useToast } from '../../context/ToastContext';
 import Spinner from '../../components/ui/Spinner';
 import Modal from '../../components/ui/Modal';
 import VideoPlayer from '../../components/reel/VideoPlayer';
-import { getAdminStats, getApplications, reviewApplication, getEnquiries, updateEnquiry, adminDeleteProduct } from '../../api';
+import { getAdminStats, getApplications, reviewApplication, getEnquiries, updateEnquiry, adminDeleteProduct, adminGetUsers, adminDeleteUser } from '../../api';
 
 export default function AdminPanel() {
   const { isAdmin } = useAuth();
@@ -17,6 +17,7 @@ export default function AdminPanel() {
   const [apps, setApps] = useState([]);
   const [pendingProducts, setPendingProducts] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [previewVideo, setPreviewVideo] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -47,6 +48,9 @@ export default function AdminPanel() {
         getAllAdminProducts('', searchQuery).then(r => setAllProducts(r.data.products)).catch(()=>{}).finally(()=>setLoading(false));
       });
     }
+    else if (tab === 'users') {
+      adminGetUsers(searchQuery).then(r => setAllUsers(r.data.users)).catch(()=>{}).finally(()=>setLoading(false));
+    }
     else setLoading(false);
   }, [tab, searchQuery]);
 
@@ -69,37 +73,43 @@ export default function AdminPanel() {
     } catch { toast.error('Failed to update product status'); }
   };
 
-  const openTakedownModal = (id, name) => {
+  const openTakedownModal = (id, name, type = 'product') => {
     setTakedownReason('');
-    setTakedownModal({ id, name });
+    setTakedownModal({ id, name, type });
   };
 
   const confirmTakedown = async () => {
     if (!takedownReason.trim()) return;
     setTakingDown(true);
     try {
-      await handleProductReview(takedownModal.id, 'rejected', takedownReason.trim());
+      if (takedownModal.type === 'user') {
+        await adminDeleteUser(takedownModal.id, takedownReason.trim());
+        setAllUsers(prev => prev.filter(u => u._id !== takedownModal.id));
+        toast.success('Account removed');
+      } else if (takedownModal.type === 'delete') {
+        await adminDeleteProduct(takedownModal.id, takedownReason.trim());
+        setPendingProducts(prev => prev.filter(p => p._id !== takedownModal.id));
+        setAllProducts(prev => prev.filter(p => p._id !== takedownModal.id));
+        if (previewVideo && previewVideo.id === takedownModal.id) setPreviewVideo(null);
+        toast.success('Product permanently deleted and vendor notified.');
+      } else {
+        await handleProductReview(takedownModal.id, 'rejected', takedownReason.trim());
+      }
       setTakedownModal(null);
     } finally {
       setTakingDown(false);
     }
   };
 
-  const handleDeleteProduct = async (id) => {
-    if (!confirm('Permanently delete this product and all its videos?')) return;
-    try {
-      await adminDeleteProduct(id);
-      setPendingProducts(prev => prev.filter(p => p._id !== id));
-      setAllProducts(prev => prev.filter(p => p._id !== id));
-      toast.success('Product deleted');
-    } catch { toast.error('Failed to delete'); }
-  };
+  // handleDeleteProduct is now handled through the modal — kept for legacy safety
+  const handleDeleteProduct = (id, name) => openTakedownModal(id, name, 'delete');
 
   const tabs = [
     { key:'stats', icon:BarChart3, label:'Dashboard' },
     { key:'apps', icon:Users, label:'Applications' },
     { key:'moderate', icon:CheckCircle, label:'Moderate' },
     { key:'manage', icon:Package, label:'Manage All' },
+    { key:'users', icon:Users, label:'Users' },
   ];
 
   return (
@@ -171,7 +181,37 @@ export default function AdminPanel() {
             </div>
           )}
 
-          {/* Manage All Products */}
+          {/* Moderate Pending Products */}
+          {tab === 'moderate' && (
+            <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+              {pendingProducts.length === 0 && <p style={{ textAlign:'center', color:'#64748b', padding:40 }}>No pending products for review</p>}
+              {pendingProducts.map(p => (
+                <div key={p._id} className="glass" style={{ padding:16, borderRadius:16 }}>
+                  <div style={{ display:'flex', gap:12, marginBottom:16 }}>
+                    <div 
+                      onClick={() => setPreviewVideo({ id: p._id, url: p.reels[0].videoUrl, name: p.name, source: 'moderate' })}
+                      style={{ width:64, height:96, borderRadius:8, overflow:'hidden', background:'#000', flexShrink:0, cursor:'pointer', position:'relative' }}
+                    >
+                      <video src={getFullSrc(p.reels[0].videoUrl)} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                      <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                        <PlayIcon size={16} color="#fff" fill="#fff" />
+                      </div>
+                    </div>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <p style={{ fontWeight:700, fontSize:'0.9rem', marginBottom:4 }}>{p.name}</p>
+                      <p style={{ fontSize:'0.75rem', color:'#94a3b8', marginBottom:12 }}>By {p.vendor?.name} • {p.category}</p>
+                      <div style={{ display:'flex', gap:8 }}>
+                        <button onClick={() => handleProductReview(p._id, 'approved')} style={{ background:'rgba(34,197,94,0.1)', border:'1px solid rgba(34,197,94,0.2)', color:'#22c55e', borderRadius:8, padding:'4px 12px', fontSize:'0.7rem', fontWeight:600, cursor:'pointer' }}>Approve</button>
+                        <button onClick={() => openTakedownModal(p._id, p.name)} style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.2)', color:'#ef4444', borderRadius:8, padding:'4px 12px', fontSize:'0.7rem', fontWeight:600, cursor:'pointer' }}>Reject</button>
+                        <button onClick={() => handleDeleteProduct(p._id, p.name)} style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', color:'#94a3b8', borderRadius:8, padding:'4px 12px', fontSize:'0.7rem', fontWeight:600, cursor:'pointer' }}>Delete</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {tab === 'manage' && (
             <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
               <div style={{ display:'flex', gap:8 }}>
@@ -222,7 +262,7 @@ export default function AdminPanel() {
                             </button>
                           )}
                           <button 
-                            onClick={() => handleDeleteProduct(p._id)}
+                            onClick={() => handleDeleteProduct(p._id, p.name)}
                             style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', color:'#94a3b8', borderRadius:8, padding:'4px 10px', fontSize:'0.7rem', fontWeight:600, cursor:'pointer' }}
                           >
                             Delete
@@ -233,6 +273,41 @@ export default function AdminPanel() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+          {/* Users Tab */}
+          {tab === 'users' && (
+            <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+              <input
+                className="input-field"
+                placeholder="Search users by name or email..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
+              {allUsers.length === 0 && <p style={{ textAlign:'center', color:'#64748b', padding:40 }}>No users found</p>}
+              {allUsers.map(u => (
+                <div key={u._id} className="glass" style={{ padding:14, borderRadius:16, display:'flex', alignItems:'center', gap:12 }}>
+                  <div style={{ width:40, height:40, borderRadius:'50%', overflow:'hidden', background:'linear-gradient(135deg,#6366f1,#8b5cf6)', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                    {u.avatar ? <img src={getFullSrc(u.avatar)} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : <span style={{ fontWeight:700 }}>{u.name?.[0]}</span>}
+                  </div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <p style={{ fontWeight:700, fontSize:'0.85rem', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{u.name}</p>
+                    <p style={{ fontSize:'0.7rem', color:'#94a3b8', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{u.email}</p>
+                  </div>
+                  <span style={{ fontSize:'0.65rem', padding:'2px 8px', borderRadius:99, fontWeight:700, flexShrink:0,
+                    background: u.role==='admin'?'rgba(251,146,60,0.15)':u.role==='vendor'?'rgba(99,102,241,0.15)':'rgba(255,255,255,0.07)',
+                    color: u.role==='admin'?'#fb923c':u.role==='vendor'?'#818cf8':'#94a3b8'
+                  }}>{u.role}</span>
+                  {u.role !== 'admin' && (
+                    <button
+                      onClick={() => openTakedownModal(u._id, u.name, 'user')}
+                      style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.2)', color:'#ef4444', borderRadius:8, padding:'4px 10px', fontSize:'0.7rem', fontWeight:600, cursor:'pointer', flexShrink:0 }}
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -284,17 +359,32 @@ export default function AdminPanel() {
           )}
         </div>
         <div style={{ display:'flex', gap:10, marginTop:20 }}>
-          <button className="btn-primary" style={{ flex:1 }} onClick={() => handleProductReview(previewVideo.id, 'approved')}>Approve Product</button>
-          <button className="btn-danger" style={{ flex:1 }} onClick={() => openTakedownModal(previewVideo.id, previewVideo.name)}>Take Down</button>
+          <button className="btn-primary" style={{ flex:1, padding:'10px 0' }} onClick={() => handleProductReview(previewVideo.id, 'approved')}>Approve</button>
+          <button className="btn-danger" style={{ flex:1, padding:'10px 0' }} onClick={() => openTakedownModal(previewVideo.id, previewVideo.name)}>Take Down</button>
+          <button 
+            onClick={() => handleDeleteProduct(previewVideo.id, previewVideo.name)}
+            style={{ flex:0.6, background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', color:'#94a3b8', borderRadius:12, fontSize:'0.8rem', fontWeight:600, cursor:'pointer' }}
+          >
+            Delete
+          </button>
         </div>
       </Modal>
 
       {/* Takedown Reason Modal */}
-      <Modal isOpen={!!takedownModal} onClose={() => setTakedownModal(null)} title="Take Down Product">
+       <Modal isOpen={!!takedownModal} onClose={() => setTakedownModal(null)} title={
+        takedownModal?.type === 'user' ? 'Remove Account' : 
+        takedownModal?.type === 'delete' ? 'Permanently Delete Product' : 
+        'Take Down Product'
+      }>
         <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
           <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}>
-            You are taking down <strong style={{ color: '#fff' }}>"{takedownModal?.name}"</strong>.
-            A message with your reason will be sent directly to the vendor's inbox.
+            {takedownModal?.type === 'user' ? (
+              <>You are permanently removing the account of <strong style={{ color: '#fff' }}>"{takedownModal?.name}"</strong>. All their reels, products, and messages will be deleted.</>
+            ) : takedownModal?.type === 'delete' ? (
+              <>You are permanently deleting <strong style={{ color: '#fff' }}>"{takedownModal?.name}"</strong>. A message with your reason will be sent to the vendor.</>
+            ) : (
+              <>You are taking down <strong style={{ color: '#fff' }}>"{takedownModal?.name}"</strong>. A message with your reason will be sent to the vendor's inbox.</>
+            )}
           </p>
           <textarea
             className="input-field"
@@ -317,7 +407,10 @@ export default function AdminPanel() {
               disabled={!takedownReason.trim() || takingDown}
               style={{ flex: 1 }}
             >
-              {takingDown ? 'Taking Down...' : 'Confirm Takedown'}
+              {takingDown ? 'Processing...' : 
+               takedownModal?.type === 'delete' ? 'Confirm Permanent Delete' :
+               takedownModal?.type === 'user' ? 'Confirm Removal' :
+               'Confirm Takedown'}
             </button>
           </div>
         </div>

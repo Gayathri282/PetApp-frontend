@@ -67,14 +67,18 @@ export const reviewApplication = (id, status) =>
 export const getEnquiries = () => api.get('/api/admin/enquiries');
 export const updateEnquiry = (id, status) =>
   api.put(`/api/admin/enquiries/${id}`, { status });
-export const adminDeleteProduct = (id) => api.delete(`/api/admin/products/${id}`);
+export const adminDeleteProduct = (id, reason = '') => api.delete(`/api/admin/products/${id}`, { data: { reason } });
 
 export const getAllAdminProducts = (status = '', q = '') =>
   api.get(`/api/admin/products?status=${status}&q=${q}`);
 
+export const deleteMyAccount = () => api.delete('/auth/me');
+
 export const getPendingProducts = () => api.get('/api/admin/products/pending');
 export const reviewProduct = (id, status, reason = '') => 
   api.put(`/api/admin/products/${id}/review`, { status, reason });
+export const adminGetUsers = (q = '') => api.get(`/api/admin/users?q=${encodeURIComponent(q)}`);
+export const adminDeleteUser = (id, reason = '') => api.delete(`/api/admin/users/${id}`, { data: { reason } });
 
 // ── Media / Cloudinary ────────────────────────────────
 export const getCloudinarySignature = () => api.get('/api/media/cloudinary-signature');
