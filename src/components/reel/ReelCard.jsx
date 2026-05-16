@@ -20,8 +20,8 @@ export default function ReelCard({ product, onLikeUpdate }) {
   const [showShare, setShowShare] = useState(false);
   const [showEnquiry, setShowEnquiry] = useState(false);
   const [sending, setSending] = useState(false);
-  // Default muted=true for iOS autoplay compatibility.
-  // Read from global preference — if user previously unmuted, respect that.
+  // Default to unmuted per user request.
+  // Note: mobile browsers may still fallback to muted for autoplay to work.
   const [isMuted, setIsMuted] = useState(!getSoundPreference());
   const [shareAnimating, setShareAnimating] = useState(false);
   const [tempPhone, setTempPhone] = useState('');

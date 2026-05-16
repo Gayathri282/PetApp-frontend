@@ -9,7 +9,8 @@
 const KEY = 'reel_sound_unmuted';
 
 export function getSoundPreference() {
-  return localStorage.getItem(KEY) === 'true'; // true = unmuted
+  const saved = localStorage.getItem(KEY);
+  return saved === null ? true : saved === 'true'; // Default to true (unmuted)
 }
 
 export function setSoundPreference(unmuted) {

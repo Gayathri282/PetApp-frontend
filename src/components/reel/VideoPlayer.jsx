@@ -67,7 +67,7 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
             video.webkitAudioDecodedByteCount === 0;
           if (noAudio) {
             setShowNoAudioNotice(true);
-            setTimeout(() => setShowNoAudioNotice(false), 10000);
+            setTimeout(() => setShowNoAudioNotice(false), 2000);
           }
         }
       }, 1000);
