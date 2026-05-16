@@ -20,6 +20,9 @@ export default function AdminPanel() {
   const [loading, setLoading] = useState(true);
   const [previewVideo, setPreviewVideo] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [takedownModal, setTakedownModal] = useState(null); // { id, name }
+  const [takedownReason, setTakedownReason] = useState('');
+  const [takingDown, setTakingDown] = useState(false);
 
   const getFullSrc = (url) => {
     if (!url) return '';
@@ -55,20 +58,31 @@ export default function AdminPanel() {
     } catch { toast.error('Failed'); }
   };
 
-  const handleProductReview = async (id, status) => {
-    const reason = status === 'rejected' ? prompt('Reason for taking down / rejecting:') : '';
-    if (status === 'rejected' && reason === null) return;
+  const handleProductReview = async (id, status, reason = '') => {
     try {
       const { reviewProduct } = await import('../../api');
       await reviewProduct(id, status, reason);
-      
-      // Update local state for both tabs
       setPendingProducts(prev => prev.filter(p => p._id !== id));
       setAllProducts(prev => prev.map(p => p._id === id ? { ...p, status } : p));
-      
       toast.success(`Product ${status}`);
       if (previewVideo && previewVideo.id === id) setPreviewVideo(null);
     } catch { toast.error('Failed to update product status'); }
+  };
+
+  const openTakedownModal = (id, name) => {
+    setTakedownReason('');
+    setTakedownModal({ id, name });
+  };
+
+  const confirmTakedown = async () => {
+    if (!takedownReason.trim()) return;
+    setTakingDown(true);
+    try {
+      await handleProductReview(takedownModal.id, 'rejected', takedownReason.trim());
+      setTakedownModal(null);
+    } finally {
+      setTakingDown(false);
+    }
   };
 
   const handleDeleteProduct = async (id) => {
@@ -192,14 +206,14 @@ export default function AdminPanel() {
                         <p style={{ fontSize:'0.75rem', color:'#94a3b8', marginBottom:6 }}>By {p.vendor?.name} • {p.category}</p>
                         
                         <div style={{ display:'flex', gap:8 }}>
-                          {p.status === 'approved' ? (
+                          {p.status !== 'rejected' ? (
                             <button 
-                              onClick={() => handleProductReview(p._id, 'rejected')}
+                              onClick={() => openTakedownModal(p._id, p.name)}
                               style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.2)', color:'#ef4444', borderRadius:8, padding:'4px 10px', fontSize:'0.7rem', fontWeight:600, cursor:'pointer' }}
                             >
                               Take Down
                             </button>
-                          ) : p.status === 'rejected' && (
+                          ) : (
                             <button 
                               onClick={() => handleProductReview(p._id, 'approved')}
                               style={{ background:'rgba(34,197,94,0.1)', border:'1px solid rgba(34,197,94,0.2)', color:'#22c55e', borderRadius:8, padding:'4px 10px', fontSize:'0.7rem', fontWeight:600, cursor:'pointer' }}
@@ -271,7 +285,41 @@ export default function AdminPanel() {
         </div>
         <div style={{ display:'flex', gap:10, marginTop:20 }}>
           <button className="btn-primary" style={{ flex:1 }} onClick={() => handleProductReview(previewVideo.id, 'approved')}>Approve Product</button>
-          <button className="btn-danger" style={{ flex:1 }} onClick={() => handleProductReview(previewVideo.id, 'rejected')}>Reject</button>
+          <button className="btn-danger" style={{ flex:1 }} onClick={() => openTakedownModal(previewVideo.id, previewVideo.name)}>Take Down</button>
+        </div>
+      </Modal>
+
+      {/* Takedown Reason Modal */}
+      <Modal isOpen={!!takedownModal} onClose={() => setTakedownModal(null)} title="Take Down Product">
+        <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}>
+            You are taking down <strong style={{ color: '#fff' }}>"{takedownModal?.name}"</strong>.
+            A message with your reason will be sent directly to the vendor's inbox.
+          </p>
+          <textarea
+            className="input-field"
+            placeholder="Enter reason for takedown (required)..."
+            value={takedownReason}
+            onChange={e => setTakedownReason(e.target.value)}
+            rows={4}
+            style={{ resize: 'vertical', fontFamily: 'inherit', fontSize: '0.9rem' }}
+          />
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button
+              onClick={() => setTakedownModal(null)}
+              style={{ flex: 1, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', borderRadius: 12, padding: '12px 0', fontWeight: 600, cursor: 'pointer' }}
+            >
+              Cancel
+            </button>
+            <button
+              className="btn-danger"
+              onClick={confirmTakedown}
+              disabled={!takedownReason.trim() || takingDown}
+              style={{ flex: 1 }}
+            >
+              {takingDown ? 'Taking Down...' : 'Confirm Takedown'}
+            </button>
+          </div>
         </div>
       </Modal>
     </div>
