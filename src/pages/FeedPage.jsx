@@ -90,8 +90,8 @@ export default function FeedPage() {
     let index = 0;
     try {
       const parsed = JSON.parse(raw);
-      const FIFTEEN_MIN = 15 * 60 * 1000;
-      if (Date.now() - parsed.ts > FIFTEEN_MIN) {
+      const FIVE_MIN = 5 * 60 * 1000;
+      if (Date.now() - parsed.ts > FIVE_MIN) {
         // Cache expired — start fresh
         sessionStorage.removeItem('feed_pos');
         restorationAttempted.current = true;

@@ -56,10 +56,28 @@ export default function ProductReelPage() {
     if (hasRestored.current) return;
     hasRestored.current = true;
 
-    const savedIndex = sessionStorage.getItem(`reel_pos_${id}`);
-    if (!savedIndex || savedIndex === '0') return;
+    const raw = sessionStorage.getItem(`reel_pos_${id}`);
+    if (!raw) return;
 
-    const index = parseInt(savedIndex);
+    let index = 0;
+    try {
+      const parsed = JSON.parse(raw);
+      const FIVE_MIN = 5 * 60 * 1000;
+      if (Date.now() - parsed.ts > FIVE_MIN) {
+        sessionStorage.removeItem(`reel_pos_${id}`);
+        return;
+      }
+      index = parsed.i;
+    } catch {
+      // Handle legacy plain index or corrupt data
+      index = parseInt(raw);
+      if (isNaN(index)) {
+        sessionStorage.removeItem(`reel_pos_${id}`);
+        return;
+      }
+    }
+
+    if (index === 0) return;
     let attempts = 0;
     const MAX_ATTEMPTS = 60;
 
@@ -90,7 +108,7 @@ export default function ProductReelPage() {
         if (entry.isIntersecting) {
           const index = entry.target.getAttribute('data-index');
           if (index !== null) {
-            sessionStorage.setItem(`reel_pos_${id}`, index);
+            sessionStorage.setItem(`reel_pos_${id}`, JSON.stringify({ i: index, ts: Date.now() }));
           }
         }
       });
