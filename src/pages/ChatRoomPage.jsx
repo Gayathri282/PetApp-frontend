@@ -160,11 +160,21 @@ export default function ChatRoomPage() {
             {otherUser?.name || 'Admin'} 
             {otherUser?.role === 'admin' && <span style={{ fontSize:'0.6rem', color:'#fb923c', marginLeft:6, fontWeight:800, textTransform:'uppercase' }}>Support</span>}
           </h2>
-          <span style={{ fontSize: '0.7rem', color: '#22c55e' }}>Active Now</span>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <span style={{ fontSize: '0.7rem', color: '#22c55e' }}>Active Now</span>
+            {otherUser?.contactNumber && (
+              <>
+                <span style={{ width:3, height:3, borderRadius:'50%', background:'rgba(255,255,255,0.3)' }} />
+                <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.6)', fontWeight:600 }}>{otherUser.contactNumber}</span>
+              </>
+            )}
+          </div>
         </div>
-        <button style={{ background: 'none', border: 'none', color: '#fff', opacity: 0.6 }}>
-          <Phone size={20} />
-        </button>
+        {otherUser?.contactNumber && (
+          <a href={`tel:${otherUser.contactNumber}`} style={{ background: 'none', border: 'none', color: '#fff', opacity: 0.8 }}>
+            <Phone size={20} />
+          </a>
+        )}
       </div>
 
       {/* Messages */}
