@@ -98,13 +98,14 @@ export default function VideoPlayer({ src, muted = false, style = {} }) {
         playVideo();
       } else {
         video.pause();
+        video.currentTime = 0;
       }
     },
-    [isPaused, playVideo]
+    [playVideo]
   );
 
   const containerRef = useIntersectionObserver(handleIntersect, {
-    threshold: 0.5,
+    threshold: 0.6,
   });
 
   const togglePlay = (e) => {
