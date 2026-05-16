@@ -11,29 +11,24 @@ export default function VideoPlayer({ src, muted = false, style = {} }) {
   };
 
   const videoRef = useRef(null);
+  // ✅ Tracks whether the USER manually paused while in viewport
+  // Reset to false when video leaves viewport — so coming back always auto-plays
+  const manuallyPaused = useRef(false);
+
   const [isPaused, setIsPaused] = useState(false);
   const [showControl, setShowControl] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [showNoAudioNotice, setShowNoAudioNotice] = useState(false);
 
-  // Auto-play attempt logic
   const playVideo = useCallback(async () => {
     const video = videoRef.current;
     if (!video) return;
-
     try {
-      // Try playing unmuted first if muted prop is false
       video.muted = muted;
       await video.play();
-    } catch (error) {
-      // If blocked, try playing muted
-      console.log("Autoplay unmuted blocked, trying muted...");
+    } catch {
       video.muted = true;
-      try {
-        await video.play();
-      } catch (mutedError) {
-        console.error("Autoplay failed even when muted:", mutedError);
-      }
+      try { await video.play(); } catch { /* autoplay fully blocked */ }
     }
   }, [muted]);
 
@@ -44,6 +39,7 @@ export default function VideoPlayer({ src, muted = false, style = {} }) {
     const fullSrc = getFullSrc(src);
     setHasError(false);
     setShowNoAudioNotice(false);
+    manuallyPaused.current = false; // ✅ reset on src change
 
     const onError = () => {
       console.error('[VideoPlayer] Failed to load source:', fullSrc);
@@ -51,24 +47,13 @@ export default function VideoPlayer({ src, muted = false, style = {} }) {
     };
 
     const onDataLoaded = () => {
-      // Check for audio tracks
-      // Note: audioTracks is standard but only Safari supports it currently
-      // mozHasAudio is for Firefox
-      // webkitAudioDecodedByteCount for Chrome
-      const hasAudio = (video.audioTracks && video.audioTracks.length > 0) || 
-                       video.mozHasAudio || 
-                       Boolean(video.webkitAudioDecodedByteCount) ||
-                       (video.audioTracks && video.audioTracks.length !== 0);
-
-      // If we are reasonably sure there's no audio, show notice
-      // We check after a small delay to allow metadata to be fully processed
       setTimeout(() => {
         if (video.readyState >= 1) {
-          const stillNoAudio = (video.audioTracks && video.audioTracks.length === 0) || 
-                               (video.mozHasAudio === false) || 
-                               (video.webkitAudioDecodedByteCount === 0);
-          
-          if (stillNoAudio) {
+          const noAudio =
+            (video.audioTracks && video.audioTracks.length === 0) ||
+            video.mozHasAudio === false ||
+            video.webkitAudioDecodedByteCount === 0;
+          if (noAudio) {
             setShowNoAudioNotice(true);
             setTimeout(() => setShowNoAudioNotice(false), 10000);
           }
@@ -95,10 +80,16 @@ export default function VideoPlayer({ src, muted = false, style = {} }) {
       if (!video) return;
 
       if (entry.isIntersecting) {
-        playVideo();
+        // ✅ Only auto-play if user hasn't manually paused in this viewport session
+        if (!manuallyPaused.current) {
+          playVideo();
+        }
       } else {
+        // ✅ Leaving viewport: pause + RESET manual pause flag
+        // So next scroll-back always auto-plays regardless of previous manual pause
         video.pause();
         video.currentTime = 0;
+        manuallyPaused.current = false;
       }
     },
     [playVideo]
@@ -114,9 +105,13 @@ export default function VideoPlayer({ src, muted = false, style = {} }) {
     if (!video) return;
 
     if (video.paused) {
-      video.play().catch(() => {});
+      // ✅ User manually resumed — clear the flag
+      manuallyPaused.current = false;
+      video.play().catch(() => { });
       setIsPaused(false);
     } else {
+      // ✅ User manually paused — set flag so intersection doesn't override it
+      manuallyPaused.current = true;
       video.pause();
       setIsPaused(true);
     }
@@ -146,82 +141,53 @@ export default function VideoPlayer({ src, muted = false, style = {} }) {
         playsInline
         autoPlay
         preload="auto"
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-        }}
+        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         onPlay={() => setIsPaused(false)}
         onPause={() => setIsPaused(true)}
       />
 
-      {/* No audio notification */}
+      {/* No audio notice */}
       {showNoAudioNotice && (
         <div style={{
-          position: 'absolute',
-          top: 20,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: 'rgba(0,0,0,0.6)',
-          backdropFilter: 'blur(10px)',
-          padding: '8px 16px',
-          borderRadius: 20,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          zIndex: 100,
-          pointerEvents: 'none'
+          position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)',
+          background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)',
+          padding: '8px 16px', borderRadius: 20, display: 'flex',
+          alignItems: 'center', gap: 8, zIndex: 100, pointerEvents: 'none',
         }}>
           <VolumeX size={16} color="#fff" />
-          <span style={{ color: '#fff', fontSize: '0.75rem', fontWeight: 600 }}>No audio in this video</span>
+          <span style={{ color: '#fff', fontSize: '0.75rem', fontWeight: 600 }}>
+            No audio in this video
+          </span>
         </div>
       )}
 
       {/* Error state */}
       {hasError && (
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'rgba(0,0,0,0.7)',
-            color: '#fff',
-            fontSize: '0.8rem',
-            gap: 8,
-            zIndex: 40,
-          }}
-        >
+        <div style={{
+          position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: '0.8rem',
+          gap: 8, zIndex: 40,
+        }}>
           <span style={{ fontSize: '1.5rem' }}>⚠️</span>
           <span>Video failed to load</span>
         </div>
       )}
 
-      {/* Play / Pause centre overlay */}
+      {/* Play / Pause overlay */}
       {(showControl || isPaused) && !hasError && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            background: 'rgba(0,0,0,0.3)',
-            backdropFilter: 'blur(10px)',
-            borderRadius: '50%',
-            padding: 24,
-            zIndex: 20,
-            pointerEvents: 'none',
-            display: 'flex',
-            animation: 'fadeInOut 0.5s ease-in-out',
-          }}
-        >
-          {isPaused ? (
-            <Play size={40} fill="#fff" color="#fff" />
-          ) : (
-            <Pause size={40} fill="#fff" color="#fff" />
-          )}
+        <div style={{
+          position: 'absolute', top: '50%', left: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(10px)',
+          borderRadius: '50%', padding: 24, zIndex: 20,
+          pointerEvents: 'none', display: 'flex',
+          animation: 'fadeInOut 0.5s ease-in-out',
+        }}>
+          {isPaused
+            ? <Play size={40} fill="#fff" color="#fff" />
+            : <Pause size={40} fill="#fff" color="#fff" />
+          }
         </div>
       )}
     </div>
