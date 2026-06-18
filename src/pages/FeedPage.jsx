@@ -236,25 +236,25 @@ export default function FeedPage() {
         </div>
       )}
 
-      <Modal isOpen={showPWA} onClose={() => setShowPWA(false)} title="Install PetPlace">
+      <Modal isOpen={showPWA} onClose={() => setShowPWA(false)} title="Install KerelaPets">
         <div style={{ padding: 24, textAlign: 'center' }}>
           <div style={{
-            background: 'linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1))',
+            background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.15), rgba(168, 85, 247, 0.1))',
             width: 80, height: 80, borderRadius: 24,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             margin: '0 auto 24px', border: '1px solid rgba(255,255,255,0.05)',
           }}>
-            <Smartphone size={40} color="#818cf8" />
+            <Smartphone size={40} color="#00d2ff" />
           </div>
           <h3 style={{
             fontSize: '1.25rem', fontWeight: 800, marginBottom: 12,
             background: 'linear-gradient(to right, #fff, #94a3b8)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
           }}>
-            Experience PetPlace App
+            Experience KerelaPets App
           </h3>
           <p style={{ fontSize: '0.95rem', color: '#94a3b8', marginBottom: 32, lineHeight: 1.6 }}>
-            Install PetPlace on your home screen for a faster, full-screen experience and instant pet reel updates.
+            Install KerelaPets on your home screen for a faster, full-screen experience and instant pet reel updates.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <button

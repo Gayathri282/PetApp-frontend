@@ -5,8 +5,8 @@ export default function LoginPage() {
     <div style={{ minHeight:'100dvh', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }} className="gradient-hero">
       <div className="animate-fade-in-up" style={{ textAlign:'center', maxWidth:420 }}>
         {/* Floating decorative orbs */}
-        <div style={{ position:'fixed', top:'15%', left:'10%', width:200, height:200, borderRadius:'50%', background:'radial-gradient(circle, rgba(99,102,241,0.15), transparent 70%)', pointerEvents:'none' }} className="animate-float" />
-        <div style={{ position:'fixed', bottom:'20%', right:'8%', width:260, height:260, borderRadius:'50%', background:'radial-gradient(circle, rgba(139,92,246,0.12), transparent 70%)', pointerEvents:'none', animationDelay:'1.5s' }} className="animate-float" />
+        <div style={{ position:'fixed', top:'15%', left:'10%', width:200, height:200, borderRadius:'50%', background:'radial-gradient(circle, rgba(0, 210, 255, 0.15), transparent 70%)', pointerEvents:'none' }} className="animate-float" />
+        <div style={{ position:'fixed', bottom:'20%', right:'8%', width:260, height:260, borderRadius:'50%', background:'radial-gradient(circle, rgba(168, 85, 247, 0.12), transparent 70%)', pointerEvents:'none', animationDelay:'1.5s' }} className="animate-float" />
 
         <div style={{ display:'flex', justifyContent:'center', marginBottom:32 }}>
           <Logo size={64} />

@@ -47,19 +47,20 @@ export default function App() {
         alignItems: 'center', 
         justifyContent: 'center', 
         height: '100dvh', 
-        background: '#0f0d1a',
+        background: '#0b0914',
         gap: 24 
       }}>
         <div style={{ 
-          width: 80, height: 80, background: 'linear-gradient(135deg, #6366f1, #a855f7)', 
-          borderRadius: 22, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 10px 25px rgba(99,102,241,0.3)',
-          animation: 'pulse 2s infinite ease-in-out'
+          width: 80, height: 80, background: 'linear-gradient(135deg, #00d2ff, #a855f7)', 
+          borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 10px 25px rgba(0, 210, 255, 0.4)',
+          animation: 'pulse 2s infinite ease-in-out',
+          padding: 2
         }}>
-          <span style={{ fontSize: '2.5rem' }}>🐾</span>
+          <img src="/logo.png" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'contain' }} alt="KerelaPets Logo" />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#fff', letterSpacing: -0.5 }}>PetPlace</h1>
+          <h1 style={{ fontSize: '2.2rem', fontFamily: 'var(--font-tall)', color: '#fff', letterSpacing: '0.08em', textTransform: 'uppercase' }}>KerelaPets</h1>
           <Spinner size={24} />
         </div>
         <style>{`

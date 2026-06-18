@@ -1,26 +1,27 @@
 @import "tailwindcss";
 
 @theme {
-  --color-dark-950: #0a0914;
-  --color-dark-900: #0f0d1a;
-  --color-dark-800: #1a1625;
-  --color-dark-700: #252136;
-  --color-dark-600: #312c47;
-  --color-dark-500: #443d5e;
-  --color-primary-400: #818cf8;
-  --color-primary-500: #6366f1;
-  --color-primary-600: #4f46e5;
-  --color-primary-700: #4338ca;
-  --color-accent-400: #a78bfa;
-  --color-accent-500: #8b5cf6;
-  --color-accent-600: #7c3aed;
-  --color-violet-400: #a78bfa;
-  --color-violet-500: #8b5cf6;
-  --color-violet-600: #7c3aed;
-  --color-success: #22c55e;
-  --color-danger: #ef4444;
-  --color-warning: #eab308;
+  --color-dark-950: #050409;
+  --color-dark-900: #0b0914;
+  --color-dark-800: #120e24;
+  --color-dark-700: #1c1538;
+  --color-dark-600: #281e4f;
+  --color-dark-500: #3b2c73;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-accent-400: #38bdf8;
+  --color-accent-500: #0ea5e9;
+  --color-accent-600: #0284c7;
+  --color-violet-400: #c084fc;
+  --color-violet-500: #a855f7;
+  --color-violet-600: #9333ea;
+  --color-success: #10b981;
+  --color-danger: #f43f5e;
+  --color-warning: #f59e0b;
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-tall: "Bebas Neue", sans-serif;
 }
 
 /* ── Base ─────────────────────────────────────────────── */
@@ -86,23 +87,23 @@ body {
 
 /* ── Gradients ────────────────────────────────────────── */
 .gradient-primary {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6, #a78bfa);
+  background: linear-gradient(135deg, #00d2ff, #0082ff, #a855f7);
 }
 
 .gradient-accent {
-  background: linear-gradient(135deg, #8b5cf6, #d946ef);
+  background: linear-gradient(135deg, #00d2ff, #a855f7);
 }
 
 .gradient-hero {
-  background: linear-gradient(135deg, #0f0d1a 0%, #1a1040 40%, #2d1b69 70%, #1a1625 100%);
+  background: linear-gradient(135deg, #0b0914 0%, #0e0a24 45%, #190e3d 75%, #0b0914 100%);
 }
 
 .gradient-card {
-  background: linear-gradient(145deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.05) 100%);
+  background: linear-gradient(145deg, rgba(0, 210, 255, 0.12) 0%, rgba(168, 85, 247, 0.06) 100%);
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #818cf8, #a78bfa, #f472b6);
+  background: linear-gradient(135deg, #00d2ff, #0082ff, #c084fc);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -245,7 +246,7 @@ body {
   justify-content: center;
   gap: 8px;
   padding: 10px 24px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #0082ff, #a855f7);
   color: white;
   border: none;
   border-radius: 12px;
@@ -257,7 +258,7 @@ body {
 }
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 8px 25px rgba(0, 130, 255, 0.5);
 }
 .btn-primary:active {
   transform: translateY(0);
@@ -275,7 +276,7 @@ body {
   justify-content: center;
   gap: 8px;
   padding: 10px 24px;
-  background: linear-gradient(135deg, #f97316, #fb923c);
+  background: linear-gradient(135deg, #00d2ff, #0082ff);
   color: white;
   border: none;
   border-radius: 12px;
@@ -287,7 +288,7 @@ body {
 }
 .btn-accent:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 25px rgba(249, 115, 22, 0.4);
+  box-shadow: 0 8px 25px rgba(0, 210, 255, 0.5);
 }
 
 .btn-ghost {
@@ -347,14 +348,14 @@ body {
   color: #94a3b8;
 }
 .tag-pill:hover {
-  background: rgba(99, 102, 241, 0.15);
-  border-color: rgba(99, 102, 241, 0.3);
-  color: #818cf8;
+  background: rgba(0, 210, 255, 0.15);
+  border-color: rgba(0, 210, 255, 0.3);
+  color: #60a5fa;
 }
 .tag-pill.active {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.2));
-  border-color: rgba(99, 102, 241, 0.5);
-  color: #a5b4fc;
+  background: linear-gradient(135deg, rgba(0, 210, 255, 0.25), rgba(168, 85, 247, 0.2));
+  border-color: rgba(0, 210, 255, 0.5);
+  color: #c084fc;
 }
 
 /* ── Input styles ─────────────────────────────────────── */

@@ -15,14 +15,14 @@ export default function Navbar() {
   return (
     <>
     {!isStandalone && wasInstalled && !canInstall && (
-      <div style={{ position:'fixed', top:60, left:0, right:0, zIndex:99, background:'linear-gradient(to right, #6366f1, #8b5cf6)', padding:'10px 20px', display:'flex', alignItems:'center', justifyContent:'space-between', boxShadow:'0 4px 15px rgba(0,0,0,0.2)' }}>
+      <div style={{ position:'fixed', top:60, left:0, right:0, zIndex:99, background:'linear-gradient(to right, #0082ff, #a855f7)', padding:'10px 20px', display:'flex', alignItems:'center', justifyContent:'space-between', boxShadow:'0 4px 15px rgba(0,0,0,0.2)' }}>
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
           <Smartphone size={20} color="#fff" />
-          <span style={{ color:'#fff', fontSize:'0.85rem', fontWeight:600 }}>Better experience in the PetPlace app</span>
+          <span style={{ color:'#fff', fontSize:'0.85rem', fontWeight:600 }}>Better experience in the KerelaPets app</span>
         </div>
         <button 
           onClick={() => window.location.reload()} 
-          style={{ background:'#fff', color:'#6366f1', border:'none', padding:'6px 14px', borderRadius:8, fontSize:'0.8rem', fontWeight:700, cursor:'pointer' }}
+          style={{ background:'#fff', color:'#0082ff', border:'none', padding:'6px 14px', borderRadius:8, fontSize:'0.8rem', fontWeight:700, cursor:'pointer' }}
         >
           Open App
         </button>
@@ -60,7 +60,7 @@ export default function Navbar() {
               display: 'flex', 
               alignItems: 'center', 
               gap: 8,
-              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              background: 'linear-gradient(135deg, #0082ff, #a855f7)',
               padding: '8px 14px',
               borderRadius: 12,
               backdropFilter: 'blur(10px)',
@@ -68,7 +68,7 @@ export default function Navbar() {
               color: '#fff',
               fontSize: '0.8rem',
               fontWeight: 700,
-              boxShadow: '0 4px 15px rgba(99,102,241,0.3)'
+              boxShadow: '0 4px 15px rgba(0, 130, 255, 0.4)'
             }}
           >
             <Download size={18} /> Install App
@@ -105,7 +105,7 @@ export default function Navbar() {
               alignItems: 'center',
               justifyContent: 'center',
               fontWeight: 800,
-              border: '2px solid #0f0d1a'
+              border: '2px solid #0b0914'
             }}>
               {notificationCount}
             </div>

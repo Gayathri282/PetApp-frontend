@@ -77,7 +77,7 @@ export default function BottomNav() {
                 size={22} 
                 strokeWidth={isActive ? 2.5 : 2} 
                 style={{
-                  filter: isActive ? 'drop-shadow(0 0 8px rgba(99,102,241,0.5))' : 'none'
+                  filter: isActive ? 'drop-shadow(0 0 8px rgba(0, 210, 255, 0.5))' : 'none'
                 }}
               />
               {/* Notification Badge */}
@@ -91,7 +91,7 @@ export default function BottomNav() {
                     height: 16, 
                     background: '#ef4444', 
                     borderRadius: 8, 
-                    border: '2px solid #0f0d1a',
+                    border: '2px solid #0b0914',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -124,8 +124,8 @@ export default function BottomNav() {
                   width: 4,
                   height: 4,
                   borderRadius: '50%',
-                  background: '#818cf8',
-                  boxShadow: '0 0 10px #818cf8',
+                  background: '#00d2ff',
+                  boxShadow: '0 0 10px #00d2ff',
                 }}
               />
             )}
