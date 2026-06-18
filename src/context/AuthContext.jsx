@@ -88,6 +88,8 @@ export function AuthProvider({ children }) {
       setDeferredPrompt(null);
       setCanInstall(false);
       localStorage.setItem('pwa_installed', 'true');
+      // Reopen in standalone mode after install completes
+      setTimeout(() => window.location.reload(), 500);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
@@ -106,6 +108,8 @@ export function AuthProvider({ children }) {
     if (outcome === 'accepted') {
       setDeferredPrompt(null);
       setCanInstall(false);
+      // Reload so the browser relaunches in standalone (PWA) mode immediately
+      setTimeout(() => window.location.reload(), 800);
     }
   };
 

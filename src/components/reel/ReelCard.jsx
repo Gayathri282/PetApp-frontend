@@ -4,7 +4,7 @@ import { Heart, Send, Zap, Layers, Volume2, VolumeX } from 'lucide-react';
 import VideoPlayer from './VideoPlayer';
 import ShareModal from '../ui/ShareModal';
 import Modal from '../ui/Modal';
-import { toggleLike, submitEnquiry, updateProfile } from '../../api';
+import { toggleLike, submitEnquiry, updateProfile, trackInterest } from '../../api';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { getSoundPreference, setSoundPreference } from '../../hooks/useSoundPreference';
@@ -61,6 +61,10 @@ export default function ReelCard({ product, onLikeUpdate }) {
       setLiked(data.liked);
       setLikeCount(data.likeCount);
       if (onLikeUpdate) onLikeUpdate(product._id, data);
+
+      if (data.liked) {
+        trackInterest(product._id, 'like').catch(() => {});
+      }
     } catch {
       setLiked(prevLiked);
       setLikeCount(prevCount);
@@ -71,6 +75,12 @@ export default function ReelCard({ product, onLikeUpdate }) {
   const handleShare = (e) => {
     e.stopPropagation();
     setShareAnimating(true);
+    
+    // Track share interest
+    if (user) {
+      trackInterest(product._id, 'share').catch(() => {});
+    }
+
     setTimeout(() => {
       setShowShare(true);
       setShareAnimating(false);

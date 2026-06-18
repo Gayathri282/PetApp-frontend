@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import ReelCard from '../components/reel/ReelCard';
 import Spinner from '../components/ui/Spinner';
 import Modal from '../components/ui/Modal';
-import { getFeed } from '../api';
-import { Smartphone, Download } from 'lucide-react';
+import { getFeed, getLatestTimestamp, trackInterest } from '../api';
+import { Smartphone, Download, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function FeedPage() {
@@ -12,12 +12,15 @@ export default function FeedPage() {
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
   const [showPWA, setShowPWA] = useState(false);
+  const [showNewReels, setShowNewReels] = useState(false);
   const pwaShown = useRef(false);
   const { canInstall, installApp } = useAuth();
 
   const containerRef = useRef(null);
   const isFetching = useRef(false);
   const restorationAttempted = useRef(false);
+  const newestTimestamp = useRef(null);      // createdAt of newest product in feed
+  const viewedProducts = useRef(new Set());  // deduped view tracking per session
 
   // Helper to check if a valid scroll position exists in sessionStorage
   const getSavedPos = () => {
@@ -43,7 +46,14 @@ export default function FeedPage() {
     try {
       const limit = customLimit || 5;
       const { data } = await getFeed(p, limit);
-      setProducts(prev => p === 1 ? data.products : [...prev, ...data.products]);
+      setProducts(prev => {
+        const next = p === 1 ? data.products : [...prev, ...data.products];
+        // Capture newest timestamp on first load
+        if (p === 1 && data.products.length > 0 && !newestTimestamp.current) {
+          newestTimestamp.current = data.products[0].createdAt;
+        }
+        return next;
+      });
       setHasMore(data.hasMore);
     } catch (e) {
       console.error('Feed error:', e);
@@ -53,7 +63,7 @@ export default function FeedPage() {
     }
   }, []);
 
-  useEffect(() => { 
+  useEffect(() => {
     let initialLimit = 5;
     try {
       const raw = sessionStorage.getItem('feed_pos');
@@ -61,17 +71,50 @@ export default function FeedPage() {
         const parsed = JSON.parse(raw);
         const FIVE_MIN = 5 * 60 * 1000;
         if (Date.now() - parsed.ts <= FIVE_MIN && parsed.i >= 5) {
-          // Fetch exactly enough to reach the saved index in one go
-          initialLimit = parsed.i + 5; 
+          initialLimit = parsed.i + 5;
         }
       }
     } catch {}
-    loadFeed(1, initialLimit); 
+    loadFeed(1, initialLimit);
   }, [loadFeed]);
 
   useEffect(() => { if (page > 1) loadFeed(page); }, [page, loadFeed]);
 
-  // ─── Scroll tracking + infinite scroll ──────────────────────────────────────
+  // ─── Poll for new reels every 60 seconds ────────────────────────────────────
+  useEffect(() => {
+    const poll = async () => {
+      try {
+        const { data } = await getLatestTimestamp();
+        if (
+          data.latestTimestamp &&
+          newestTimestamp.current &&
+          new Date(data.latestTimestamp) > new Date(newestTimestamp.current)
+        ) {
+          setShowNewReels(true);
+        }
+      } catch {
+        // silent — polling is non-critical
+      }
+    };
+
+    const timer = setInterval(poll, 60_000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // ─── Refresh to top when user taps banner ───────────────────────────────────
+  const handleRefresh = () => {
+    setShowNewReels(false);
+    newestTimestamp.current = null;
+    sessionStorage.removeItem('feed_pos');
+    setPage(1);
+    restorationAttempted.current = false;
+    isRestoring.current = false;
+    setIsRestoringState(false);
+    if (containerRef.current) containerRef.current.scrollTop = 0;
+    loadFeed(1, 5);
+  };
+
+  // ─── Scroll tracking + infinite scroll + view interest tracking ─────────────
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -81,8 +124,9 @@ export default function FeedPage() {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           const index = parseInt(entry.target.getAttribute('data-index'));
+          const productId = entry.target.getAttribute('data-product-id');
 
-          // Save position with a timestamp for 15-min TTL
+          // Save scroll position
           sessionStorage.setItem('feed_pos', JSON.stringify({ i: index, ts: Date.now() }));
 
           // PWA prompt on 2nd reel
@@ -91,7 +135,13 @@ export default function FeedPage() {
             pwaShown.current = true;
           }
 
-          // Load more when on 2nd reel of current batch or near end
+          // Track 'view' interest once per product per session
+          if (productId && !viewedProducts.current.has(productId)) {
+            viewedProducts.current.add(productId);
+            trackInterest(productId, 'view').catch(() => {});
+          }
+
+          // Trigger next page near end
           const isNearEnd = index >= products.length - 2;
           const isBatchTrigger = (index % 5) === 1;
 
@@ -122,7 +172,6 @@ export default function FeedPage() {
       const parsed = JSON.parse(raw);
       const FIVE_MIN = 5 * 60 * 1000;
       if (Date.now() - parsed.ts > FIVE_MIN) {
-        // Cache expired — start fresh
         sessionStorage.removeItem('feed_pos');
         restorationAttempted.current = true;
         isRestoring.current = false;
@@ -131,7 +180,6 @@ export default function FeedPage() {
       }
       index = parsed.i;
     } catch {
-      // Legacy plain number format or corrupt — discard
       sessionStorage.removeItem('feed_pos');
       restorationAttempted.current = true;
       isRestoring.current = false;
@@ -146,7 +194,6 @@ export default function FeedPage() {
       return;
     }
 
-    // If we don't have enough products loaded yet, wait for more
     if (index >= products.length) {
       if (hasMore && !isFetching.current) setPage(p => p + 1);
       return;
@@ -164,20 +211,15 @@ export default function FeedPage() {
 
       const target = c.querySelector(`[data-index="${index}"]`);
       if (target) {
-        // Temporarily disable scroll snap to allow smooth/accurate positioning
         const originalSnap = c.style.scrollSnapType;
         c.style.scrollSnapType = 'none';
-        
         target.scrollIntoView();
-        
-        // Brief timeout to let the browser settle before re-enabling snap
         setTimeout(() => {
           if (c) c.style.scrollSnapType = originalSnap;
           isRestoring.current = false;
           setIsRestoringState(false);
         }, 100);
       } else {
-        // If target disappeared or didn't mount, release guard
         isRestoring.current = false;
         setIsRestoringState(false);
       }
@@ -209,21 +251,52 @@ export default function FeedPage() {
     <div
       className="reel-container"
       ref={containerRef}
-      style={{ 
-        position: 'fixed', 
-        inset: 0, 
-        overflowY: 'scroll', 
+      style={{
+        position: 'fixed',
+        inset: 0,
+        overflowY: 'scroll',
         scrollSnapType: 'y mandatory',
-        // Hide content while restoring to prevent the "flash" of the first video
         opacity: isRestoringState ? 0 : 1,
-        transition: 'opacity 0.2s ease-in-out'
+        transition: 'opacity 0.2s ease-in-out',
       }}
     >
+      {/* ── New Reels Banner ─────────────────────────────────────────────────── */}
+      {showNewReels && (
+        <div
+          onClick={handleRefresh}
+          style={{
+            position: 'fixed',
+            top: 70,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 9999,
+            background: 'linear-gradient(135deg, #10b981, #059669)',
+            color: '#fff',
+            padding: '10px 20px',
+            borderRadius: 50,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            cursor: 'pointer',
+            boxShadow: '0 0 20px rgba(16,185,129,0.5), 0 4px 16px rgba(0,0,0,0.3)',
+            fontSize: '0.88rem',
+            fontWeight: 700,
+            animation: 'slideDown 0.35s cubic-bezier(0.34,1.56,0.64,1)',
+            userSelect: 'none',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <RefreshCw size={15} strokeWidth={2.5} />
+          New reels available — tap to refresh
+        </div>
+      )}
+
       {products.map((product, i) => (
         <div
           key={product._id}
           className="reel-wrapper"
           data-index={i}
+          data-product-id={product._id}
           style={{ height: '100dvh', scrollSnapAlign: 'start' }}
         >
           <ReelCard product={product} />
@@ -236,10 +309,11 @@ export default function FeedPage() {
         </div>
       )}
 
+      {/* ── PWA Install Modal ─────────────────────────────────────────────────── */}
       <Modal isOpen={showPWA} onClose={() => setShowPWA(false)} title="Install KerelaPets">
         <div style={{ padding: 24, textAlign: 'center' }}>
           <div style={{
-            background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.15), rgba(168, 85, 247, 0.1))',
+            background: 'linear-gradient(135deg, rgba(0,210,255,0.15), rgba(168,85,247,0.1))',
             width: 80, height: 80, borderRadius: 24,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             margin: '0 auto 24px', border: '1px solid rgba(255,255,255,0.05)',
