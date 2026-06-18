@@ -12,7 +12,8 @@ const SPECIAL_TAGS = ['On Sale', 'Not For Sale', 'Near Me'];
 
 export default function SearchPage() {
   const [query, setQuery] = useState('');
-  const [selectedTags, setSelectedTags] = useState([]);
+  // Default to 'on sale' enabled
+  const [selectedTags, setSelectedTags] = useState(['on sale']);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
@@ -56,8 +57,9 @@ export default function SearchPage() {
   useEffect(() => {
     (async () => {
       try {
-        const { data } = await getFeed(1, 20);
-        setInitialProducts(data.products || []);
+        // Because default is 'on sale', let's load initial products with 'on sale' filter
+        // We can just rely on the doSearch effect to trigger the search initially
+        setInitialLoading(false);
       } catch (err) {
         console.error('Failed to load initial products:', err);
       } finally {
@@ -82,6 +84,7 @@ export default function SearchPage() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
+      // If there are tags or query, do a search
       if (query || selectedTags.length) doSearch();
       else { setResults([]); setSearched(false); }
     }, 400);
@@ -105,7 +108,8 @@ export default function SearchPage() {
           const isActive = selectedTags.includes(tag.toLowerCase());
           let activeStyle = {};
           if (isActive) {
-            if (tag === 'On Sale') activeStyle = { background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#fff', border: 'none' };
+            // Updated On Sale to Green gradient for clarity
+            if (tag === 'On Sale') activeStyle = { background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', border: 'none', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)' };
             if (tag === 'Not For Sale') activeStyle = { background: 'linear-gradient(135deg, #ef4444, #b91c1c)', color: '#fff', border: 'none' };
             if (tag === 'Near Me') activeStyle = { background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)', color: '#fff', border: 'none' };
           }
