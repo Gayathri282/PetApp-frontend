@@ -22,23 +22,23 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
   const [showControl, setShowControl] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [showNoAudioNotice, setShowNoAudioNotice] = useState(false);
-  const [isNearView, setIsNearView] = useState(false);
 
   const playVideo = useCallback(async () => {
     const video = videoRef.current;
-    if (!video || !video.src) return; // Guard: don't play if no src yet
+    if (!video || !src) return;
     try {
       video.muted = muted;
+      video.volume = 1.0;
       await video.play();
     } catch {
       video.muted = true;
       try { await video.play(); } catch { /* autoplay fully blocked */ }
     }
-  }, [muted]);
+  }, [src, muted]);
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !src || !isNearView) return;
+    if (!video || !src) return;
 
     let retryCount = 0;
     const maxRetries = 3;
@@ -47,7 +47,13 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
     setShowNoAudioNotice(false);
     manuallyPaused.current = false;
 
-    const onError = () => {
+    const onError = (e) => {
+      console.error('[VideoPlayer] Media load error:', {
+        src,
+        fullSrc: getFullSrc(src),
+        error: e?.currentTarget?.error || e,
+      });
+
       if (retryCount < maxRetries) {
         retryCount++;
         const delay = retryCount * 1000;
@@ -65,7 +71,7 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
     };
 
     const onCanPlay = () => {
-      setHasError(false); // Clear any previous errors if we can now play
+      setHasError(false);
       if (isInView.current && !manuallyPaused.current) {
         playVideo();
       }
@@ -73,7 +79,7 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
 
     const onDataLoaded = () => {
       setTimeout(() => {
-        if (video.readyState >= 1) {
+        if (video && video.readyState >= 1) {
           const noAudio =
             (video.audioTracks && video.audioTracks.length === 0) ||
             video.mozHasAudio === false ||
@@ -90,8 +96,8 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
     video.addEventListener('canplaythrough', onCanPlay, { once: true });
     video.addEventListener('loadeddata', onDataLoaded);
 
-    // Initial check: if already in view, try playing
-    if (isInView.current && !manuallyPaused.current && video.readyState >= 2) {
+    // Try playing if already ready
+    if (!manuallyPaused.current && video.readyState >= 2) {
       playVideo();
     }
 
@@ -101,48 +107,31 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
       video.removeEventListener('loadeddata', onDataLoaded);
       video.pause();
     };
-  }, [src, playVideo, isNearView]);
+  }, [src, playVideo]);
 
   const handleIntersect = useCallback(
     (entry) => {
       const video = videoRef.current;
       if (!video) return;
 
-      // Play when at least 60% visible
-      if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
+      if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
         isInView.current = true;
-        if (!manuallyPaused.current && video.src) {
+        if (!manuallyPaused.current && src) {
           playVideo();
         }
-      } 
-      // Pause only when visibility drops below 10% (Hysteresis)
-      else if (entry.intersectionRatio < 0.1) {
+      } else if (entry.intersectionRatio < 0.1) {
         isInView.current = false;
         video.pause();
         video.currentTime = 0;
         manuallyPaused.current = false;
       }
     },
-    [playVideo]
+    [src, playVideo]
   );
 
   const containerRef = useIntersectionObserver(handleIntersect, {
-    threshold: [0.1, 0.6],
+    threshold: [0.1, 0.5],
   });
-
-  // Near-view observer to trigger preloading and resource cleanup
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const observer = new IntersectionObserver((entries) => {
-      // We use isIntersecting with a large margin to know if it's "near"
-      setIsNearView(entries[0].isIntersecting);
-    }, { rootMargin: '100% 0px' }); // 1 viewport ahead/behind
-
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, [containerRef]);
 
   const togglePlay = (e) => {
     e.stopPropagation();
@@ -171,7 +160,7 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
         position: 'relative',
         width: '100%',
         height: '100%',
-        background: '#000',
+        background: '#040704',
         cursor: 'pointer',
         overflow: 'hidden',
         ...style,
@@ -180,17 +169,21 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
       <video
         key={src}
         ref={videoRef}
-        src={isNearView ? getFullSrc(src) : ''}
+        src={src ? getFullSrc(src) : ''}
         muted={muted}
         loop
         playsInline
         webkit-playsinline="true"
         x5-playsinline="true"
         crossOrigin="anonymous"
-        preload={isNearView ? "auto" : "none"}
+        preload="auto"
         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         onPlay={() => setIsPaused(false)}
         onPause={() => setIsPaused(true)}
+        onError={(e) => {
+          console.error('[VideoPlayer] Direct video element error:', e.currentTarget.error);
+          setHasError(true);
+        }}
       />
 
       {/* No audio notice */}

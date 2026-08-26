@@ -98,6 +98,8 @@ export default function ChatRoomPage() {
         const isInternal = linkUrl.startsWith(window.location.origin) || 
                           linkUrl.startsWith('/') || 
                           linkUrl.includes('/product/') || 
+                          linkUrl.includes('/reel/') || 
+                          linkUrl.includes('/reels/') || 
                           linkUrl.includes('/feed');
         
         if (isInternal) {
@@ -137,6 +139,19 @@ export default function ChatRoomPage() {
       let urlParts = result[0].split(urlRegex);
       return urlParts.map((part, i) => {
         if (urlRegex.test(part)) {
+          let path = part;
+          const isInternal = part.includes('/product/') || part.includes('/reel/') || part.includes('/reels/') || part.includes('/feed');
+          if (isInternal) {
+            try {
+              const u = new URL(part);
+              path = u.pathname + u.search;
+            } catch { /* use raw */ }
+            return (
+              <span key={i} onClick={() => navigate(path, { state: { from: 'chat' } })} style={{ color: '#FFE58F', textDecoration: 'underline', cursor: 'pointer', wordBreak: 'break-all' }}>
+                {part}
+              </span>
+            );
+          }
           return (
             <a key={i} href={part} target="_blank" rel="noopener noreferrer" style={{ color: '#FFE58F', textDecoration: 'underline', wordBreak: 'break-all' }}>
               {part}

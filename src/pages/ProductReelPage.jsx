@@ -308,14 +308,19 @@ ${canonicalUrl}`;
       </div>
       {/* Reels */}
       <div className="reel-container" ref={containerRef} style={{ height: '100dvh', overflowY: 'scroll', scrollSnapType: 'y mandatory' }}>
-        {product.reels.map((reel, i) => (
-          <div key={`${product._id}-${i}`} className="reel-item" data-index={i} style={{ position: 'relative', height: '100dvh', scrollSnapAlign: 'start', overflow: 'hidden' }}>
-            <VideoPlayer 
-              key={`${product._id}-reel-${i}`} 
-              src={reel.videoUrl} 
-              muted={isMuted}
-              externalRef={(el) => (videoRefs.current[i] = el)}
-            />
+        {(() => {
+          const reelsList = (product.reels && product.reels.length > 0)
+            ? product.reels
+            : [{ videoUrl: '', thumbnail: product.images?.[0] || '', isFallback: true }];
+
+          return reelsList.map((reel, i) => (
+            <div key={`${product._id}-${i}`} className="reel-item" data-index={i} style={{ position: 'relative', height: '100dvh', scrollSnapAlign: 'start', overflow: 'hidden' }}>
+              <VideoPlayer 
+                key={`${product._id}-reel-${i}`} 
+                src={reel.videoUrl} 
+                muted={isMuted}
+                externalRef={(el) => (videoRefs.current[i] = el)}
+              />
 
             {/* Bottom Gradient Overlay */}
             <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '40%', background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', pointerEvents: 'none', zIndex: 5 }} />
@@ -416,8 +421,9 @@ ${canonicalUrl}`;
               </div>
             </div>
           </div>
-        ))}
-      </div>
+        ));
+      })()}
+    </div>
 
       <ShareModal isOpen={showShare} onClose={() => setShowShare(false)} url={window.location.href} />
       <Modal isOpen={showEnquiry} onClose={() => setShowEnquiry(false)} title="Register Interest">

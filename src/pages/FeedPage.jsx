@@ -9,6 +9,7 @@ import { getFeed, getLatestTimestamp, trackInterest } from '../api';
 import { Smartphone, Download, RefreshCw, Bell, Search, Heart, MapPin, Play, Film, ChevronRight, ShoppingBag, Scissors, Package, Sparkles, Home, Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { CATEGORIES } from '../data/categories';
+import { openReel } from '../utils/navigation';
 
 export default function FeedPage() {
   const navigate = useNavigate();
@@ -301,7 +302,7 @@ export default function FeedPage() {
             Trending Reels 🔥
           </h2>
           <button
-            onClick={() => setViewMode('reels')}
+            onClick={() => products.length > 0 ? openReel(navigate, products[0], { from: 'feed' }) : setViewMode('reels')}
             style={{ background: 'none', border: 'none', color: '#D4AF37', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
           >
             View all <ChevronRight size={15} />
@@ -315,7 +316,7 @@ export default function FeedPage() {
             return (
               <div
                 key={product._id}
-                onClick={() => openFullReelAt(idx)}
+                onClick={() => openReel(navigate, product, { from: 'feed' })}
                 className="glass"
                 style={{
                   width: 165,

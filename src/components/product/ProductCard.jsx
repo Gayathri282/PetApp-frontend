@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Play, Clock, XCircle } from 'lucide-react';
 import { useRef, useState, useEffect, memo } from 'react';
+import { openReel } from '../../utils/navigation';
 
 const STATUS_CONFIG = {
   pending: {
@@ -50,7 +51,7 @@ const ProductCard = memo(({ product, style = {} }) => {
 
   return (
     <div
-      onClick={() => isClickable && navigate(`/product/${product._id}`)}
+      onClick={() => isClickable && openReel(navigate, product)}
       onMouseEnter={() => { if (isClickable) { setHovering(true); videoRef.current?.play().catch(()=>{}); } }}
       onMouseLeave={() => { setHovering(false); if(videoRef.current){videoRef.current.pause();videoRef.current.currentTime=0;} }}
       className="glass animate-fade-in"

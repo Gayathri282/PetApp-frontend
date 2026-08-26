@@ -8,6 +8,7 @@ import { toggleLike, submitEnquiry, updateProfile, trackInterest, sendMessage } 
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { getSoundPreference, setSoundPreference } from '../../hooks/useSoundPreference';
+import { openReel } from '../../utils/navigation';
 
 export default function ReelCard({ product, onLikeUpdate }) {
   const navigate = useNavigate();

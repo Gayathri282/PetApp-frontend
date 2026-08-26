@@ -80,6 +80,8 @@ export default function App() {
         <Route path="/search" element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
         <Route path="/product/:id" element={<ProtectedRoute><ProductReelPage /></ProtectedRoute>} />
         <Route path="/reel/:id" element={<ProtectedRoute><ProductReelPage /></ProtectedRoute>} />
+        <Route path="/reels/:id" element={<ProtectedRoute><ProductReelPage /></ProtectedRoute>} />
+        <Route path="/reels" element={<Navigate to="/feed" replace />} />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="/vendor/apply" element={<ProtectedRoute><VendorApplyPage /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
