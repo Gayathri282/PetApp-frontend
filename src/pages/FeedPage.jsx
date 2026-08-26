@@ -6,24 +6,24 @@ import Spinner from '../components/ui/Spinner';
 import Modal from '../components/ui/Modal';
 import ComingSoonModal from '../components/ui/ComingSoonModal';
 import { getFeed, getLatestTimestamp, trackInterest } from '../api';
-import { Smartphone, Download, RefreshCw, Bell, Search, Heart, MapPin, Play, Film, ChevronRight, ShoppingBag, Scissors, Package, Sparkles } from 'lucide-react';
+import { Smartphone, Download, RefreshCw, Bell, Search, Heart, MapPin, Play, Film, ChevronRight, ShoppingBag, Scissors, Package, Sparkles, Home } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const CATEGORY_AVATARS = [
-  { name: 'Dogs', count: '125+', tag: 'dog', img: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=150&auto=format&fit=crop&q=80' },
-  { name: 'Cats', count: '89+', tag: 'cat', img: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=150&auto=format&fit=crop&q=80' },
-  { name: 'Birds', count: '45+', tag: 'bird', img: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=150&auto=format&fit=crop&q=80' },
-  { name: 'Fish', count: '30+', tag: 'fish', img: 'https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?w=150&auto=format&fit=crop&q=80' },
-  { name: 'Others', count: '20+', tag: 'other', img: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=150&auto=format&fit=crop&q=80' },
+  { name: 'Dogs', count: '125+', tag: 'dog', img: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=200&auto=format&fit=crop&q=80' },
+  { name: 'Cats', count: '89+', tag: 'cat', img: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=200&auto=format&fit=crop&q=80' },
+  { name: 'Birds', count: '45+', tag: 'bird', img: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=200&auto=format&fit=crop&q=80' },
+  { name: 'Fish', count: '30+', tag: 'fish', img: 'https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?w=200&auto=format&fit=crop&q=80' },
+  { name: 'Others', count: '20+', tag: 'other', img: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=200&auto=format&fit=crop&q=80' },
 ];
 
 const CATEGORY_GRID_ITEMS = [
-  { name: 'Dogs', count: '125+ Listings', tag: 'dog', img: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=300&auto=format&fit=crop&q=80' },
-  { name: 'Cats', count: '89+ Listings', tag: 'cat', img: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=300&auto=format&fit=crop&q=80' },
-  { name: 'Birds', count: '45+ Listings', tag: 'bird', img: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=300&auto=format&fit=crop&q=80' },
-  { name: 'Fish', count: '30+ Listings', tag: 'fish', img: 'https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?w=300&auto=format&fit=crop&q=80' },
-  { name: 'Small Pets', count: '20+ Listings', tag: 'other', img: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=300&auto=format&fit=crop&q=80' },
-  { name: 'Pet Services', count: 'Coming Soon', featureKey: 'services', img: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=300&auto=format&fit=crop&q=80' },
+  { name: 'Dogs', count: '125+ Listings', tag: 'dog', img: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400&auto=format&fit=crop&q=80' },
+  { name: 'Cats', count: '89+ Listings', tag: 'cat', img: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&auto=format&fit=crop&q=80' },
+  { name: 'Birds', count: '45+ Listings', tag: 'bird', img: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=400&auto=format&fit=crop&q=80' },
+  { name: 'Fish', count: '30+ Listings', tag: 'fish', img: 'https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?w=400&auto=format&fit=crop&q=80' },
+  { name: 'Small Pets', count: '20+ Listings', tag: 'other', img: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=400&auto=format&fit=crop&q=80' },
+  { name: 'Pet Services', count: 'Coming Soon', featureKey: 'services', img: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=400&auto=format&fit=crop&q=80' },
 ];
 
 export default function FeedPage() {
@@ -127,45 +127,36 @@ export default function FeedPage() {
           zIndex: 100,
         }}
       >
-        {/* Back to Homepage Header */}
+        {/* Sleek Home Icon Overlay (Top-Left) */}
         <div style={{
           position: 'fixed',
-          top: 16,
+          top: 20,
           left: 16,
-          right: 16,
           zIndex: 1000,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
         }}>
           <button
-            onClick={() => setViewMode('home')}
+            onClick={() => {
+              setViewMode('home');
+              navigate('/feed');
+            }}
+            aria-label="Home"
             style={{
-              padding: '8px 16px',
-              borderRadius: 20,
-              background: 'rgba(10, 18, 13, 0.85)',
+              width: 42,
+              height: 42,
+              borderRadius: '50%',
+              background: 'rgba(10, 18, 13, 0.65)',
+              backdropFilter: 'blur(10px)',
               border: '1px solid rgba(212, 175, 55, 0.4)',
               color: '#FFE58F',
-              fontSize: '0.82rem',
-              fontWeight: 700,
               cursor: 'pointer',
-              backdropFilter: 'blur(12px)',
               display: 'flex',
               alignItems: 'center',
-              gap: 6,
+              justifyContent: 'center',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.5)',
             }}
           >
-            ← Back to Feed
+            <Home size={22} color="#FFE58F" />
           </button>
-          <div style={{
-            fontSize: '0.9rem',
-            fontWeight: 800,
-            color: '#FFE58F',
-            letterSpacing: '0.04em',
-            textShadow: '0 2px 8px rgba(0,0,0,0.8)',
-          }}>
-            Reels 🎬
-          </div>
         </div>
 
         {products.map((product, i) => (
