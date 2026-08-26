@@ -6,16 +6,12 @@ import { getPlayableVideoUrl, getPosterUrl, logVideoDiagnostics } from '../../ut
 export default function ReelViewerModal({ isOpen, onClose, reel, product }) {
   const videoRef = useRef(null);
   const [hasError, setHasError] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
 
   const itemData = product || reel;
   const videoUrl = getPlayableVideoUrl(itemData);
   const posterUrl = getPosterUrl(itemData);
-
-  if (isOpen && itemData) {
-    logVideoDiagnostics('ReelViewerModal', itemData);
-  }
 
   useEffect(() => {
     setHasError(false);
@@ -23,13 +19,17 @@ export default function ReelViewerModal({ isOpen, onClose, reel, product }) {
 
     if (isOpen && videoRef.current && videoUrl) {
       console.log('[REEL VIEWER] Modal Opened with Video URL:', videoUrl);
-      const playPromise = videoRef.current.play();
+      const video = videoRef.current;
+      video.muted = isMuted;
+      const playPromise = video.play();
       if (playPromise !== undefined) {
         playPromise
           .then(() => setIsPlaying(true))
           .catch((err) => {
-            console.warn('[REEL VIEWER] Autoplay rejected, user tap required:', err);
-            setIsPlaying(false);
+            console.warn('[REEL VIEWER] Autoplay rejected, falling back to muted play:', err);
+            video.muted = true;
+            setIsMuted(true);
+            video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
           });
       }
     }
@@ -145,6 +145,7 @@ export default function ReelViewerModal({ isOpen, onClose, reel, product }) {
               src={videoUrl}
               poster={posterUrl}
               controls
+              loop
               playsInline
               webkit-playsinline="true"
               x5-playsinline="true"

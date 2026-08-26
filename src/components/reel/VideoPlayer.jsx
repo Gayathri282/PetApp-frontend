@@ -115,15 +115,14 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
       const video = videoRef.current;
       if (!video) return;
 
-      if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+      if (entry.isIntersecting && entry.intersectionRatio >= 0.15) {
         isInView.current = true;
         if (!manuallyPaused.current && src) {
           playVideo();
         }
-      } else if (entry.intersectionRatio < 0.1) {
+      } else if (entry.intersectionRatio < 0.05) {
         isInView.current = false;
         video.pause();
-        video.currentTime = 0;
         manuallyPaused.current = false;
       }
     },
@@ -131,7 +130,7 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
   );
 
   const containerRef = useIntersectionObserver(handleIntersect, {
-    threshold: [0.1, 0.5],
+    threshold: [0.05, 0.15, 0.5],
   });
 
   const togglePlay = (e) => {
