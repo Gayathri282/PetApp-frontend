@@ -28,12 +28,16 @@ export default function BottomNav() {
         left: 0,
         right: 0,
         zIndex: 1000,
-        height: 64,
+        height: 66,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-around',
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-        borderTop: '1px solid rgba(255,255,255,0.05)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 4px)',
+        background: 'rgba(10, 18, 13, 0.92)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        borderTop: '1px solid rgba(212, 175, 55, 0.25)',
+        boxShadow: '0 -10px 30px rgba(0, 0, 0, 0.6)',
       }}
     >
       {finalTabs.map(({ path, icon: Icon, label }) => {
@@ -57,7 +61,7 @@ export default function BottomNav() {
               background: 'none',
               border: 'none',
               cursor: 'pointer',
-              color: isActive ? '#FFE58F' : '#8c8c8c',
+              color: isActive ? '#FFE58F' : '#A3B8A8',
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               position: 'relative',
               touchAction: 'manipulation',

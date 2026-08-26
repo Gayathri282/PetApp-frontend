@@ -1,15 +1,17 @@
 @theme {
-  --color-dark-950: #050403;
-  --color-dark-900: #090807;
-  --color-dark-800: #120e0a;
-  --color-dark-700: #1a150f;
-  --color-dark-600: #261f16;
-  --color-dark-500: #3b3022;
+  --color-dark-950: #040704;
+  --color-dark-900: #080d09;
+  --color-dark-800: #0f1d14;
+  --color-dark-700: #16281c;
+  --color-dark-600: #1e3827;
+  --color-dark-500: #2a4d36;
   --color-gold-400: #FFE58F;
   --color-gold-500: #D4AF37;
   --color-gold-600: #AA7C11;
+  --color-cream: #F5F5EC;
+  --color-cream-muted: #A3B8A8;
   --color-success: #10b981;
-  --color-danger: #f43f5e;
+  --color-danger: #ef4444;
   --color-warning: #f59e0b;
   --font-sans: "Outfit", "Inter", system-ui, -apple-system, sans-serif;
   --font-tall: "Cinzel", serif;
@@ -29,9 +31,9 @@ html {
 
 body {
   font-family: var(--font-sans);
-  background-color: #090807;
-  background-image: radial-gradient(ellipse at 50% 10%, #1c150c 0%, #0d0b08 60%, #050403 100%);
-  color: #e2e8f0;
+  background-color: #080d09;
+  background-image: radial-gradient(ellipse at 50% 15%, #0f1d14 0%, #080d09 60%, #040704 100%);
+  color: #F5F5EC;
   min-height: 100dvh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
@@ -48,20 +50,20 @@ body {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #090807;
+  background: #080d09;
 }
 ::-webkit-scrollbar-thumb {
-  background: #3b3022;
+  background: #1e3827;
   border-radius: 999px;
 }
 
-/* ── Glassmorphism ────────────────────────────────────── */
+/* ── Glassmorphism (Dark Forest Green Glass) ────────── */
 .glass {
-  background: rgba(22, 18, 14, 0.75);
+  background: rgba(15, 29, 20, 0.75);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(212, 175, 55, 0.25);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
 }
 
 .glass-light {
@@ -72,10 +74,11 @@ body {
 }
 
 .glass-strong {
-  background: rgba(13, 10, 8, 0.9);
+  background: rgba(10, 18, 13, 0.9);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid rgba(212, 175, 55, 0.25);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
 }
 
 /* ── Gradients ────────────────────────────────────────── */
@@ -88,11 +91,11 @@ body {
 }
 
 .gradient-hero {
-  background: radial-gradient(ellipse at 50% 20%, #1c150c 0%, #0d0b08 60%, #050403 100%);
+  background: radial-gradient(ellipse at 50% 20%, #0f1d14 0%, #080d09 60%, #040704 100%);
 }
 
 .gradient-card {
-  background: linear-gradient(145deg, rgba(212, 175, 55, 0.12) 0%, rgba(170, 124, 17, 0.05) 100%);
+  background: linear-gradient(145deg, rgba(15, 29, 20, 0.8) 0%, rgba(10, 18, 13, 0.9) 100%);
 }
 
 .gradient-text {

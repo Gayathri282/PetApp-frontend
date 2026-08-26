@@ -95,23 +95,36 @@ export default function SearchPage() {
   const isLoading = searched ? loading : initialLoading;
 
   return (
-    <div style={{ padding:'20px 16px 40px', maxWidth:640, margin:'0 auto' }}>
+    <div style={{ padding:'20px 16px 40px', maxWidth:680, margin:'0 auto' }}>
       {/* Search input */}
       <div style={{ position:'relative', marginBottom:20 }}>
-        <Search size={18} style={{ position:'absolute', left:16, top:'50%', transform:'translateY(-50%)', color:'#64748b' }} />
-        <input className="input-field" placeholder="Search pets, products, breeds..." value={query} onChange={e => setQuery(e.target.value)} style={{ paddingLeft:44, borderRadius:16, fontSize:'0.95rem' }} />
+        <Search size={18} style={{ position:'absolute', left:16, top:'50%', transform:'translateY(-50%)', color:'#D4AF37' }} />
+        <input 
+          className="input-field" 
+          placeholder="Search pets, products, breeds..." 
+          value={query} 
+          onChange={e => setQuery(e.target.value)} 
+          style={{ 
+            paddingLeft:44, 
+            borderRadius:16, 
+            fontSize:'0.95rem',
+            background: 'rgba(15, 29, 20, 0.75)',
+            border: '1px solid rgba(212, 175, 55, 0.25)',
+            color: '#F5F5EC',
+            boxShadow: '0 8px 25px rgba(0, 0, 0, 0.4)',
+          }} 
+        />
       </div>
 
-      {/* Tags */}
+      {/* Filter Chips */}
       <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:24 }}>
         {SPECIAL_TAGS.map(tag => {
           const isActive = selectedTags.includes(tag.toLowerCase());
           let activeStyle = {};
           if (isActive) {
-            // Updated On Sale to Green gradient for clarity
-            if (tag === 'On Sale') activeStyle = { background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', border: 'none', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)' };
-            if (tag === 'Not For Sale') activeStyle = { background: 'linear-gradient(135deg, #ef4444, #b91c1c)', color: '#fff', border: 'none' };
-            if (tag === 'Near Me') activeStyle = { background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)', color: '#fff', border: 'none' };
+            if (tag === 'On Sale') activeStyle = { background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.3), rgba(16, 185, 129, 0.3))', color: '#FFE58F', border: '1px solid rgba(212, 175, 55, 0.6)', boxShadow: '0 4px 15px rgba(212, 175, 55, 0.25)' };
+            if (tag === 'Not For Sale') activeStyle = { background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(185, 28, 28, 0.3))', color: '#fca5a5', border: '1px solid rgba(239, 68, 68, 0.5)' };
+            if (tag === 'Near Me') activeStyle = { background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.3), rgba(170, 124, 17, 0.3))', color: '#FFE58F', border: '1px solid rgba(212, 175, 55, 0.6)' };
           }
           return (
             <button key={tag} className={`tag-pill ${isActive ? 'active' : ''}`} style={activeStyle} onClick={() => toggleTag(tag.toLowerCase())}>
@@ -119,7 +132,7 @@ export default function SearchPage() {
             </button>
           );
         })}
-        <div style={{ width: '100%', height: 1, background: 'rgba(255,255,255,0.05)', margin: '4px 0' }} />
+        <div style={{ width: '100%', height: 1, background: 'rgba(212,175,55,0.1)', margin: '4px 0' }} />
         {TAGS.map(tag => (
           <button key={tag} className={`tag-pill ${selectedTags.includes(tag)?'active':''}`} onClick={() => toggleTag(tag)}>
             {tag}

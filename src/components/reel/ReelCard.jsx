@@ -309,14 +309,14 @@ export default function ReelCard({ product, onLikeUpdate }) {
               background: 'none',
               border: 'none',
               cursor: 'pointer',
-              color: '#a78bfa',
+              color: '#FFE58F',
               padding: 0,
             }}
           >
-            <div style={{ display: 'flex', filter: 'drop-shadow(0 2px 4px rgba(139,92,246,0.5))' }}>
-              <Zap size={28} fill="#8b5cf6" strokeWidth={0} />
+            <div style={{ display: 'flex', filter: 'drop-shadow(0 2px 8px rgba(212,175,55,0.6))' }}>
+              <Zap size={28} fill="#D4AF37" strokeWidth={0} />
             </div>
-            <span style={{ fontSize: '0.7rem', fontWeight: 800, textShadow: '0 2px 4px rgba(0,0,0,0.5)', color: '#fff' }}>
+            <span style={{ fontSize: '0.7rem', fontWeight: 800, textShadow: '0 2px 4px rgba(0,0,0,0.5)', color: '#FFE58F' }}>
               BUY
             </span>
           </button>
@@ -325,22 +325,23 @@ export default function ReelCard({ product, onLikeUpdate }) {
 
       {/* ── Vendor info & product details (bottom-left) ───────────────────────── */}
       <div style={{ position: 'absolute', bottom: 100, left: 16, right: 100, zIndex: 15 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
           <div
             style={{
               width: 44,
               height: 44,
               borderRadius: '50%',
-              border: '2px solid #818cf8',
+              border: '2px solid #D4AF37',
               padding: 2,
-              background: 'rgba(0,0,0,0.3)',
+              background: 'rgba(0,0,0,0.4)',
+              boxShadow: '0 0 12px rgba(212, 175, 55, 0.3)',
             }}
           >
             <img
               src={
                 product.vendor?.avatar
                   ? getFullSrc(product.vendor.avatar)
-                  : `https://ui-avatars.com/api/?name=${encodeURIComponent(product.vendor?.name ?? 'V')}&background=6366f1&color=fff`
+                  : `https://ui-avatars.com/api/?name=${encodeURIComponent(product.vendor?.name ?? 'V')}&background=D4AF37&color=0f0c08`
               }
               alt={product.vendor?.name ?? 'Vendor'}
               style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
@@ -349,16 +350,16 @@ export default function ReelCard({ product, onLikeUpdate }) {
           <div>
             <h3
               style={{
-                fontSize: '1rem',
+                fontSize: '0.98rem',
                 fontWeight: 800,
                 color: '#fff',
-                textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+                textShadow: '0 2px 4px rgba(0,0,0,0.8)',
               }}
             >
               @{product.vendor?.name?.replace(/\s+/g, '').toLowerCase() ?? 'vendor'}
             </h3>
-            <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>
-              Verified Vendor
+            <p style={{ fontSize: '0.75rem', color: '#FFE58F', fontWeight: 600, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
+              ✨ Verified Vendor
             </p>
           </div>
         </div>
@@ -367,9 +368,9 @@ export default function ReelCard({ product, onLikeUpdate }) {
           style={{
             fontSize: '1.1rem',
             fontWeight: 700,
-            color: '#fff',
+            color: '#F5F5EC',
             marginBottom: 6,
-            textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+            textShadow: '0 2px 4px rgba(0,0,0,0.8)',
           }}
         >
           {product.name}
@@ -377,12 +378,13 @@ export default function ReelCard({ product, onLikeUpdate }) {
         <p
           style={{
             fontSize: '0.85rem',
-            color: 'rgba(255,255,255,0.7)',
+            color: 'rgba(245,245,236,0.85)',
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
-            marginBottom: 8,
+            marginBottom: 10,
+            textShadow: '0 1px 3px rgba(0,0,0,0.8)',
           }}
         >
           {product.description}
@@ -391,12 +393,14 @@ export default function ReelCard({ product, onLikeUpdate }) {
         {product.price > 0 && (
           <span
             style={{
-              background: '#8b5cf6',
-              color: '#fff',
-              padding: '4px 12px',
-              borderRadius: 10,
+              background: 'linear-gradient(135deg, #FFE58F 0%, #D4AF37 50%, #AA7C11 100%)',
+              color: '#0f0c08',
+              padding: '5px 14px',
+              borderRadius: 12,
               fontSize: '1rem',
               fontWeight: 800,
+              boxShadow: '0 4px 15px rgba(212, 175, 55, 0.4)',
+              display: 'inline-block',
             }}
           >
             ₹{product.price.toLocaleString('en-IN')}

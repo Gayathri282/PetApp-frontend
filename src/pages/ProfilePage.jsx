@@ -76,44 +76,44 @@ export default function ProfilePage() {
   if (!user) return <Spinner />;
 
   return (
-    <div style={{ padding: '20px 16px 40px', maxWidth: 640, margin: '0 auto' }}>
+    <div style={{ padding: '20px 16px 40px', maxWidth: 680, margin: '0 auto' }}>
       {/* Profile header */}
       <div className="animate-fade-in" style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 28 }}>
-        <div style={{ width: 72, height: 72, borderRadius: '50%', overflow: 'hidden', border: '3px solid rgba(99,102,241,0.4)', flexShrink: 0, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {user.avatar ? <img src={getFullSrc(user.avatar)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 28, fontWeight: 800 }}>{user.name?.[0]}</span>}
+        <div style={{ width: 76, height: 76, borderRadius: '50%', overflow: 'hidden', border: '3px solid #D4AF37', flexShrink: 0, background: 'linear-gradient(135deg, #FFE58F, #D4AF37)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)' }}>
+          {user.avatar ? <img src={getFullSrc(user.avatar)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 30, fontWeight: 800, color: '#0f0c08' }}>{user.name?.[0]}</span>}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <h1 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: 2 }}>{user.name}</h1>
-          <p style={{ fontSize: '0.8rem', color: '#818cf8', fontWeight: 500 }}>{user.role === 'vendor' ? '✨ Verified Vendor' : user.role === 'admin' ? '🛡️ Admin' : '🐾 Pet Lover'}</p>
+          <h1 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#F5F5EC', marginBottom: 2 }}>{user.name}</h1>
+          <p style={{ fontSize: '0.82rem', color: '#FFE58F', fontWeight: 600 }}>{user.role === 'vendor' ? '✨ Verified Vendor' : user.role === 'admin' ? '🛡️ Admin' : '🐾 Pet Lover'}</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => setShowEditProfile(true)} className="btn-ghost" style={{ padding: 10, borderRadius: 12, fontSize: '0.75rem', fontWeight: 600 }}>Edit Profile</button>
-          <button onClick={() => setShowShare(true)} className="btn-ghost" style={{ padding: 10, borderRadius: 12 }}><Share2 size={18} /></button>
-          <button onClick={handleLogout} className="btn-ghost" style={{ padding: 10, borderRadius: 12, color: '#ef4444' }}><LogOut size={18} /></button>
+          <button onClick={() => setShowEditProfile(true)} className="btn-ghost" style={{ padding: '8px 14px', borderRadius: 12, fontSize: '0.78rem', fontWeight: 600, border: '1px solid rgba(212,175,55,0.3)', color: '#F5F5EC' }}>Edit Profile</button>
+          <button onClick={() => setShowShare(true)} className="btn-ghost" style={{ padding: 10, borderRadius: 12, border: '1px solid rgba(212,175,55,0.3)' }}><Share2 size={18} color="#D4AF37" /></button>
+          <button onClick={handleLogout} className="btn-ghost" style={{ padding: 10, borderRadius: 12, border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444' }}><LogOut size={18} /></button>
         </div>
       </div>
 
       {/* Normal user — become vendor */}
       {user.role === 'user' && (
-        <div className="glass animate-fade-in-up" style={{ padding: 20, borderRadius: 16, marginBottom: 24 }}>
+        <div className="glass animate-fade-in-up" style={{ padding: 22, borderRadius: 20, marginBottom: 24, background: 'rgba(15, 29, 20, 0.75)', border: '1px solid rgba(212, 175, 55, 0.25)' }}>
           {appStatus?.status === 'pending' ? (
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 36, marginBottom: 8 }}>⏳</div>
-              <p style={{ fontWeight: 600, marginBottom: 4 }}>Application Pending</p>
-              <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>We're reviewing your vendor application.</p>
+              <p style={{ fontWeight: 700, color: '#FFE58F', marginBottom: 4 }}>Application Pending</p>
+              <p style={{ fontSize: '0.82rem', color: '#A3B8A8' }}>We're reviewing your vendor application.</p>
             </div>
           ) : appStatus?.status === 'rejected' ? (
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 36, marginBottom: 8 }}>😔</div>
-              <p style={{ fontWeight: 600, marginBottom: 4 }}>Application Rejected</p>
-              <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: 12 }}>You can apply again with updated details.</p>
+              <p style={{ fontWeight: 700, color: '#ef4444', marginBottom: 4 }}>Application Rejected</p>
+              <p style={{ fontSize: '0.82rem', color: '#A3B8A8', marginBottom: 14 }}>You can apply again with updated details.</p>
               <button className="btn-primary" onClick={() => navigate('/vendor/apply')}>Re-apply</button>
             </div>
           ) : (
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 36, marginBottom: 8 }}>🏪</div>
-              <p style={{ fontWeight: 600, marginBottom: 4 }}>Want to sell pets or products?</p>
-              <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: 16 }}>Apply to become a vendor and start uploading reels.</p>
+              <p style={{ fontWeight: 700, color: '#F5F5EC', fontSize: '1rem', marginBottom: 4 }}>Want to sell pets or products?</p>
+              <p style={{ fontSize: '0.82rem', color: '#A3B8A8', marginBottom: 16 }}>Apply to become a verified vendor and start posting listings & reels.</p>
               <button className="btn-primary" onClick={() => navigate('/vendor/apply')}>Become a Vendor</button>
             </div>
           )}
@@ -123,17 +123,36 @@ export default function ProfilePage() {
       {/* Vendor/Admin dashboard */}
       {(isVendor || isAdmin) && (
         <>
-          {/* Tabs */}
-          <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: 4 }}>
+          {/* Segmented Glass Tabs */}
+          <div style={{ display: 'flex', gap: 6, marginBottom: 20, background: 'rgba(10, 18, 13, 0.8)', border: '1px solid rgba(212, 175, 55, 0.2)', borderRadius: 16, padding: 5 }}>
             {[{ key: 'reels', icon: Film, label: 'My Reels' }, { key: 'products', icon: Package, label: 'My Products' }].map(t => (
-              <button key={t.key} onClick={() => setTab(t.key)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 0', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.2s', background: tab === t.key ? 'linear-gradient(135deg,rgba(99,102,241,0.2),rgba(139,92,246,0.15))' : 'none', color: tab === t.key ? '#a5b4fc' : '#64748b' }}>
-                <t.icon size={16} />{t.label}
+              <button 
+                key={t.key} 
+                onClick={() => setTab(t.key)} 
+                style={{ 
+                  flex: 1, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  gap: 8, 
+                  padding: '12px 0', 
+                  borderRadius: 12, 
+                  border: tab === t.key ? '1px solid rgba(212, 175, 55, 0.5)' : '1px solid transparent', 
+                  cursor: 'pointer', 
+                  fontSize: '0.88rem', 
+                  fontWeight: 700, 
+                  transition: 'all 0.25s ease', 
+                  background: tab === t.key ? 'linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(16, 185, 129, 0.15))' : 'transparent', 
+                  color: tab === t.key ? '#FFE58F' : '#A3B8A8' 
+                }}
+              >
+                <t.icon size={18} color={tab === t.key ? '#D4AF37' : '#A3B8A8'} />{t.label}
               </button>
             ))}
           </div>
 
           {loadingProducts ? <Spinner /> : (
-            <div className="stagger-children" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="stagger-children" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
               {/* Pending review banner */}
               {(() => {
@@ -142,22 +161,19 @@ export default function ProfilePage() {
                 const rejectedCount = list.filter(p => p.status === 'rejected').length;
                 if (pendingCount === 0 && rejectedCount === 0) return null;
                 return (
-                  <div style={{
-                    display: 'flex', flexDirection: 'column', gap: 6,
-                    padding: '12px 14px', borderRadius: 14, marginBottom: 4,
-                  }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 4 }}>
                     {pendingCount > 0 && (
                       <div style={{
                         display: 'flex', alignItems: 'center', gap: 10,
-                        background: 'rgba(251,146,60,0.1)', border: '1px solid rgba(251,146,60,0.25)',
-                        borderRadius: 12, padding: '10px 14px',
+                        background: 'rgba(212, 175, 55, 0.12)', border: '1px solid rgba(212, 175, 55, 0.3)',
+                        borderRadius: 14, padding: '12px 16px',
                       }}>
-                        <span style={{ fontSize: 18 }}>⏳</span>
+                        <span style={{ fontSize: 20 }}>⏳</span>
                         <div>
-                          <p style={{ fontSize: '0.8rem', fontWeight: 700, color: '#fb923c', marginBottom: 2 }}>
+                          <p style={{ fontSize: '0.82rem', fontWeight: 700, color: '#FFE58F', marginBottom: 2 }}>
                             {pendingCount} item{pendingCount > 1 ? 's' : ''} under review
                           </p>
-                          <p style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+                          <p style={{ fontSize: '0.72rem', color: '#A3B8A8' }}>
                             Not visible to the public until approved by admin
                           </p>
                         </div>
@@ -166,15 +182,15 @@ export default function ProfilePage() {
                     {rejectedCount > 0 && (
                       <div style={{
                         display: 'flex', alignItems: 'center', gap: 10,
-                        background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
-                        borderRadius: 12, padding: '10px 14px',
+                        background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)',
+                        borderRadius: 14, padding: '12px 16px',
                       }}>
-                        <span style={{ fontSize: 18 }}>❌</span>
+                        <span style={{ fontSize: 20 }}>❌</span>
                         <div>
-                          <p style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ef4444', marginBottom: 2 }}>
+                          <p style={{ fontSize: '0.82rem', fontWeight: 700, color: '#ef4444', marginBottom: 2 }}>
                             {rejectedCount} item{rejectedCount > 1 ? 's' : ''} rejected
                           </p>
-                          <p style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+                          <p style={{ fontSize: '0.72rem', color: '#A3B8A8' }}>
                             Edit and re-submit for approval
                           </p>
                         </div>
@@ -189,52 +205,52 @@ export default function ProfilePage() {
                   <div key={p._id} style={{ position: 'relative' }}>
                     <ProductCard product={p} />
                     <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 6, zIndex: 5 }}>
-                      <button onClick={() => { setEditingProduct(p); setShowEditReel(true); }} style={{ background: 'rgba(34,197,94,0.85)', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff', display: 'flex' }}><Edit2 size={14} /></button>
+                      <button onClick={() => { setEditingProduct(p); setShowEditReel(true); }} style={{ background: 'rgba(16,185,129,0.85)', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff', display: 'flex' }}><Edit2 size={14} /></button>
                       <button onClick={() => handleDelete(p._id)} style={{ background: 'rgba(239,68,68,0.85)', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff', display: 'flex' }}><X size={14} /></button>
                     </div>
                   </div>
-                )) : <p style={{ textAlign: 'center', color: '#64748b', padding: 40 }}>No promotional reels yet</p>
+                )) : <p style={{ textAlign: 'center', color: '#A3B8A8', padding: 40 }}>No promotional reels yet</p>
               ) : (
                 saleProducts.length > 0 ? saleProducts.map(p => (
                   <div key={p._id} style={{ position: 'relative' }}>
                     <ProductCard product={p} />
                     <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 6, zIndex: 5 }}>
-                      <button onClick={() => { setEditingProduct(p); setShowEditProduct(true); }} style={{ background: 'rgba(34,197,94,0.85)', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff', display: 'flex' }}><Edit2 size={14} /></button>
+                      <button onClick={() => { setEditingProduct(p); setShowEditProduct(true); }} style={{ background: 'rgba(16,185,129,0.85)', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff', display: 'flex' }}><Edit2 size={14} /></button>
                       <button onClick={() => handleDelete(p._id)} style={{ background: 'rgba(239,68,68,0.85)', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff', display: 'flex' }}><X size={14} /></button>
                     </div>
                   </div>
-                )) : <p style={{ textAlign: 'center', color: '#64748b', padding: 40 }}>No products yet</p>
+                )) : <p style={{ textAlign: 'center', color: '#A3B8A8', padding: 40 }}>No products yet</p>
               )}
             </div>
           )}
 
-          {/* FAB */}
+          {/* Floating Gold Add Button */}
           <div style={{ position: 'fixed', bottom: 84, right: 20, zIndex: 90 }}>
             {showAddMenu && (
-              <div className="glass animate-scale-in" style={{ position: 'absolute', bottom: 60, right: 0, borderRadius: 16, padding: 8, minWidth: 200 }}>
-                <button onClick={() => { setShowAddMenu(false); setShowUploadReel(true); }} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 14px', background: 'none', border: 'none', borderRadius: 10, color: '#e2e8f0', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500 }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                  <Film size={18} color="#818cf8" /> Upload Reel
+              <div className="glass animate-scale-in" style={{ position: 'absolute', bottom: 60, right: 0, borderRadius: 18, padding: 8, minWidth: 200, background: 'rgba(15, 29, 20, 0.95)', border: '1px solid rgba(212, 175, 55, 0.3)' }}>
+                <button onClick={() => { setShowAddMenu(false); setShowUploadReel(true); }} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 14px', background: 'none', border: 'none', borderRadius: 10, color: '#F5F5EC', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(212,175,55,0.12)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                  <Film size={18} color="#D4AF37" /> Upload Reel
                 </button>
-                <button onClick={() => { setShowAddMenu(false); setShowUploadProduct(true); }} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 14px', background: 'none', border: 'none', borderRadius: 10, color: '#e2e8f0', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500 }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                  <Package size={18} color="#fb923c" /> Upload Product
+                <button onClick={() => { setShowAddMenu(false); setShowUploadProduct(true); }} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 14px', background: 'none', border: 'none', borderRadius: 10, color: '#F5F5EC', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(212,175,55,0.12)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                  <Package size={18} color="#FFE58F" /> Upload Product
                 </button>
               </div>
             )}
-            <button onClick={() => setShowAddMenu(!showAddMenu)} className="gradient-primary animate-pulse-glow" style={{ width: 52, height: 52, borderRadius: 16, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: '0 8px 30px rgba(99,102,241,0.5)', transition: 'transform 0.2s', transform: showAddMenu ? 'rotate(45deg)' : 'none' }}>
-              <Plus size={26} />
+            <button onClick={() => setShowAddMenu(!showAddMenu)} style={{ width: 56, height: 56, borderRadius: '50%', background: 'linear-gradient(135deg, #FFE58F 0%, #D4AF37 50%, #AA7C11 100%)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0f0c08', boxShadow: '0 8px 30px rgba(212,175,55,0.5)', transition: 'transform 0.2s', transform: showAddMenu ? 'rotate(45deg)' : 'none' }}>
+              <Plus size={28} strokeWidth={2.5} />
             </button>
           </div>
         </>
       )}
 
-      {/* Danger Zone — Delete Account */}
+      {/* Danger Zone — Professional Dark Red Glass Card */}
       {(isVendor || user.role === 'user') && (
-        <div style={{ marginTop: 32, padding: '16px 20px', borderRadius: 16, border: '1px solid rgba(239,68,68,0.25)', background: 'rgba(239,68,68,0.04)' }}>
-          <p style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ef4444', marginBottom: 4 }}>Danger Zone</p>
-          <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: 12 }}>Permanently delete your account and all your reels/products. This cannot be undone.</p>
+        <div style={{ marginTop: 36, padding: '20px 22px', borderRadius: 20, border: '1px solid rgba(239, 68, 68, 0.3)', background: 'rgba(40, 10, 10, 0.65)', backdropFilter: 'blur(16px)' }}>
+          <p style={{ fontSize: '0.85rem', fontWeight: 800, color: '#ef4444', marginBottom: 4, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Danger Zone</p>
+          <p style={{ fontSize: '0.78rem', color: '#A3B8A8', marginBottom: 16, lineHeight: 1.5 }}>Permanently delete your account and all your reels/products. This action cannot be undone.</p>
           <button
             onClick={() => { setDeleteConfirmText(''); setShowDeleteAccount(true); }}
-            style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', borderRadius: 10, padding: '8px 18px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}
+            style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.4)', color: '#ef4444', borderRadius: 12, padding: '10px 20px', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
           >
             Delete My Account
           </button>
