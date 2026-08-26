@@ -63,7 +63,11 @@ const ProductCard = memo(({ product, style = {} }) => {
 
   return (
     <div
-      onClick={() => isClickable && openReel(navigate, product)}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (isClickable) openReel(navigate, product);
+      }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className="card animate-fade-in"
@@ -94,6 +98,11 @@ const ProductCard = memo(({ product, style = {} }) => {
               playsInline
               preload="metadata"
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              onLoadStart={() => console.log('[CARD PREVIEW] Load start:', videoUrl)}
+              onLoadedMetadata={() => console.log('[CARD PREVIEW] Metadata loaded')}
+              onCanPlay={() => console.log('[CARD PREVIEW] Can play')}
+              onPlay={() => console.log('[CARD PREVIEW] Playing preview')}
+              onError={(e) => console.error('[CARD PREVIEW ERROR]', e.currentTarget.error)}
             />
             {!hovering && (
               <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.18)' }}>

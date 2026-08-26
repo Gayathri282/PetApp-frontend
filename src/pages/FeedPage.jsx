@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Heart, MapPin, Play, ChevronRight, CheckCircle, Star, Plus, ShieldCheck, ShoppingBag, Scissors, Package, ArrowLeft, RefreshCw } from 'lucide-react';
+import { Search, MapPin, Play, ChevronRight, CheckCircle, Star, ShieldCheck } from 'lucide-react';
 import ReelCard from '../components/reel/ReelCard';
 import ProductCard from '../components/product/ProductCard';
+import ReelViewerModal from '../components/reel/ReelViewerModal';
 import Modal from '../components/ui/Modal';
 import Spinner from '../components/ui/Spinner';
-import { getFeed, getLatestTimestamp, trackInterest } from '../api';
-import { openReel } from '../utils/navigation';
+import { getFeed, getLatestTimestamp } from '../api';
 import { CATEGORIES } from '../data/categories';
 
 export default function FeedPage() {
@@ -19,6 +19,7 @@ export default function FeedPage() {
   const [viewMode, setViewMode] = useState('home'); // 'home' or 'reels'
   const [comingSoonFeature, setComingSoonFeature] = useState(null);
   const [selectedReelIndex, setSelectedReelIndex] = useState(0);
+  const [activeModalItem, setActiveModalItem] = useState(null);
 
   const containerRef = useRef(null);
   const newestTimestamp = useRef(null);
@@ -84,13 +85,6 @@ export default function FeedPage() {
     return () => clearInterval(timer);
   }, []);
 
-  const handleRefresh = () => {
-    setShowNewReels(false);
-    newestTimestamp.current = null;
-    setPage(1);
-    loadFeed(1);
-  };
-
   const openFullReelAt = (index) => {
     setSelectedReelIndex(index);
     setViewMode('reels');
@@ -121,26 +115,25 @@ export default function FeedPage() {
           scrollSnapType: 'y mandatory',
         }}
       >
-        {/* Sleek Home Button Overlay */}
         <div style={{ position: 'fixed', top: 16, left: 16, zIndex: 10000 }}>
           <button
             onClick={() => setViewMode('home')}
             style={{
               background: '#0D5148',
-              border: 'none',
-              borderRadius: 14,
-              padding: '10px 16px',
               color: '#FFFFFF',
+              border: 'none',
+              borderRadius: 999,
+              padding: '8px 16px',
+              fontSize: '0.8rem',
+              fontWeight: 700,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: 8,
-              fontSize: '0.85rem',
-              fontWeight: 700,
+              gap: 6,
               boxShadow: '0 4px 14px rgba(13, 81, 72, 0.4)',
             }}
           >
-            <ArrowLeft size={18} /> Home
+            ← Back to Feed
           </button>
         </div>
 
@@ -159,11 +152,13 @@ export default function FeedPage() {
     );
   }
 
-  // ── Render Clean AquaBasket Marketplace View ──────────────────────────────────
+  // Slice maximum 3 products for single-row "Available near Kochi" section
+  const nearbyProducts = products.slice(0, 3);
+
   return (
     <div style={{ padding: '16px 16px 100px', maxWidth: 680, margin: '0 auto', background: '#F3F8F5', minHeight: '100dvh' }}>
       
-      {/* 1. Header Greeting & Hero Section */}
+      {/* 1. Header Hero Section */}
       <div style={{ marginBottom: 20 }}>
         <p className="section-label">KERALA'S PET MARKETPLACE</p>
         <h1 className="serif-heading" style={{ fontSize: '1.75rem', marginBottom: 6 }}>
@@ -174,7 +169,7 @@ export default function FeedPage() {
         </p>
       </div>
 
-      {/* 2. AquaBasket-Style Search Bar */}
+      {/* 2. Search Bar */}
       <div
         onClick={() => navigate('/search')}
         style={{
@@ -199,7 +194,7 @@ export default function FeedPage() {
         </div>
       </div>
 
-      {/* 3. Top Compact Category Circles */}
+      {/* 3. Category Avatar Row */}
       <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 10, marginBottom: 26, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
         {CATEGORIES.map((cat) => (
           <div
@@ -233,7 +228,7 @@ export default function FeedPage() {
         ))}
       </div>
 
-      {/* 4. Marketplace Features Bar */}
+      {/* 4. Marketplace Features Pills */}
       <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 10, marginBottom: 30, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
         <button
           onClick={() => navigate('/search')}
@@ -301,59 +296,33 @@ export default function FeedPage() {
         </button>
       </div>
 
-      {/* 5. START WITH A CATEGORY Cards Carousel */}
+      {/* 5. AVAILABLE NEAR KOCHI (Single Row — Max 3 Cards) */}
       <div style={{ marginBottom: 34 }}>
-        <p className="section-label">START WITH A CATEGORY</p>
+        <p className="section-label">CURATED AROUND YOUR LOCATION</p>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
           <h2 className="serif-heading" style={{ fontSize: '1.35rem' }}>
-            Find your next pet
+            Available near Kochi
           </h2>
           <button
             onClick={() => navigate('/search')}
             style={{ background: 'none', border: 'none', color: '#0D5148', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
           >
-            Browse all <ChevronRight size={16} />
+            View all <ChevronRight size={16} />
           </button>
         </div>
 
-        {/* Horizontal Card Row */}
-        <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-          {CATEGORIES.map((cat) => (
-            <div
-              key={cat.id}
-              onClick={() => {
-                if (cat.featureKey) {
-                  setComingSoonFeature(cat.featureKey);
-                } else {
-                  navigate(`/search?category=${cat.tag}`);
-                }
-              }}
-              className="card"
-              style={{
-                width: 170,
-                flexShrink: 0,
-                padding: 0,
-                overflow: 'hidden',
-                cursor: 'pointer',
-                transition: 'transform 0.2s ease',
-              }}
-            >
-              <div style={{ height: 110, width: '100%', overflow: 'hidden', background: '#E8F1ED' }}>
-                <img src={cat.image} alt={cat.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
-              <div style={{ padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  <h4 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#12332F', marginBottom: 2 }}>{cat.name}</h4>
-                  <p style={{ fontSize: '0.72rem', color: '#60736F' }}>{cat.count}</p>
-                </div>
-                <span style={{ color: '#0D5148', fontWeight: 800, fontSize: '0.9rem' }}>→</span>
-              </div>
-            </div>
-          ))}
-        </div>
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spinner size={36} /></div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
+            {nearbyProducts.map((p) => (
+              <ProductCard key={p._id} product={p} />
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* 6. Promotional Yellow Banner (AquaBasket Style Flat Accent) */}
+      {/* 6. Promotional Banner */}
       <div style={{
         background: '#F3C34E',
         borderRadius: 22,
@@ -391,7 +360,7 @@ export default function FeedPage() {
         </button>
       </div>
 
-      {/* 7. TRUSTED BY LOCAL PET LOVERS (Breeder Trust Section) */}
+      {/* 7. TRUSTED BREEDERS SECTION */}
       <div style={{ marginBottom: 34 }}>
         <p className="section-label">TRUSTED BY LOCAL PET LOVERS</p>
         <h2 className="serif-heading" style={{ fontSize: '1.35rem', marginBottom: 14 }}>
@@ -431,7 +400,7 @@ export default function FeedPage() {
         </div>
       </div>
 
-      {/* 8. TRENDING REELS Horizontal Carousel */}
+      {/* 8. WATCH PET REELS (Trending Reels Horizontal Carousel) */}
       <div style={{ marginBottom: 34 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
           <div>
@@ -452,7 +421,25 @@ export default function FeedPage() {
             return (
               <div
                 key={product._id}
-                onClick={() => openFullReelAt(idx)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setActiveModalItem(product);
+                }}
+                onMouseEnter={(e) => {
+                  const video = e.currentTarget.querySelector('video');
+                  if (video) {
+                    video.muted = true;
+                    video.play().catch(() => {});
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  const video = e.currentTarget.querySelector('video');
+                  if (video) {
+                    video.pause();
+                    try { video.currentTime = 0; } catch {}
+                  }
+                }}
                 className="card"
                 style={{
                   width: 165,
@@ -464,13 +451,19 @@ export default function FeedPage() {
                   padding: 0,
                 }}
               >
-                {reel ? (
+                {reel?.videoUrl ? (
                   <video
                     poster={reel.thumbnail ? getFullSrc(reel.thumbnail) : (product.images?.[0] ? getFullSrc(product.images[0]) : undefined)}
                     src={getFullSrc(reel.videoUrl)}
                     muted
+                    playsInline
                     preload="metadata"
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    onLoadStart={() => console.log('[TRENDING REEL] Load start:', reel.videoUrl)}
+                    onLoadedMetadata={() => console.log('[TRENDING REEL] Metadata loaded')}
+                    onCanPlay={() => console.log('[TRENDING REEL] Can play')}
+                    onPlay={() => console.log('[TRENDING REEL] Playing preview')}
+                    onError={(e) => console.error('[TRENDING REEL ERROR]', e.currentTarget.error)}
                   />
                 ) : product.images?.[0] ? (
                   <img src={getFullSrc(product.images[0])} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -498,31 +491,63 @@ export default function FeedPage() {
         </div>
       </div>
 
-      {/* 9. CURATED AROUND YOUR LOCATION (Product Grid) */}
-      <div style={{ marginBottom: 30 }}>
-        <p className="section-label">CURATED AROUND YOUR LOCATION</p>
+      {/* 9. START WITH A CATEGORY Cards Carousel (Positioned at the Bottom) */}
+      <div style={{ marginBottom: 34 }}>
+        <p className="section-label">START WITH A CATEGORY</p>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
           <h2 className="serif-heading" style={{ fontSize: '1.35rem' }}>
-            Available near Kochi
+            Find your next pet
           </h2>
           <button
             onClick={() => navigate('/search')}
             style={{ background: 'none', border: 'none', color: '#0D5148', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
           >
-            View all <ChevronRight size={16} />
+            Browse all <ChevronRight size={16} />
           </button>
         </div>
 
-        {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spinner size={36} /></div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 14 }}>
-            {products.map((p) => (
-              <ProductCard key={p._id} product={p} />
-            ))}
-          </div>
-        )}
+        <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+          {CATEGORIES.map((cat) => (
+            <div
+              key={cat.id}
+              onClick={() => {
+                if (cat.featureKey) {
+                  setComingSoonFeature(cat.featureKey);
+                } else {
+                  navigate(`/search?category=${cat.tag}`);
+                }
+              }}
+              className="card"
+              style={{
+                width: 170,
+                flexShrink: 0,
+                padding: 0,
+                overflow: 'hidden',
+                cursor: 'pointer',
+                transition: 'transform 0.2s ease',
+              }}
+            >
+              <div style={{ height: 110, width: '100%', overflow: 'hidden', background: '#E8F1ED' }}>
+                <img src={cat.image} alt={cat.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+              <div style={{ padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <h4 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#12332F', marginBottom: 2 }}>{cat.name}</h4>
+                  <p style={{ fontSize: '0.72rem', color: '#60736F' }}>{cat.count}</p>
+                </div>
+                <span style={{ color: '#0D5148', fontWeight: 800, fontSize: '0.9rem' }}>→</span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
+
+      {/* Reel Viewer Modal for Click Playback */}
+      <ReelViewerModal
+        isOpen={Boolean(activeModalItem)}
+        onClose={() => setActiveModalItem(null)}
+        product={activeModalItem}
+      />
 
       {/* Modal for Coming Soon Features */}
       {comingSoonFeature && (
