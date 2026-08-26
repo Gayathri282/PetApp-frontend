@@ -84,15 +84,15 @@ export default function ProfilePage() {
   if (!user) return <Spinner />;
 
   return (
-    <div style={{ padding: '20px 16px 40px', maxWidth: 680, margin: '0 auto', paddingBottom: 90 }}>
-      {/* Profile header */}
-      <div className="animate-fade-in" style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 28 }}>
-        <div style={{ width: 76, height: 76, borderRadius: '50%', overflow: 'hidden', border: '3px solid #D4AF37', flexShrink: 0, background: 'linear-gradient(135deg, #FFE58F, #D4AF37)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)' }}>
-          {user.avatar ? <img src={getFullSrc(user.avatar)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 30, fontWeight: 800, color: '#0f0c08' }}>{user.name?.[0]}</span>}
+    <div style={{ padding: '16px 16px 100px', maxWidth: 680, margin: '0 auto', background: '#F3F8F5', minHeight: '100dvh' }}>
+      {/* Profile Header Card */}
+      <div className="card animate-fade-in" style={{ padding: 18, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div style={{ width: 70, height: 70, borderRadius: '50%', overflow: 'hidden', border: '2px solid #0D5148', flexShrink: 0, background: '#E8F1ED', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {user.avatar ? <img src={getFullSrc(user.avatar)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 26, fontWeight: 800, color: '#0D5148' }}>{user.name?.[0]}</span>}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <h1 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#F5F5EC', marginBottom: 2 }}>{user.name}</h1>
-          <p style={{ fontSize: '0.82rem', color: '#FFE58F', fontWeight: 600 }}>{user.role === 'vendor' ? '✨ Verified Vendor' : user.role === 'admin' ? '🛡️ Admin' : '🐾 Pet Lover'}</p>
+          <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#12332F', marginBottom: 2 }}>{user.name}</h1>
+          <p style={{ fontSize: '0.8rem', color: '#0D5148', fontWeight: 700 }}>{user.role === 'vendor' ? 'Verified Vendor' : user.role === 'admin' ? 'Admin' : 'Pet Lover'}</p>
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           {(isVendor || isAdmin) && (
@@ -100,33 +100,30 @@ export default function ProfilePage() {
               <Plus size={15} /> Post
             </button>
           )}
-          <button onClick={() => setShowEditProfile(true)} className="btn-ghost" style={{ padding: '8px 12px', borderRadius: 12, fontSize: '0.78rem', fontWeight: 600, border: '1px solid rgba(212,175,55,0.3)', color: '#F5F5EC' }}>Edit</button>
-          <button onClick={() => setShowShare(true)} className="btn-ghost" style={{ padding: 9, borderRadius: 12, border: '1px solid rgba(212,175,55,0.3)' }}><Share2 size={16} color="#D4AF37" /></button>
-          <button onClick={handleLogout} className="btn-ghost" style={{ padding: 9, borderRadius: 12, border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444' }}><LogOut size={16} /></button>
+          <button onClick={() => setShowEditProfile(true)} className="btn-ghost" style={{ padding: '8px 12px', borderRadius: 12, fontSize: '0.78rem', fontWeight: 600 }}>Edit</button>
+          <button onClick={() => setShowShare(true)} className="btn-ghost" style={{ padding: 9, borderRadius: 12 }}><Share2 size={16} color="#0D5148" /></button>
+          <button onClick={handleLogout} className="btn-ghost" style={{ padding: 9, borderRadius: 12, border: '1px solid #fee2e2', color: '#ef4444' }}><LogOut size={16} /></button>
         </div>
       </div>
 
       {/* Normal user — become vendor */}
       {user.role === 'user' && (
-        <div className="glass animate-fade-in-up" style={{ padding: 22, borderRadius: 20, marginBottom: 24, background: 'rgba(15, 29, 20, 0.75)', border: '1px solid rgba(212, 175, 55, 0.25)' }}>
+        <div className="card animate-fade-in-up" style={{ padding: 22, marginBottom: 24, textAlign: 'center' }}>
           {appStatus?.status === 'pending' ? (
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 36, marginBottom: 8 }}>⏳</div>
-              <p style={{ fontWeight: 700, color: '#FFE58F', marginBottom: 4 }}>Application Pending</p>
-              <p style={{ fontSize: '0.82rem', color: '#A3B8A8' }}>We're reviewing your vendor application.</p>
+            <div>
+              <p style={{ fontWeight: 700, color: '#0D5148', marginBottom: 4 }}>Application Pending</p>
+              <p style={{ fontSize: '0.82rem', color: '#60736F' }}>We're reviewing your vendor application.</p>
             </div>
           ) : appStatus?.status === 'rejected' ? (
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 36, marginBottom: 8 }}>😔</div>
+            <div>
               <p style={{ fontWeight: 700, color: '#ef4444', marginBottom: 4 }}>Application Rejected</p>
-              <p style={{ fontSize: '0.82rem', color: '#A3B8A8', marginBottom: 14 }}>You can apply again with updated details.</p>
+              <p style={{ fontSize: '0.82rem', color: '#60736F', marginBottom: 14 }}>You can apply again with updated details.</p>
               <button className="btn-primary" onClick={() => navigate('/vendor/apply')}>Re-apply</button>
             </div>
           ) : (
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 36, marginBottom: 8 }}>🏪</div>
-              <p style={{ fontWeight: 700, color: '#F5F5EC', fontSize: '1rem', marginBottom: 4 }}>Want to sell pets or products?</p>
-              <p style={{ fontSize: '0.82rem', color: '#A3B8A8', marginBottom: 16 }}>Apply to become a verified vendor and start posting listings & reels.</p>
+            <div>
+              <p style={{ fontWeight: 700, color: '#12332F', fontSize: '1rem', marginBottom: 4 }}>Want to sell pets or products?</p>
+              <p style={{ fontSize: '0.82rem', color: '#60736F', marginBottom: 16 }}>Apply to become a verified vendor and start posting listings & reels.</p>
               <button className="btn-primary" onClick={() => navigate('/vendor/apply')}>Become a Vendor</button>
             </div>
           )}
@@ -136,8 +133,8 @@ export default function ProfilePage() {
       {/* Vendor/Admin dashboard */}
       {(isVendor || isAdmin) && (
         <>
-          {/* Segmented Glass Tabs */}
-          <div style={{ display: 'flex', gap: 6, marginBottom: 20, background: 'rgba(10, 18, 13, 0.8)', border: '1px solid rgba(212, 175, 55, 0.2)', borderRadius: 16, padding: 5 }}>
+          {/* Segmented Tabs */}
+          <div style={{ display: 'flex', gap: 6, marginBottom: 20, background: '#FFFFFF', border: '1px solid #D6E3DE', borderRadius: 16, padding: 4 }}>
             {[{ key: 'reels', icon: Film, label: 'My Reels' }, { key: 'products', icon: Package, label: 'My Products' }].map(t => (
               <button 
                 key={t.key} 
@@ -148,108 +145,61 @@ export default function ProfilePage() {
                   alignItems: 'center', 
                   justifyContent: 'center', 
                   gap: 8, 
-                  padding: '12px 0', 
+                  padding: '10px 0', 
                   borderRadius: 12, 
-                  border: tab === t.key ? '1px solid rgba(212, 175, 55, 0.5)' : '1px solid transparent', 
+                  border: 'none', 
                   cursor: 'pointer', 
-                  fontSize: '0.88rem', 
+                  fontSize: '0.85rem', 
                   fontWeight: 700, 
-                  transition: 'all 0.25s ease', 
-                  background: tab === t.key ? 'linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(16, 185, 129, 0.15))' : 'transparent', 
-                  color: tab === t.key ? '#FFE58F' : '#A3B8A8' 
+                  transition: 'all 0.2s ease', 
+                  background: tab === t.key ? '#0D5148' : 'transparent', 
+                  color: tab === t.key ? '#FFFFFF' : '#60736F' 
                 }}
               >
-                <t.icon size={18} color={tab === t.key ? '#D4AF37' : '#A3B8A8'} />{t.label}
+                <t.icon size={17} color={tab === t.key ? '#FFFFFF' : '#60736F'} />{t.label}
               </button>
             ))}
           </div>
 
           {loadingProducts ? <Spinner /> : (
             <div className="stagger-children" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-
-              {/* Pending review banner */}
-              {(() => {
-                const list = tab === 'reels' ? reels : saleProducts;
-                const pendingCount = list.filter(p => p.status === 'pending').length;
-                const rejectedCount = list.filter(p => p.status === 'rejected').length;
-                if (pendingCount === 0 && rejectedCount === 0) return null;
-                return (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 4 }}>
-                    {pendingCount > 0 && (
-                      <div style={{
-                        display: 'flex', alignItems: 'center', gap: 10,
-                        background: 'rgba(212, 175, 55, 0.12)', border: '1px solid rgba(212, 175, 55, 0.3)',
-                        borderRadius: 14, padding: '12px 16px',
-                      }}>
-                        <span style={{ fontSize: 20 }}>⏳</span>
-                        <div>
-                          <p style={{ fontSize: '0.82rem', fontWeight: 700, color: '#FFE58F', marginBottom: 2 }}>
-                            {pendingCount} item{pendingCount > 1 ? 's' : ''} under review
-                          </p>
-                          <p style={{ fontSize: '0.72rem', color: '#A3B8A8' }}>
-                            Not visible to the public until approved by admin
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    {rejectedCount > 0 && (
-                      <div style={{
-                        display: 'flex', alignItems: 'center', gap: 10,
-                        background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)',
-                        borderRadius: 14, padding: '12px 16px',
-                      }}>
-                        <span style={{ fontSize: 20 }}>❌</span>
-                        <div>
-                          <p style={{ fontSize: '0.82rem', fontWeight: 700, color: '#ef4444', marginBottom: 2 }}>
-                            {rejectedCount} item{rejectedCount > 1 ? 's' : ''} rejected
-                          </p>
-                          <p style={{ fontSize: '0.72rem', color: '#A3B8A8' }}>
-                            Edit and re-submit for approval
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
-
               {tab === 'reels' ? (
                 reels.length > 0 ? reels.map(p => (
                   <div key={p._id} style={{ position: 'relative' }}>
                     <ProductCard product={p} />
-                    <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 6, zIndex: 5 }}>
-                      <button onClick={() => { setEditingProduct(p); setShowEditReel(true); }} style={{ background: 'rgba(16,185,129,0.85)', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff', display: 'flex' }}><Edit2 size={14} /></button>
-                      <button onClick={() => handleDelete(p._id)} style={{ background: 'rgba(239,68,68,0.85)', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff', display: 'flex' }}><X size={14} /></button>
+                    <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 6, zIndex: 15 }}>
+                      <button onClick={() => { setEditingProduct(p); setShowEditReel(true); }} style={{ background: '#0D5148', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff', display: 'flex' }}><Edit2 size={14} /></button>
+                      <button onClick={() => handleDelete(p._id)} style={{ background: '#ef4444', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff', display: 'flex' }}><X size={14} /></button>
                     </div>
                   </div>
-                )) : <p style={{ textAlign: 'center', color: '#A3B8A8', padding: 40 }}>No promotional reels yet</p>
+                )) : <p style={{ textAlign: 'center', color: '#60736F', padding: 40 }}>No promotional reels yet</p>
               ) : (
                 saleProducts.length > 0 ? saleProducts.map(p => (
                   <div key={p._id} style={{ position: 'relative' }}>
                     <ProductCard product={p} />
-                    <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 6, zIndex: 5 }}>
-                      <button onClick={() => { setEditingProduct(p); setShowEditProduct(true); }} style={{ background: 'rgba(16,185,129,0.85)', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff', display: 'flex' }}><Edit2 size={14} /></button>
-                      <button onClick={() => handleDelete(p._id)} style={{ background: 'rgba(239,68,68,0.85)', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff', display: 'flex' }}><X size={14} /></button>
+                    <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 6, zIndex: 15 }}>
+                      <button onClick={() => { setEditingProduct(p); setShowEditProduct(true); }} style={{ background: '#0D5148', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff', display: 'flex' }}><Edit2 size={14} /></button>
+                      <button onClick={() => handleDelete(p._id)} style={{ background: '#ef4444', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff', display: 'flex' }}><X size={14} /></button>
                     </div>
                   </div>
-                )) : <p style={{ textAlign: 'center', color: '#A3B8A8', padding: 40 }}>No products yet</p>
+                )) : <p style={{ textAlign: 'center', color: '#60736F', padding: 40 }}>No products yet</p>
               )}
             </div>
           )}
 
-          {/* Floating Gold Add Button */}
+          {/* Floating Add Button */}
           <div style={{ position: 'fixed', bottom: 84, right: 20, zIndex: 90 }}>
             {showAddMenu && (
-              <div className="glass animate-scale-in" style={{ position: 'absolute', bottom: 60, right: 0, borderRadius: 18, padding: 8, minWidth: 200, background: 'rgba(15, 29, 20, 0.95)', border: '1px solid rgba(212, 175, 55, 0.3)' }}>
-                <button onClick={() => { setShowAddMenu(false); setShowUploadReel(true); }} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 14px', background: 'none', border: 'none', borderRadius: 10, color: '#F5F5EC', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(212,175,55,0.12)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                  <Film size={18} color="#D4AF37" /> Upload Reel
+              <div className="card animate-scale-in" style={{ position: 'absolute', bottom: 60, right: 0, borderRadius: 18, padding: 8, minWidth: 200, background: '#FFFFFF', border: '1px solid #D6E3DE' }}>
+                <button onClick={() => { setShowAddMenu(false); setShowUploadReel(true); }} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 14px', background: 'none', border: 'none', borderRadius: 10, color: '#12332F', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>
+                  <Film size={18} color="#0D5148" /> Upload Reel
                 </button>
-                <button onClick={() => { setShowAddMenu(false); setShowUploadProduct(true); }} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 14px', background: 'none', border: 'none', borderRadius: 10, color: '#F5F5EC', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(212,175,55,0.12)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                  <Package size={18} color="#FFE58F" /> Upload Product
+                <button onClick={() => { setShowAddMenu(false); setShowUploadProduct(true); }} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 14px', background: 'none', border: 'none', borderRadius: 10, color: '#12332F', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>
+                  <Package size={18} color="#0D5148" /> Upload Product
                 </button>
               </div>
             )}
-            <button onClick={() => setShowAddMenu(!showAddMenu)} style={{ width: 56, height: 56, borderRadius: '50%', background: 'linear-gradient(135deg, #FFE58F 0%, #D4AF37 50%, #AA7C11 100%)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0f0c08', boxShadow: '0 8px 30px rgba(212,175,55,0.5)', transition: 'transform 0.2s', transform: showAddMenu ? 'rotate(45deg)' : 'none' }}>
+            <button onClick={() => setShowAddMenu(!showAddMenu)} style={{ width: 56, height: 56, borderRadius: '50%', background: '#0D5148', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', boxShadow: '0 4px 16px rgba(13,81,72,0.3)', transition: 'transform 0.2s', transform: showAddMenu ? 'rotate(45deg)' : 'none' }}>
               <Plus size={28} strokeWidth={2.5} />
             </button>
           </div>
