@@ -4,7 +4,7 @@ import { Search, MapPin, Play, ChevronRight, CheckCircle, Star, ShieldCheck } fr
 import ReelCard from '../components/reel/ReelCard';
 import ProductCard from '../components/product/ProductCard';
 import PetVideoCard from '../components/video/PetVideoCard';
-import ReelViewerModal from '../components/reel/ReelViewerModal';
+import ReelsViewer from '../components/reel/ReelsViewer';
 import Modal from '../components/ui/Modal';
 import Spinner from '../components/ui/Spinner';
 import { getFeed, getLatestTimestamp } from '../api';
@@ -23,6 +23,22 @@ export default function FeedPage() {
   const [selectedReelIndex, setSelectedReelIndex] = useState(0);
   const [activeModalItem, setActiveModalItem] = useState(null);
   const [activeVideoId, setActiveVideoId] = useState(null);
+
+  const [reelsViewerState, setReelsViewerState] = useState({
+    isOpen: false,
+    initialVideoId: null,
+    videos: [],
+  });
+
+  const handleOpenReels = (clickedItem, list = products) => {
+    if (!clickedItem) return;
+    const targetId = clickedItem._id || clickedItem.id;
+    setReelsViewerState({
+      isOpen: true,
+      initialVideoId: targetId,
+      videos: list && list.length > 0 ? list : [clickedItem],
+    });
+  };
 
   const containerRef = useRef(null);
   const newestTimestamp = useRef(null);
@@ -324,6 +340,7 @@ export default function FeedPage() {
                 product={p}
                 activeVideoId={activeVideoId}
                 setActiveVideoId={setActiveVideoId}
+                onVideoClick={(item) => handleOpenReels(item, products)}
               />
             ))}
           </div>
@@ -416,7 +433,7 @@ export default function FeedPage() {
             <h2 className="serif-heading" style={{ fontSize: '1.35rem' }}>Watch pet reels</h2>
           </div>
           <button
-            onClick={() => setViewMode('reels')}
+            onClick={() => handleOpenReels(products[0], products)}
             style={{ background: 'none', border: 'none', color: '#0D5148', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
           >
             View all <ChevronRight size={16} />
@@ -442,6 +459,7 @@ export default function FeedPage() {
                 item={product}
                 activeVideoId={activeVideoId}
                 setActiveVideoId={setActiveVideoId}
+                onVideoClick={(item) => handleOpenReels(item, products)}
                 mediaHeight={230}
                 sectionName="Watch Pet Reels"
               >
@@ -510,10 +528,11 @@ export default function FeedPage() {
       </div>
 
       {/* Reel Viewer Modal for Click Playback */}
-      <ReelViewerModal
-        isOpen={Boolean(activeModalItem)}
-        onClose={() => setActiveModalItem(null)}
-        product={activeModalItem}
+      <ReelsViewer
+        isOpen={reelsViewerState.isOpen}
+        videos={reelsViewerState.videos}
+        initialVideoId={reelsViewerState.initialVideoId}
+        onClose={() => setReelsViewerState({ isOpen: false, initialVideoId: null, videos: [] })}
       />
 
       {/* Modal for Coming Soon Features */}

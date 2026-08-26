@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Search, MapPin, SlidersHorizontal, X } from 'lucide-react';
 import ProductCard from '../components/product/ProductCard';
+import ReelsViewer from '../components/reel/ReelsViewer';
 import Spinner from '../components/ui/Spinner';
 import Modal from '../components/ui/Modal';
 import { useAuth } from '../context/AuthContext';
@@ -29,6 +30,21 @@ const CATEGORY_MAP = {
 export default function SearchPage() {
   const location = useLocation();
   const [activeVideoId, setActiveVideoId] = useState(null);
+  const [reelsViewerState, setReelsViewerState] = useState({
+    isOpen: false,
+    initialVideoId: null,
+    videos: [],
+  });
+
+  const handleOpenReels = (clickedItem, list = []) => {
+    if (!clickedItem) return;
+    const targetId = clickedItem._id || clickedItem.id;
+    setReelsViewerState({
+      isOpen: true,
+      initialVideoId: targetId,
+      videos: list && list.length > 0 ? list : [clickedItem],
+    });
+  };
   const [query, setQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState(['on sale']);
   const [results, setResults] = useState([]);
@@ -251,6 +267,7 @@ export default function SearchPage() {
               product={p}
               activeVideoId={activeVideoId}
               setActiveVideoId={setActiveVideoId}
+              onVideoClick={(item) => handleOpenReels(item, displayProducts)}
             />
           ))}
           {!isLoading && displayProducts.length === 0 && (
@@ -341,6 +358,14 @@ export default function SearchPage() {
           </div>
         </Modal>
       )}
+
+      {/* Reels Viewer Modal */}
+      <ReelsViewer
+        isOpen={reelsViewerState.isOpen}
+        videos={reelsViewerState.videos}
+        initialVideoId={reelsViewerState.initialVideoId}
+        onClose={() => setReelsViewerState({ isOpen: false, initialVideoId: null, videos: [] })}
+      />
     </div>
   );
 }

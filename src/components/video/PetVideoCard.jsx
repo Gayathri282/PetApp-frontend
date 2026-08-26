@@ -12,6 +12,7 @@ export default function PetVideoCard({
   item,
   activeVideoId,
   setActiveVideoId,
+  onVideoClick,
   style = {},
   mediaHeight = 180,
   children,
@@ -98,6 +99,11 @@ export default function PetVideoCard({
     e.stopPropagation();
     e.preventDefault();
 
+    if (onVideoClick) {
+      onVideoClick(item);
+      return;
+    }
+
     if (!normalized.url || hasError) return;
 
     if (setActiveVideoId) {
@@ -134,6 +140,7 @@ export default function PetVideoCard({
       ref={containerRef}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onClick={handleVideoClick}
       style={{
         position: 'relative',
         width: '100%',

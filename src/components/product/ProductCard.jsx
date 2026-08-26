@@ -20,7 +20,7 @@ const STATUS_CONFIG = {
 
 import PetVideoCard from '../video/PetVideoCard';
 
-const ProductCard = memo(({ product, activeVideoId, setActiveVideoId, style = {} }) => {
+const ProductCard = memo(({ product, activeVideoId, setActiveVideoId, onVideoClick, style = {} }) => {
   const navigate = useNavigate();
   const [liked, setLiked] = useState(false);
 
@@ -48,6 +48,7 @@ const ProductCard = memo(({ product, activeVideoId, setActiveVideoId, style = {}
         item={product}
         activeVideoId={activeVideoId}
         setActiveVideoId={setActiveVideoId}
+        onVideoClick={onVideoClick}
         mediaHeight={180}
         sectionName="Available near Kochi"
       >
