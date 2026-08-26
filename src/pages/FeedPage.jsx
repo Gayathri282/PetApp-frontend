@@ -217,9 +217,6 @@ export default function FeedPage() {
               width: 60,
               height: 60,
               borderRadius: '50%',
-              padding: 2,
-              border: '2px solid #0D5148',
-              background: '#FFFFFF',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -249,12 +246,10 @@ export default function FeedPage() {
             fontSize: '0.8rem',
             borderRadius: 999,
             fontWeight: 700,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
+            cursor: 'pointer',
           }}
         >
-          <ShoppingBag size={15} /> Buy & Sell
+          Buy & Sell
         </button>
         <button
           onClick={() => setComingSoonFeature('adoption')}
@@ -267,12 +262,10 @@ export default function FeedPage() {
             fontSize: '0.8rem',
             borderRadius: 999,
             fontWeight: 600,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
+            cursor: 'pointer',
           }}
         >
-          <Heart size={15} /> Adoption <span style={{ fontSize: '0.62rem', background: '#F3C34E', color: '#082F2B', padding: '2px 6px', borderRadius: 8, fontWeight: 800 }}>Soon</span>
+          Adoption <span style={{ fontSize: '0.62rem', background: '#F3C34E', color: '#082F2B', padding: '2px 6px', borderRadius: 8, fontWeight: 800, marginLeft: 4 }}>Soon</span>
         </button>
         <button
           onClick={() => setComingSoonFeature('services')}
@@ -285,12 +278,10 @@ export default function FeedPage() {
             fontSize: '0.8rem',
             borderRadius: 999,
             fontWeight: 600,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
+            cursor: 'pointer',
           }}
         >
-          <Scissors size={15} /> Pet Services <span style={{ fontSize: '0.62rem', background: '#F3C34E', color: '#082F2B', padding: '2px 6px', borderRadius: 8, fontWeight: 800 }}>Soon</span>
+          Pet Services <span style={{ fontSize: '0.62rem', background: '#F3C34E', color: '#082F2B', padding: '2px 6px', borderRadius: 8, fontWeight: 800, marginLeft: 4 }}>Soon</span>
         </button>
         <button
           onClick={() => setComingSoonFeature('essentials')}
@@ -303,12 +294,10 @@ export default function FeedPage() {
             fontSize: '0.8rem',
             borderRadius: 999,
             fontWeight: 600,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
+            cursor: 'pointer',
           }}
         >
-          <Package size={15} /> Essentials <span style={{ fontSize: '0.62rem', background: '#F3C34E', color: '#082F2B', padding: '2px 6px', borderRadius: 8, fontWeight: 800 }}>Soon</span>
+          Essentials <span style={{ fontSize: '0.62rem', background: '#F3C34E', color: '#082F2B', padding: '2px 6px', borderRadius: 8, fontWeight: 800, marginLeft: 4 }}>Soon</span>
         </button>
       </div>
 
