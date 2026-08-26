@@ -47,12 +47,15 @@ function SingleReelItem({
 
     if (isActive) {
       video.muted = isMuted;
+      if (!isMuted) {
+        video.volume = 1;
+      }
       const playPromise = video.play();
       if (playPromise !== undefined) {
         playPromise
           .then(() => setIsPlaying(true))
           .catch((err) => {
-            console.warn(`[REEL ${index}] Autoplay rejected, attempting muted play:`, err);
+            console.warn(`[REEL ${index}] Audio autoplay blocked by browser, attempting muted fallback:`, err);
             video.muted = true;
             video.play()
               .then(() => setIsPlaying(true))
@@ -72,6 +75,9 @@ function SingleReelItem({
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.muted = isMuted;
+      if (!isMuted) {
+        videoRef.current.volume = 1;
+      }
     }
   }, [isMuted]);
 
@@ -630,7 +636,14 @@ export default function ReelsViewer({
 }) {
   const { user } = useAuth();
   const containerRef = useRef(null);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
+
+  // Reset audio to sound ON whenever ReelsViewer opens via user click
+  useEffect(() => {
+    if (isOpen) {
+      setIsMuted(false);
+    }
+  }, [isOpen]);
 
   // Normalize input videos list (supports single product/reel fallback for backward compatibility)
   const rawList = Array.isArray(videos) && videos.length > 0
