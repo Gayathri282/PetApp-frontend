@@ -307,7 +307,7 @@ export default function FeedPage() {
             Trending Reels 🔥
           </h2>
           <button
-            onClick={() => products.length > 0 ? openReel(navigate, products[0], { from: 'feed' }) : setViewMode('reels')}
+            onClick={() => setViewMode('reels')}
             style={{ background: 'none', border: 'none', color: '#D4AF37', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
           >
             View all <ChevronRight size={15} />
@@ -321,7 +321,7 @@ export default function FeedPage() {
             return (
               <div
                 key={product._id}
-                onClick={() => openReel(navigate, product, { from: 'feed' })}
+                onClick={() => openFullReelAt(idx)}
                 className="glass"
                 style={{
                   width: 165,
