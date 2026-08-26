@@ -11,7 +11,7 @@ export const CATEGORIES = [
     tag: 'dog',
     count: '125+ Listings',
     shortCount: '125+',
-    image: '/categories/dog.jpg',
+    image: '/categories/dog.png',
     bg: 'linear-gradient(135deg, rgba(50, 42, 22, 0.88) 0%, rgba(18, 16, 10, 0.96) 100%)',
   },
   {
