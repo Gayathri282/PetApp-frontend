@@ -23,8 +23,8 @@ export default function ProductReelPage() {
   const location = useLocation();
   const toast = useToast();
   const { user, refreshUser } = useAuth();
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [product, setProduct] = useState(location.state?.product || null);
+  const [loading, setLoading] = useState(!location.state?.product);
   const [error, setError] = useState(null);
   const [showShare, setShowShare] = useState(false);
   const [showEnquiry, setShowEnquiry] = useState(false);
@@ -49,7 +49,9 @@ export default function ProductReelPage() {
 
   useEffect(() => {
     let isMounted = true;
-    setLoading(true);
+    if (!location.state?.product) {
+      setLoading(true);
+    }
     setError(null);
 
     (async () => {
@@ -62,14 +64,14 @@ export default function ProductReelPage() {
         if (isMounted) {
           if (data?.product) {
             setProduct(data.product);
-          } else {
+          } else if (!location.state?.product) {
             console.warn('[PRODUCT/REEL] No product record in response payload');
             setError('Product unavailable');
           }
         }
       } catch (err) {
         console.error('[PRODUCT/REEL] Fetch Error:', err?.response?.data || err.message);
-        if (isMounted) {
+        if (isMounted && !location.state?.product) {
           setError(err?.response?.data?.message || 'Product unavailable');
         }
       } finally {

@@ -1,6 +1,7 @@
 /**
  * Unified Reusable Reel / Product Navigation Helper
  * Standardizes navigation across Feed, Search, Chat, and Notifications.
+ * Passes product payload via location state for instant zero-latency rendering.
  */
 export const openReel = (navigate, item, options = {}) => {
   if (!item) {
@@ -16,6 +17,6 @@ export const openReel = (navigate, item, options = {}) => {
 
   console.log('[OPEN REEL] Opening reel/product ID:', id);
   navigate(`/product/${id}`, {
-    state: { from: options.from || 'feed', ...options.state }
+    state: { product: item, from: options.from || 'feed', ...options.state }
   });
 };
