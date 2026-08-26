@@ -56,11 +56,9 @@ export default function Layout({ children }) {
   }, [unreadCount, notificationCount, location.pathname, user, toast]);
 
   const isChatRoom = location.pathname.startsWith('/chat/');
-  const hideChrome =
-    !user ||
-    location.pathname === '/login' ||
-    location.pathname.startsWith('/product/') ||
-    isChatRoom;
+  const isProductReel = location.pathname.startsWith('/product/');
+  const isLogin = location.pathname === '/login';
+  const hideChrome = !user || isLogin || isProductReel || isChatRoom;
 
   return (
     <>
@@ -68,7 +66,7 @@ export default function Layout({ children }) {
       <main
         style={{
           flex: 1,
-          paddingTop: hideChrome ? 0 : 60,
+          paddingTop: hideChrome ? 0 : 70,
           paddingBottom: hideChrome ? 0 : 68,
           minHeight: '100dvh',
         }}

@@ -25,7 +25,6 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(() => !localStorage.getItem('app_loaded'));
 
   useEffect(() => {
-    // Ensure the flag is set even if we skipped the timer
     if (!localStorage.getItem('app_loaded')) {
       setTimeout(() => {
         setIsLoading(false);
@@ -33,7 +32,6 @@ export default function App() {
       }, 1200);
     }
 
-    // Wake up the Render backend
     import('./api').then(({ default: api }) => {
       api.get('/api/health').catch(() => {});
     });
@@ -47,20 +45,20 @@ export default function App() {
         alignItems: 'center', 
         justifyContent: 'center', 
         height: '100dvh', 
-        background: '#0b0914',
+        background: '#090807',
         gap: 24 
       }}>
         <div style={{ 
-          width: 80, height: 80, background: 'linear-gradient(135deg, #00d2ff, #a855f7)', 
+          width: 90, height: 90, 
           borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 10px 25px rgba(0, 210, 255, 0.4)',
+          boxShadow: '0 10px 30px rgba(212, 175, 55, 0.4)',
           animation: 'pulse 2s infinite ease-in-out',
           padding: 2
         }}>
-          <img src="/logo.png" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'contain' }} alt="KerelaPets Logo" />
+          <img src="/logo.png" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'contain' }} alt="KeralaPets Logo" />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-          <h1 style={{ fontSize: '2.2rem', fontFamily: 'var(--font-tall)', color: '#fff', letterSpacing: '0.08em', textTransform: 'uppercase' }}>KerelaPets</h1>
+          <h1 style={{ fontSize: '2.2rem', fontFamily: 'Cinzel, serif', color: '#D4AF37', letterSpacing: '0.12em', textTransform: 'uppercase' }}>KeralaPets</h1>
           <Spinner size={24} />
         </div>
         <style>{`
@@ -93,3 +91,5 @@ export default function App() {
     </Layout>
   );
 }
+
+

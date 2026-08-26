@@ -57,7 +57,7 @@ export default function BottomNav() {
               background: 'none',
               border: 'none',
               cursor: 'pointer',
-              color: isActive ? '#fff' : '#64748b',
+              color: isActive ? '#FFE58F' : '#8c8c8c',
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               position: 'relative',
               touchAction: 'manipulation',
@@ -77,7 +77,7 @@ export default function BottomNav() {
                 size={22} 
                 strokeWidth={isActive ? 2.5 : 2} 
                 style={{
-                  filter: isActive ? 'drop-shadow(0 0 8px rgba(0, 210, 255, 0.5))' : 'none'
+                  filter: isActive ? 'drop-shadow(0 0 8px rgba(212, 175, 55, 0.6))' : 'none'
                 }}
               />
               {/* Notification Badge */}
@@ -91,7 +91,7 @@ export default function BottomNav() {
                     height: 16, 
                     background: '#ef4444', 
                     borderRadius: 8, 
-                    border: '2px solid #0b0914',
+                    border: '2px solid #090807',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -124,8 +124,8 @@ export default function BottomNav() {
                   width: 4,
                   height: 4,
                   borderRadius: '50%',
-                  background: '#00d2ff',
-                  boxShadow: '0 0 10px #00d2ff',
+                  background: '#D4AF37',
+                  boxShadow: '0 0 10px #D4AF37',
                 }}
               />
             )}

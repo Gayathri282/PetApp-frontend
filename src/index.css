@@ -1,27 +1,18 @@
-@import "tailwindcss";
-
 @theme {
-  --color-dark-950: #050409;
-  --color-dark-900: #0b0914;
-  --color-dark-800: #120e24;
-  --color-dark-700: #1c1538;
-  --color-dark-600: #281e4f;
-  --color-dark-500: #3b2c73;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-accent-400: #38bdf8;
-  --color-accent-500: #0ea5e9;
-  --color-accent-600: #0284c7;
-  --color-violet-400: #c084fc;
-  --color-violet-500: #a855f7;
-  --color-violet-600: #9333ea;
+  --color-dark-950: #050403;
+  --color-dark-900: #090807;
+  --color-dark-800: #120e0a;
+  --color-dark-700: #1a150f;
+  --color-dark-600: #261f16;
+  --color-dark-500: #3b3022;
+  --color-gold-400: #FFE58F;
+  --color-gold-500: #D4AF37;
+  --color-gold-600: #AA7C11;
   --color-success: #10b981;
   --color-danger: #f43f5e;
   --color-warning: #f59e0b;
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
-  --font-tall: "Bebas Neue", sans-serif;
+  --font-sans: "Outfit", "Inter", system-ui, -apple-system, sans-serif;
+  --font-tall: "Cinzel", serif;
 }
 
 /* ── Base ─────────────────────────────────────────────── */
@@ -38,7 +29,8 @@ html {
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--color-dark-900);
+  background-color: #090807;
+  background-image: radial-gradient(ellipse at 50% 10%, #1c150c 0%, #0d0b08 60%, #050403 100%);
   color: #e2e8f0;
   min-height: 100dvh;
   overflow-x: hidden;
@@ -56,54 +48,55 @@ body {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-dark-900);
+  background: #090807;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-dark-600);
+  background: #3b3022;
   border-radius: 999px;
 }
 
 /* ── Glassmorphism ────────────────────────────────────── */
 .glass {
-  background: rgba(26, 22, 37, 0.6);
+  background: rgba(22, 18, 14, 0.75);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .glass-light {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.15);
 }
 
 .glass-strong {
-  background: rgba(15, 13, 26, 0.85);
+  background: rgba(13, 10, 8, 0.9);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(212, 175, 55, 0.25);
 }
 
 /* ── Gradients ────────────────────────────────────────── */
 .gradient-primary {
-  background: linear-gradient(135deg, #00d2ff, #0082ff, #a855f7);
+  background: linear-gradient(135deg, #FFE58F 0%, #D4AF37 50%, #AA7C11 100%);
 }
 
 .gradient-accent {
-  background: linear-gradient(135deg, #00d2ff, #a855f7);
+  background: linear-gradient(135deg, #FFE58F, #D4AF37);
 }
 
 .gradient-hero {
-  background: linear-gradient(135deg, #0b0914 0%, #0e0a24 45%, #190e3d 75%, #0b0914 100%);
+  background: radial-gradient(ellipse at 50% 20%, #1c150c 0%, #0d0b08 60%, #050403 100%);
 }
 
 .gradient-card {
-  background: linear-gradient(145deg, rgba(0, 210, 255, 0.12) 0%, rgba(168, 85, 247, 0.06) 100%);
+  background: linear-gradient(145deg, rgba(212, 175, 55, 0.12) 0%, rgba(170, 124, 17, 0.05) 100%);
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #00d2ff, #0082ff, #c084fc);
+  background: linear-gradient(135deg, #FFF5C0 0%, #E6CA65 40%, #D4AF37 70%, #AA7C11 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -246,19 +239,20 @@ body {
   justify-content: center;
   gap: 8px;
   padding: 10px 24px;
-  background: linear-gradient(135deg, #0082ff, #a855f7);
-  color: white;
+  background: linear-gradient(135deg, #FFE58F 0%, #D4AF37 50%, #AA7C11 100%);
+  color: #0f0c08;
   border: none;
   border-radius: 12px;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);
 }
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 25px rgba(0, 130, 255, 0.5);
+  box-shadow: 0 8px 25px rgba(212, 175, 55, 0.55);
 }
 .btn-primary:active {
   transform: translateY(0);
@@ -276,9 +270,9 @@ body {
   justify-content: center;
   gap: 8px;
   padding: 10px 24px;
-  background: linear-gradient(135deg, #00d2ff, #0082ff);
-  color: white;
-  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: #FFE58F;
+  border: 1px solid rgba(212, 175, 55, 0.35);
   border-radius: 12px;
   font-weight: 600;
   font-size: 0.9rem;
@@ -287,8 +281,9 @@ body {
   text-decoration: none;
 }
 .btn-accent:hover {
+  background: rgba(212, 175, 55, 0.15);
   transform: translateY(-1px);
-  box-shadow: 0 8px 25px rgba(0, 210, 255, 0.5);
+  box-shadow: 0 8px 25px rgba(212, 175, 55, 0.25);
 }
 
 .btn-ghost {
@@ -348,14 +343,14 @@ body {
   color: #94a3b8;
 }
 .tag-pill:hover {
-  background: rgba(0, 210, 255, 0.15);
-  border-color: rgba(0, 210, 255, 0.3);
-  color: #60a5fa;
+  background: rgba(212, 175, 55, 0.15);
+  border-color: rgba(212, 175, 55, 0.35);
+  color: #FFE58F;
 }
 .tag-pill.active {
-  background: linear-gradient(135deg, rgba(0, 210, 255, 0.25), rgba(168, 85, 247, 0.2));
-  border-color: rgba(0, 210, 255, 0.5);
-  color: #c084fc;
+  background: linear-gradient(135deg, rgba(255, 229, 143, 0.25), rgba(212, 175, 55, 0.2));
+  border-color: rgba(212, 175, 55, 0.6);
+  color: #FFE58F;
 }
 
 /* ── Input styles ─────────────────────────────────────── */
@@ -363,7 +358,7 @@ body {
   width: 100%;
   padding: 12px 16px;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: 12px;
   color: #e2e8f0;
   font-family: var(--font-sans);
@@ -372,11 +367,11 @@ body {
   outline: none;
 }
 .input-field::placeholder {
-  color: #64748b;
+  color: #8c8c8c;
 }
 .input-field:focus {
-  border-color: rgba(99, 102, 241, 0.5);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  border-color: rgba(212, 175, 55, 0.6);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
   background: rgba(255, 255, 255, 0.08);
 }
 
