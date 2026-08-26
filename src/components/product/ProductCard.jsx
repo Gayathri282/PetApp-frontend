@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Play, Clock, XCircle } from 'lucide-react';
+import { Play, Clock, XCircle, Heart, MapPin, CheckCircle, MessageCircle } from 'lucide-react';
 import { useRef, useState, useEffect, memo } from 'react';
 import { openReel } from '../../utils/navigation';
 
@@ -7,16 +7,14 @@ const STATUS_CONFIG = {
   pending: {
     label: 'Under Review',
     icon: Clock,
-    bg: 'rgba(251,146,60,0.92)',
+    bg: '#f97316',
     color: '#fff',
-    pulse: true,
   },
   rejected: {
     label: 'Rejected',
     icon: XCircle,
-    bg: 'rgba(239,68,68,0.92)',
+    bg: '#ef4444',
     color: '#fff',
-    pulse: false,
   },
 };
 
@@ -32,6 +30,7 @@ const ProductCard = memo(({ product, style = {} }) => {
   const navigate = useNavigate();
   const videoRef = useRef(null);
   const [hovering, setHovering] = useState(false);
+  const [liked, setLiked] = useState(false);
   const reel = product.primaryReel || product.reels?.[0];
 
   const status = product.status; // 'pending' | 'approved' | 'rejected'
@@ -55,74 +54,171 @@ const ProductCard = memo(({ product, style = {} }) => {
       onClick={() => isClickable && openReel(navigate, product)}
       onMouseEnter={() => { if (isClickable) { setHovering(true); videoRef.current?.play().catch(()=>{}); } }}
       onMouseLeave={() => { setHovering(false); if(videoRef.current){videoRef.current.pause();videoRef.current.currentTime=0;} }}
-      className="glass animate-fade-in"
+      className="card animate-fade-in"
       style={{
-        display:'flex', gap:14, padding:12, borderRadius:18,
-        background: 'rgba(15, 29, 20, 0.75)',
-        border: '1px solid rgba(212, 175, 55, 0.22)',
-        backdropFilter: 'blur(20px)',
+        display: 'flex',
+        flexDirection: 'column',
+        borderRadius: 20,
+        background: '#FFFFFF',
+        border: '1px solid rgba(13, 81, 72, 0.08)',
+        boxShadow: '0 4px 18px rgba(13, 81, 72, 0.05)',
         cursor: isClickable ? 'pointer' : 'default',
-        transition:'all 0.25s ease',
+        transition: 'all 0.25s ease',
         transform: hovering ? 'translateY(-2px)' : 'none',
-        boxShadow: hovering ? '0 12px 40px rgba(212, 175, 55, 0.25)' : '0 4px 15px rgba(0, 0, 0, 0.5)',
-        opacity: statusCfg ? 0.85 : 1,
+        overflow: 'hidden',
         ...style,
       }}
     >
-      <div style={{ width:110, minHeight:130, borderRadius:14, overflow:'hidden', position:'relative', background:'#040704', flexShrink:0, border: '1px solid rgba(212, 175, 55, 0.15)' }}>
+      {/* Thumbnail Container */}
+      <div style={{ width: '100%', height: 180, position: 'relative', background: '#E8F1ED', overflow: 'hidden' }}>
         {reel ? (
           <>
             <video
               ref={videoRef}
-              poster={reel.thumbnail ? getFullSrc(reel.thumbnail) : undefined}
+              poster={reel.thumbnail ? getFullSrc(reel.thumbnail) : (product.images?.[0] ? getFullSrc(product.images[0]) : undefined)}
               muted
               loop
               playsInline
               preload="metadata"
-              style={{ width:'100%', height:'100%', objectFit:'cover' }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
-            {!hovering && <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,0.35)' }}><Play size={26} fill="#FFE58F" color="#D4AF37" /></div>}
+            {!hovering && (
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.15)' }}>
+                <div style={{ background: 'rgba(13,81,72,0.85)', padding: 10, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
+                  <Play size={20} fill="#FFFFFF" color="#FFFFFF" />
+                </div>
+              </div>
+            )}
           </>
         ) : (
-          <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', background:'linear-gradient(135deg,#0d1a12,#16281c)' }}><Play size={26} color="#A3B8A8" /></div>
+          product.images?.[0] ? (
+            <img src={getFullSrc(product.images[0])} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#E8F1ED' }}>
+              <Play size={28} color="#0D5148" />
+            </div>
+          )
         )}
 
-        {/* Status badge overlay on thumbnail */}
+        {/* Favorite Icon */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setLiked(!liked);
+          }}
+          style={{
+            position: 'absolute',
+            top: 10,
+            right: 10,
+            width: 32,
+            height: 32,
+            borderRadius: '50%',
+            background: '#FFFFFF',
+            border: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+            zIndex: 10,
+          }}
+        >
+          <Heart size={16} fill={liked ? '#ef4444' : 'none'} color={liked ? '#ef4444' : '#0D5148'} />
+        </button>
+
+        {/* Availability Badge Overlay */}
+        <div style={{
+          position: 'absolute',
+          bottom: 10,
+          left: 10,
+          background: '#0D5148',
+          color: '#FFFFFF',
+          padding: '4px 10px',
+          borderRadius: 999,
+          fontSize: '0.65rem',
+          fontWeight: 800,
+          letterSpacing: '0.04em',
+          textTransform: 'uppercase',
+        }}>
+          {product.isOnSale ? 'AVAILABLE TODAY' : 'VERIFIED LISTING'}
+        </div>
+
+        {/* Status Overlay */}
         {statusCfg && (
           <div style={{
-            position: 'absolute', bottom: 0, left: 0, right: 0,
-            background: statusCfg.bg,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-            padding: '4px 6px',
-            backdropFilter: 'blur(4px)',
+            position: 'absolute', top: 10, left: 10,
+            background: statusCfg.bg, color: statusCfg.color,
+            display: 'flex', alignItems: 'center', gap: 4,
+            padding: '4px 10px', borderRadius: 999,
+            fontSize: '0.65rem', fontWeight: 800,
           }}>
-            <statusCfg.icon size={11} color={statusCfg.color} />
-            <span style={{
-              fontSize: '0.6rem', fontWeight: 700, color: statusCfg.color, letterSpacing: 0.3,
-              animation: statusCfg.pulse ? 'pulse 2s infinite' : 'none',
-            }}>
-              {statusCfg.label}
-            </span>
+            <statusCfg.icon size={12} color="#fff" />
+            <span>{statusCfg.label}</span>
           </div>
         )}
       </div>
 
-      <div style={{ flex:1, display:'flex', flexDirection:'column', gap:6, minWidth:0, justifyContent: 'center' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-          <h3 style={{ fontSize:'0.95rem', fontWeight:700, color: '#F5F5EC', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{product.name}</h3>
+      {/* Product Content Details */}
+      <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+        <h3 style={{
+          fontSize: '0.98rem',
+          fontWeight: 700,
+          color: '#12332F',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}>
+          {product.name}
+        </h3>
+
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+          <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#12332F' }}>
+            ₹{product.price?.toLocaleString() || '0'}
+          </span>
+          <span style={{ fontSize: '0.72rem', color: '#60736F', fontWeight: 500 }}>
+            / listing
+          </span>
         </div>
-        {product.vendor?.name && <p style={{ fontSize:'0.78rem', color:'#A3B8A8', fontWeight:500 }}>{product.vendor.name}</p>}
-        {product.description && <p style={{ fontSize:'0.8rem', color:'#8c9e90', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden', lineHeight:1.4 }}>{product.description}</p>}
-        {product.tags?.length > 0 && (
-          <div style={{ display:'flex', gap:4, flexWrap:'wrap', marginTop:2 }}>
-            {product.tags.slice(0,3).map(t => <span key={t} style={{ fontSize:'0.65rem', padding:'2px 8px', borderRadius:999, background:'rgba(212,175,55,0.12)', color:'#FFE58F', border: '1px solid rgba(212,175,55,0.25)', fontWeight:500 }}>{t}</span>)}
-          </div>
-        )}
-        <div style={{ marginTop: 4, display:'flex', alignItems:'center', gap:8 }}>
-          {product.isOnSale ? (
-            <><span style={{ fontSize:'1.05rem', fontWeight:800, color:'#FFE58F' }}>₹{product.price?.toLocaleString()||'0'}</span><span style={{ fontSize:'0.65rem', padding:'2px 8px', borderRadius:999, background:'rgba(16,185,129,0.2)', color:'#10b981', border: '1px solid rgba(16,185,129,0.4)', fontWeight:700 }}>For Sale</span></>
-          ) : <span style={{ fontSize:'0.72rem', color:'#8c9e90', fontWeight:500 }}>Not for Sale</span>}
+
+        {/* Seller Info */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.78rem', color: '#60736F', marginTop: 2 }}>
+          <span style={{ fontWeight: 600, color: '#0D5148', display: 'flex', alignItems: 'center', gap: 4 }}>
+            {product.vendor?.name || 'Kerala Pets Verified'} <CheckCircle size={14} color="#0D5148" />
+          </span>
         </div>
+
+        {/* Location */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.74rem', color: '#60736F' }}>
+          <MapPin size={13} color="#0D5148" />
+          <span>Kochi, Kerala</span>
+        </div>
+
+        {/* Action Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (isClickable) openReel(navigate, product);
+          }}
+          style={{
+            marginTop: 6,
+            width: '100%',
+            padding: '9px 0',
+            borderRadius: 12,
+            background: '#E8F1ED',
+            color: '#0D5148',
+            border: '1px solid #D6E3DE',
+            fontWeight: 700,
+            fontSize: '0.82rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+            transition: 'all 0.2s ease',
+          }}
+        >
+          <MessageCircle size={15} /> Contact Seller
+        </button>
       </div>
     </div>
   );

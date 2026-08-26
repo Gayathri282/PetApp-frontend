@@ -89,7 +89,8 @@ export default function SearchPage() {
   useEffect(() => {
     (async () => {
       try {
-        setInitialLoading(false);
+        const { data } = await getFeed(1, 20);
+        setInitialProducts(data.products || []);
       } catch (err) {
         console.error('Failed to load initial products:', err);
       } finally {
@@ -98,129 +99,166 @@ export default function SearchPage() {
     })();
   }, []);
 
-  const doSearch = async () => {
-    setLoading(true);
-    setSearched(true);
-    try {
-      const { data } = await searchProducts(query, selectedTags.join(','));
-      let productsList = data.products || [];
-      if (priceMax && priceMax < 50000) {
-        productsList = productsList.filter(p => !p.price || p.price <= priceMax);
-      }
-      if (sortBy === 'price_asc') {
-        productsList.sort((a, b) => (a.price || 0) - (b.price || 0));
-      } else if (sortBy === 'price_desc') {
-        productsList.sort((a, b) => (b.price || 0) - (a.price || 0));
-      }
-      setResults(productsList);
-    } catch (err) {
-      console.error('Search failed:', err);
-      setResults([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (query || selectedTags.length) doSearch();
-      else { setResults([]); setSearched(false); }
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [query, selectedTags, priceMax, sortBy]);
+    const timer = setTimeout(async () => {
+      if (!query.trim() && selectedTags.length === 0) {
+        setSearched(false);
+        setResults([]);
+        return;
+      }
+      setLoading(true);
+      setSearched(true);
+      try {
+        const isNearMe = selectedTags.includes('near me');
+        const cleanTags = selectedTags.filter(t => t !== 'near me');
+        const { data } = await searchProducts(query, cleanTags, isNearMe);
+        setResults(data.products || []);
+      } catch (e) {
+        console.error(e);
+        setResults([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
 
-  const displayProducts = searched ? results : initialProducts;
+    return () => clearTimeout(timer);
+  }, [query, selectedTags]);
+
+  const rawList = searched ? results : initialProducts;
+
+  const displayProducts = rawList
+    .filter(p => p.price <= priceMax)
+    .sort((a, b) => {
+      if (sortBy === 'price_asc') return a.price - b.price;
+      if (sortBy === 'price_desc') return b.price - a.price;
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+
   const isLoading = searched ? loading : initialLoading;
 
   return (
-    <div style={{ padding:'20px 16px 40px', maxWidth:680, margin:'0 auto', paddingBottom: 90 }}>
-      {/* Search Input Bar with Filter Button */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 16, alignItems: 'center' }}>
-        <div style={{ position:'relative', flex: 1 }}>
-          <Search size={18} style={{ position:'absolute', left:16, top:'50%', transform:'translateY(-50%)', color:'#D4AF37' }} />
-          <input 
-            className="input-field" 
-            placeholder="Search pets, products, breeds..." 
-            value={query} 
-            onChange={e => setQuery(e.target.value)} 
-            style={{ 
-              paddingLeft:44, 
-              borderRadius:16, 
-              fontSize:'0.92rem',
-              background: 'rgba(15, 29, 20, 0.75)',
-              border: '1px solid rgba(212, 175, 55, 0.25)',
-              color: '#F5F5EC',
-              boxShadow: '0 8px 25px rgba(0, 0, 0, 0.4)',
-              height: 48,
-            }} 
+    <div style={{ padding: '16px 16px 100px', maxWidth: 680, margin: '0 auto', background: '#F3F8F5', minHeight: '100dvh' }}>
+      
+      {/* Header */}
+      <div style={{ marginBottom: 18 }}>
+        <p className="section-label">EXPLORE & SEARCH</p>
+        <h1 className="serif-heading" style={{ fontSize: '1.65rem' }}>
+          Browse Marketplace
+        </h1>
+      </div>
+
+      {/* Search Input Bar */}
+      <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
+        <div style={{ position: 'relative', flex: 1 }}>
+          <Search size={18} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#0D5148' }} />
+          <input
+            className="input-field"
+            placeholder="Search pets, breeds, products..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            style={{ paddingLeft: 46 }}
           />
+          {query && (
+            <button
+              onClick={() => setQuery('')}
+              style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#60736F', cursor: 'pointer' }}
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
+
         <button
           onClick={() => setShowFilterModal(true)}
           style={{
+            background: '#FFFFFF',
+            border: '1px solid #D6E3DE',
+            borderRadius: 14,
             width: 48,
             height: 48,
-            borderRadius: 16,
-            background: 'rgba(15, 29, 20, 0.75)',
-            border: '1px solid rgba(212, 175, 55, 0.3)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            color: '#0D5148',
             cursor: 'pointer',
-            color: '#FFE58F',
             flexShrink: 0,
-            boxShadow: '0 8px 25px rgba(0, 0, 0, 0.4)',
+            boxShadow: '0 2px 10px rgba(13,81,72,0.04)',
           }}
         >
           <SlidersHorizontal size={20} />
         </button>
       </div>
 
-      {/* Horizontal Scrollable Filter Chips */}
-      <div style={{ display:'flex', gap:8, overflowX:'auto', paddingBottom:8, marginBottom:14, scrollbarWidth:'none', msOverflowStyle:'none', WebkitOverflowScrolling:'touch' }}>
+      {/* Special Filter Tags */}
+      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8, marginBottom: 12, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
         {SPECIAL_TAGS.map(tag => {
           const isActive = selectedTags.includes(tag.toLowerCase());
-          let activeStyle = {};
-          if (isActive) {
-            if (tag === 'On Sale') activeStyle = { background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.3), rgba(16, 185, 129, 0.3))', color: '#FFE58F', border: '1px solid rgba(212, 175, 55, 0.6)', boxShadow: '0 4px 15px rgba(212, 175, 55, 0.25)' };
-            if (tag === 'Not For Sale') activeStyle = { background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(185, 28, 28, 0.3))', color: '#fca5a5', border: '1px solid rgba(239, 68, 68, 0.5)' };
-            if (tag === 'Near Me') activeStyle = { background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.3), rgba(170, 124, 17, 0.3))', color: '#FFE58F', border: '1px solid rgba(212, 175, 55, 0.6)' };
-          }
           return (
-            <button key={tag} className={`tag-pill ${isActive ? 'active' : ''}`} style={{ whiteSpace: 'nowrap', ...activeStyle }} onClick={() => toggleTag(tag.toLowerCase())}>
+            <button
+              key={tag}
+              onClick={() => toggleTag(tag.toLowerCase())}
+              style={{
+                whiteSpace: 'nowrap',
+                padding: '6px 14px',
+                borderRadius: 999,
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                border: isActive ? 'none' : '1px solid #D6E3DE',
+                background: isActive ? '#0D5148' : '#FFFFFF',
+                color: isActive ? '#FFFFFF' : '#60736F',
+                cursor: 'pointer',
+              }}
+            >
               {tag}
             </button>
           );
         })}
       </div>
 
-      {/* Horizontal Scrollable Category Chips */}
-      <div style={{ display:'flex', gap:8, overflowX:'auto', paddingBottom:8, marginBottom:20, scrollbarWidth:'none', msOverflowStyle:'none', WebkitOverflowScrolling:'touch' }}>
-        {TAGS.map(tag => (
-          <button key={tag} className={`tag-pill ${selectedTags.includes(tag)?'active':''}`} style={{ whiteSpace: 'nowrap' }} onClick={() => toggleTag(tag)}>
-            #{tag}
-          </button>
-        ))}
+      {/* Category Chips */}
+      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8, marginBottom: 20, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+        {TAGS.map(tag => {
+          const isActive = selectedTags.includes(tag);
+          return (
+            <button
+              key={tag}
+              onClick={() => toggleTag(tag)}
+              style={{
+                whiteSpace: 'nowrap',
+                padding: '6px 14px',
+                borderRadius: 999,
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                border: isActive ? 'none' : '1px solid #D6E3DE',
+                background: isActive ? '#E8F1ED' : '#FFFFFF',
+                color: isActive ? '#0D5148' : '#60736F',
+                cursor: 'pointer',
+              }}
+            >
+              #{tag}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Results */}
+      {/* Product Results */}
       {isLoading ? <Spinner /> : (
-        <div className="stagger-children" style={{ display:'flex', flexDirection:'column', gap:12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 14 }}>
           {Array.isArray(displayProducts) && displayProducts.map(p => <ProductCard key={p._id} product={p} />)}
           {!isLoading && displayProducts.length === 0 && (
-            <div style={{ textAlign:'center', padding:40, color:'#64748b' }}>
-              <div style={{ fontSize:48, marginBottom:12 }}>{searched ? '🔍' : '🐾'}</div>
-              <p>{searched ? 'No results found. Try different keywords or tags.' : 'No products available yet.'}</p>
+            <div style={{ textAlign: 'center', padding: 40, color: '#60736F', gridColumn: '1 / -1' }}>
+              <p style={{ fontSize: '1rem', fontWeight: 600, color: '#12332F', marginBottom: 4 }}>No listings found</p>
+              <p style={{ fontSize: '0.84rem' }}>Try adjusting your search terms or filter tags.</p>
             </div>
           )}
         </div>
       )}
-      {/* Mobile Bottom Sheet Filter Modal */}
+
+      {/* Filter Modal */}
       <Modal isOpen={showFilterModal} onClose={() => setShowFilterModal(false)} title="Filter & Sort">
         <div style={{ padding: '8px 4px 16px', display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {/* Price Range Filter */}
           <div>
-            <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#FFE58F', display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+            <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#12332F', display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
               <span>Max Price</span>
               <span>₹{priceMax >= 50000 ? 'Any' : priceMax.toLocaleString('en-IN')}</span>
             </label>
@@ -231,18 +269,12 @@ export default function SearchPage() {
               step="500" 
               value={priceMax} 
               onChange={e => setPriceMax(Number(e.target.value))} 
-              style={{ width: '100%', accentColor: '#D4AF37' }}
+              style={{ width: '100%', accentColor: '#0D5148' }}
             />
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#A3B8A8', marginTop: 4 }}>
-              <span>₹500</span>
-              <span>₹25,000</span>
-              <span>₹50,000+</span>
-            </div>
           </div>
 
-          {/* Sort By */}
           <div>
-            <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#FFE58F', display: 'block', marginBottom: 10 }}>Sort By</label>
+            <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#12332F', display: 'block', marginBottom: 10 }}>Sort By</label>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {[
                 { id: 'newest', label: 'Newest First' },
@@ -256,13 +288,11 @@ export default function SearchPage() {
                     padding: '12px 16px',
                     borderRadius: 12,
                     textAlign: 'left',
-                    background: sortBy === opt.id ? 'rgba(212, 175, 55, 0.2)' : 'rgba(255,255,255,0.03)',
-                    border: sortBy === opt.id ? '1px solid rgba(212, 175, 55, 0.5)' : '1px solid rgba(255,255,255,0.06)',
-                    color: sortBy === opt.id ? '#FFE58F' : '#F5F5EC',
-                    fontSize: '0.88rem',
+                    background: sortBy === opt.id ? '#E8F1ED' : '#F3F8F5',
+                    border: sortBy === opt.id ? '1px solid #0D5148' : '1px solid #D6E3DE',
+                    color: sortBy === opt.id ? '#0D5148' : '#60736F',
                     fontWeight: sortBy === opt.id ? 700 : 500,
                     cursor: 'pointer',
-                    transition: 'all 0.2s',
                   }}
                 >
                   {opt.label}
@@ -271,34 +301,38 @@ export default function SearchPage() {
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
-            <button 
-              onClick={() => { setPriceMax(50000); setSortBy('newest'); }}
-              style={{
-                flex: 1,
-                padding: 14,
-                borderRadius: 14,
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                color: '#A3B8A8',
-                fontWeight: 600,
-                fontSize: '0.88rem',
-                cursor: 'pointer',
-              }}
-            >
-              Reset
-            </button>
-            <button 
-              className="btn-primary" 
-              onClick={() => { setShowFilterModal(false); doSearch(); }} 
-              style={{ flex: 2, padding: 14 }}
-            >
-              Apply Filters
-            </button>
-          </div>
+          <button
+            onClick={() => setShowFilterModal(false)}
+            className="btn-primary"
+            style={{ width: '100%', marginTop: 8 }}
+          >
+            Apply Filters
+          </button>
         </div>
       </Modal>
+
+      {/* Location Prompt Modal */}
+      {showLocPrompt && (
+        <Modal title="Set Your Location" onClose={() => setShowLocPrompt(false)}>
+          <div style={{ textAlign: 'center', padding: '16px 0' }}>
+            <MapPin size={40} color="#0D5148" style={{ marginBottom: 12 }} />
+            <h3 style={{ fontSize: '1.1rem', color: '#12332F', fontWeight: 700, marginBottom: 8 }}>
+              Find Nearby Pets & Sellers
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: '#60736F', marginBottom: 20 }}>
+              Allow location access to sort listings by distance near your city.
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setShowLocPrompt(false)} className="btn-ghost" style={{ flex: 1 }}>
+                Cancel
+              </button>
+              <button onClick={handleSetLocation} className="btn-primary" style={{ flex: 1 }}>
+                Enable Location
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

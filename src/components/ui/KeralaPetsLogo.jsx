@@ -8,7 +8,7 @@ export default function KeralaPetsLogo({ size = 180, showText = true, layout = '
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 12,
+          gap: 10,
           userSelect: 'none',
         }}
       >
@@ -18,11 +18,22 @@ export default function KeralaPetsLogo({ size = 180, showText = true, layout = '
           style={{
             height: size,
             width: 'auto',
-            maxHeight: 52,
+            maxHeight: 44,
             objectFit: 'contain',
-            filter: 'drop-shadow(0 4px 15px rgba(212, 175, 55, 0.4))',
           }}
         />
+        {showText && (
+          <span style={{
+            fontFamily: 'var(--font-serif)',
+            fontWeight: 800,
+            fontSize: '1.25rem',
+            color: '#0D5148',
+            letterSpacing: '0.04em',
+            textTransform: 'uppercase',
+          }}>
+            KERALA<span style={{ color: '#F3C34E' }}>PETS</span>
+          </span>
+        )}
       </div>
     );
   }
@@ -46,9 +57,21 @@ export default function KeralaPetsLogo({ size = 180, showText = true, layout = '
           maxWidth: '100%',
           height: 'auto',
           objectFit: 'contain',
-          filter: 'drop-shadow(0 6px 20px rgba(212, 175, 55, 0.45))',
         }}
       />
+      {showText && (
+        <span style={{
+          fontFamily: 'var(--font-serif)',
+          fontWeight: 800,
+          fontSize: '1.4rem',
+          color: '#0D5148',
+          letterSpacing: '0.06em',
+          textTransform: 'uppercase',
+          marginTop: 8,
+        }}>
+          KERALA<span style={{ color: '#F3C34E' }}>PETS</span>
+        </span>
+      )}
     </div>
   );
 }

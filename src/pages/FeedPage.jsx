@@ -1,33 +1,28 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Search, Heart, MapPin, Play, ChevronRight, CheckCircle, Star, Plus, ShieldCheck, ShoppingBag, Scissors, Package, ArrowLeft, RefreshCw } from 'lucide-react';
 import ReelCard from '../components/reel/ReelCard';
 import ProductCard from '../components/product/ProductCard';
-import Spinner from '../components/ui/Spinner';
 import Modal from '../components/ui/Modal';
-import ComingSoonModal from '../components/ui/ComingSoonModal';
+import Spinner from '../components/ui/Spinner';
 import { getFeed, getLatestTimestamp, trackInterest } from '../api';
-import { Smartphone, Download, RefreshCw, Bell, Search, Heart, MapPin, Play, Film, ChevronRight, ShoppingBag, Scissors, Package, Sparkles, Home, Plus } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { CATEGORIES } from '../data/categories';
 import { openReel } from '../utils/navigation';
+import { CATEGORIES } from '../data/categories';
 
 export default function FeedPage() {
   const navigate = useNavigate();
-  const { user, canInstall, installApp, unreadNotificationsCount } = useAuth();
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [loading, setLoading] = useState(true);
-  const [showPWA, setShowPWA] = useState(false);
   const [showNewReels, setShowNewReels] = useState(false);
-  const [viewMode, setViewMode] = useState('home'); // 'home' | 'reels'
-  const [selectedReelIndex, setSelectedReelIndex] = useState(0);
+  const [viewMode, setViewMode] = useState('home'); // 'home' or 'reels'
   const [comingSoonFeature, setComingSoonFeature] = useState(null);
+  const [selectedReelIndex, setSelectedReelIndex] = useState(0);
 
   const containerRef = useRef(null);
-  const isFetching = useRef(false);
   const newestTimestamp = useRef(null);
-  const viewedProducts = useRef(new Set());
+  const isFetching = useRef(false);
 
   const getFullSrc = (url) => {
     if (!url || typeof url !== 'string') return '';
@@ -93,8 +88,7 @@ export default function FeedPage() {
     setShowNewReels(false);
     newestTimestamp.current = null;
     setPage(1);
-    if (containerRef.current) containerRef.current.scrollTop = 0;
-    loadFeed(1, 10);
+    loadFeed(1);
   };
 
   const openFullReelAt = (index) => {
@@ -102,7 +96,17 @@ export default function FeedPage() {
     setViewMode('reels');
   };
 
-  // Render Full Screen Vertical Reels Mode
+  // Scroll to selected reel index when switching to reels viewMode
+  useEffect(() => {
+    if (viewMode === 'reels' && containerRef.current) {
+      const children = containerRef.current.querySelectorAll('.reel-wrapper');
+      if (children[selectedReelIndex]) {
+        children[selectedReelIndex].scrollIntoView({ behavior: 'auto' });
+      }
+    }
+  }, [viewMode, selectedReelIndex]);
+
+  // ── Fullscreen Reels Vertical Scroll View Mode ─────────────────────────────────
   if (viewMode === 'reels') {
     return (
       <div
@@ -111,41 +115,32 @@ export default function FeedPage() {
         style={{
           position: 'fixed',
           inset: 0,
+          background: '#000',
+          zIndex: 9999,
           overflowY: 'scroll',
           scrollSnapType: 'y mandatory',
-          background: '#040704',
-          zIndex: 100,
         }}
       >
-        {/* Sleek Home Icon Overlay (Top-Left) */}
-        <div style={{
-          position: 'fixed',
-          top: 20,
-          left: 16,
-          zIndex: 1000,
-        }}>
+        {/* Sleek Home Button Overlay */}
+        <div style={{ position: 'fixed', top: 16, left: 16, zIndex: 10000 }}>
           <button
-            onClick={() => {
-              setViewMode('home');
-              navigate('/feed');
-            }}
-            aria-label="Home"
+            onClick={() => setViewMode('home')}
             style={{
-              width: 42,
-              height: 42,
-              borderRadius: '50%',
-              background: 'rgba(10, 18, 13, 0.65)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(212, 175, 55, 0.4)',
-              color: '#FFE58F',
+              background: '#0D5148',
+              border: 'none',
+              borderRadius: 14,
+              padding: '10px 16px',
+              color: '#FFFFFF',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 15px rgba(0,0,0,0.5)',
+              gap: 8,
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              boxShadow: '0 4px 14px rgba(13, 81, 72, 0.4)',
             }}
           >
-            <Home size={22} color="#FFE58F" />
+            <ArrowLeft size={18} /> Home
           </button>
         </div>
 
@@ -164,46 +159,48 @@ export default function FeedPage() {
     );
   }
 
-  // ── Render Mobile Landing Homepage View ──────────────────────────────────────────
+  // ── Render Clean AquaBasket Marketplace View ──────────────────────────────────
   return (
-    <div style={{ padding: '16px 16px 100px', maxWidth: 680, margin: '0 auto' }}>
-      {/* Greeting Header */}
-      <div style={{ marginBottom: 18 }}>
-        <h1 style={{ fontSize: '1.45rem', fontWeight: 800, color: '#F5F5EC', marginBottom: 2, fontFamily: 'Cinzel, serif' }}>
-          Hey, Pet Lover! 🐾
+    <div style={{ padding: '16px 16px 100px', maxWidth: 680, margin: '0 auto', background: '#F3F8F5', minHeight: '100dvh' }}>
+      
+      {/* 1. Header Greeting & Hero Section */}
+      <div style={{ marginBottom: 20 }}>
+        <p className="section-label">KERALA'S PET MARKETPLACE</p>
+        <h1 className="serif-heading" style={{ fontSize: '1.75rem', marginBottom: 6 }}>
+          Find your next best companion
         </h1>
-        <p style={{ fontSize: '0.88rem', color: '#A3B8A8', fontWeight: 500 }}>
-          What are you looking for today?
+        <p style={{ fontSize: '0.88rem', color: '#60736F' }}>
+          Connect with trusted breeders and pet lovers across Kerala.
         </p>
       </div>
 
-      {/* 3. Search Bar */}
+      {/* 2. AquaBasket-Style Search Bar */}
       <div
         onClick={() => navigate('/search')}
         style={{
           position: 'relative',
-          marginBottom: 20,
+          marginBottom: 24,
           cursor: 'pointer',
         }}
       >
-        <Search size={18} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#D4AF37' }} />
+        <Search size={20} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#0D5148' }} />
         <div
           style={{
-            padding: '13px 16px 13px 44px',
-            borderRadius: 16,
-            fontSize: '0.88rem',
-            background: 'rgba(15, 29, 20, 0.75)',
-            border: '1px solid rgba(212, 175, 55, 0.25)',
-            color: '#8c9e90',
-            boxShadow: '0 8px 25px rgba(0, 0, 0, 0.4)',
+            padding: '14px 16px 14px 48px',
+            borderRadius: 18,
+            fontSize: '0.9rem',
+            background: '#FFFFFF',
+            border: '1px solid #D6E3DE',
+            color: '#60736F',
+            boxShadow: '0 4px 18px rgba(13, 81, 72, 0.05)',
           }}
         >
-          Search pets, services, breeds...
+          Search pets, breeds, products...
         </div>
       </div>
 
-      {/* 4. Horizontal Scrollable Category Avatars */}
-      <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 10, marginBottom: 20, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+      {/* 3. Top Compact Category Circles */}
+      <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 10, marginBottom: 26, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
         {CATEGORIES.map((cat) => (
           <div
             key={cat.id}
@@ -217,12 +214,12 @@ export default function FeedPage() {
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0, cursor: 'pointer' }}
           >
             <div style={{
-              width: 58,
-              height: 58,
+              width: 60,
+              height: 60,
               borderRadius: '50%',
               padding: 2,
-              background: 'linear-gradient(135deg, #FFE58F, #D4AF37)',
-              boxShadow: '0 0 14px rgba(212, 175, 55, 0.28)',
+              border: '2px solid #0D5148',
+              background: '#FFFFFF',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -231,90 +228,235 @@ export default function FeedPage() {
               <img
                 src={cat.image}
                 alt={cat.name}
-                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', objectPosition: 'center' }}
+                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
               />
             </div>
-            <span style={{ fontSize: '0.76rem', fontWeight: 600, color: '#F5F5EC', fontFamily: 'Cinzel, serif' }}>{cat.name}</span>
+            <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#12332F' }}>{cat.name}</span>
           </div>
         ))}
       </div>
 
-      {/* 5. Compact Explore Discovery Row (Section 4) */}
-      <div style={{ marginBottom: 26 }}>
-        <p style={{ fontSize: '0.74rem', fontWeight: 700, color: '#A3B8A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
-          Explore Features
-        </p>
-        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+      {/* 4. Marketplace Features Bar */}
+      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 10, marginBottom: 30, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+        <button
+          onClick={() => navigate('/search')}
+          style={{
+            whiteSpace: 'nowrap',
+            background: '#0D5148',
+            color: '#FFFFFF',
+            border: 'none',
+            padding: '8px 16px',
+            fontSize: '0.8rem',
+            borderRadius: 999,
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+          }}
+        >
+          <ShoppingBag size={15} /> Buy & Sell
+        </button>
+        <button
+          onClick={() => setComingSoonFeature('adoption')}
+          style={{
+            whiteSpace: 'nowrap',
+            background: '#FFFFFF',
+            color: '#0D5148',
+            border: '1px solid #D6E3DE',
+            padding: '8px 16px',
+            fontSize: '0.8rem',
+            borderRadius: 999,
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+          }}
+        >
+          <Heart size={15} /> Adoption <span style={{ fontSize: '0.62rem', background: '#F3C34E', color: '#082F2B', padding: '2px 6px', borderRadius: 8, fontWeight: 800 }}>Soon</span>
+        </button>
+        <button
+          onClick={() => setComingSoonFeature('services')}
+          style={{
+            whiteSpace: 'nowrap',
+            background: '#FFFFFF',
+            color: '#0D5148',
+            border: '1px solid #D6E3DE',
+            padding: '8px 16px',
+            fontSize: '0.8rem',
+            borderRadius: 999,
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+          }}
+        >
+          <Scissors size={15} /> Pet Services <span style={{ fontSize: '0.62rem', background: '#F3C34E', color: '#082F2B', padding: '2px 6px', borderRadius: 8, fontWeight: 800 }}>Soon</span>
+        </button>
+        <button
+          onClick={() => setComingSoonFeature('essentials')}
+          style={{
+            whiteSpace: 'nowrap',
+            background: '#FFFFFF',
+            color: '#0D5148',
+            border: '1px solid #D6E3DE',
+            padding: '8px 16px',
+            fontSize: '0.8rem',
+            borderRadius: 999,
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+          }}
+        >
+          <Package size={15} /> Essentials <span style={{ fontSize: '0.62rem', background: '#F3C34E', color: '#082F2B', padding: '2px 6px', borderRadius: 8, fontWeight: 800 }}>Soon</span>
+        </button>
+      </div>
+
+      {/* 5. START WITH A CATEGORY Cards Carousel */}
+      <div style={{ marginBottom: 34 }}>
+        <p className="section-label">START WITH A CATEGORY</p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <h2 className="serif-heading" style={{ fontSize: '1.35rem' }}>
+            Find your next pet
+          </h2>
           <button
             onClick={() => navigate('/search')}
-            className="tag-pill active"
-            style={{
-              whiteSpace: 'nowrap',
-              background: 'linear-gradient(135deg, rgba(212,175,55,0.3), rgba(16,185,129,0.3))',
-              color: '#FFE58F',
-              border: '1px solid rgba(212,175,55,0.6)',
-              padding: '6px 14px',
-              fontSize: '0.78rem',
-              borderRadius: 20,
-              fontWeight: 700,
-            }}
+            style={{ background: 'none', border: 'none', color: '#0D5148', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
           >
-            🛍️ Buy & Sell
+            Browse all <ChevronRight size={16} />
           </button>
-          <button
-            onClick={() => setComingSoonFeature('adoption')}
-            className="tag-pill"
-            style={{
-              whiteSpace: 'nowrap',
-              padding: '6px 14px',
-              fontSize: '0.78rem',
-              borderRadius: 20,
-            }}
-          >
-            ❤️ Adoption <span style={{ fontSize: '0.6rem', color: '#FFE58F', background: 'rgba(212,175,55,0.2)', padding: '2px 6px', borderRadius: 8, marginLeft: 4, fontWeight: 700 }}>Soon</span>
-          </button>
-          <button
-            onClick={() => setComingSoonFeature('services')}
-            className="tag-pill"
-            style={{
-              whiteSpace: 'nowrap',
-              padding: '6px 14px',
-              fontSize: '0.78rem',
-              borderRadius: 20,
-            }}
-          >
-            ✂️ Pet Services <span style={{ fontSize: '0.6rem', color: '#FFE58F', background: 'rgba(212,175,55,0.2)', padding: '2px 6px', borderRadius: 8, marginLeft: 4, fontWeight: 700 }}>Soon</span>
-          </button>
-          <button
-            onClick={() => setComingSoonFeature('essentials')}
-            className="tag-pill"
-            style={{
-              whiteSpace: 'nowrap',
-              padding: '6px 14px',
-              fontSize: '0.78rem',
-              borderRadius: 20,
-            }}
-          >
-            📦 Essentials <span style={{ fontSize: '0.6rem', color: '#FFE58F', background: 'rgba(212,175,55,0.2)', padding: '2px 6px', borderRadius: 8, marginLeft: 4, fontWeight: 700 }}>Soon</span>
-          </button>
+        </div>
+
+        {/* Horizontal Card Row */}
+        <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+          {CATEGORIES.map((cat) => (
+            <div
+              key={cat.id}
+              onClick={() => {
+                if (cat.featureKey) {
+                  setComingSoonFeature(cat.featureKey);
+                } else {
+                  navigate(`/search?category=${cat.tag}`);
+                }
+              }}
+              className="card"
+              style={{
+                width: 170,
+                flexShrink: 0,
+                padding: 0,
+                overflow: 'hidden',
+                cursor: 'pointer',
+                transition: 'transform 0.2s ease',
+              }}
+            >
+              <div style={{ height: 110, width: '100%', overflow: 'hidden', background: '#E8F1ED' }}>
+                <img src={cat.image} alt={cat.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+              <div style={{ padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <h4 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#12332F', marginBottom: 2 }}>{cat.name}</h4>
+                  <p style={{ fontSize: '0.72rem', color: '#60736F' }}>{cat.count}</p>
+                </div>
+                <span style={{ color: '#0D5148', fontWeight: 800, fontSize: '0.9rem' }}>→</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* 6. Trending Reels Carousel */}
-      <div style={{ marginBottom: 30 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <h2 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#FFE58F', display: 'flex', alignItems: 'center', gap: 6 }}>
-            Trending Reels 🔥
-          </h2>
+      {/* 6. Promotional Yellow Banner (AquaBasket Style Flat Accent) */}
+      <div style={{
+        background: '#F3C34E',
+        borderRadius: 22,
+        padding: 20,
+        marginBottom: 34,
+        color: '#082F2B',
+        boxShadow: '0 4px 18px rgba(243, 195, 78, 0.25)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+      }}>
+        <p style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase' }}>SELL WITH CONFIDENCE</p>
+        <h3 className="serif-heading" style={{ fontSize: '1.3rem', color: '#082F2B' }}>
+          Reach trusted pet lovers across Kerala
+        </h3>
+        <p style={{ fontSize: '0.84rem', color: '#123F3A', lineHeight: 1.4 }}>
+          List your pet or breed with verified badge protection and direct local enquiries.
+        </p>
+        <button
+          onClick={() => navigate('/vendor/apply')}
+          style={{
+            marginTop: 4,
+            alignSelf: 'flex-start',
+            background: '#0D5148',
+            color: '#FFFFFF',
+            border: 'none',
+            borderRadius: 14,
+            padding: '10px 20px',
+            fontSize: '0.85rem',
+            fontWeight: 700,
+            cursor: 'pointer',
+          }}
+        >
+          List Your Pet
+        </button>
+      </div>
+
+      {/* 7. TRUSTED BY LOCAL PET LOVERS (Breeder Trust Section) */}
+      <div style={{ marginBottom: 34 }}>
+        <p className="section-label">TRUSTED BY LOCAL PET LOVERS</p>
+        <h2 className="serif-heading" style={{ fontSize: '1.35rem', marginBottom: 14 }}>
+          Meet Kerala's top breeders
+        </h2>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 }}>
+          <div className="card" style={{ padding: 16, background: '#0D5148', color: '#FFFFFF' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <span style={{ fontSize: '0.65rem', fontWeight: 800, background: 'rgba(255,255,255,0.15)', padding: '4px 10px', borderRadius: 999, letterSpacing: '0.08em' }}>PROFESSIONAL BREEDER</span>
+              <span style={{ fontSize: '0.65rem', fontWeight: 800, background: '#F3C34E', color: '#082F2B', padding: '4px 10px', borderRadius: 999 }}>TOP BREEDER</span>
+            </div>
+            <h4 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+              GreenFin Aquatics & Pets <CheckCircle size={16} color="#F3C34E" />
+            </h4>
+            <p style={{ fontSize: '0.78rem', color: '#E8F1ED', marginBottom: 12 }}>Kozhikode, Kerala</p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.8rem', paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.15)' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 700, color: '#F3C34E' }}><Star size={14} fill="#F3C34E" /> 4.9 Rating</span>
+              <span style={{ color: '#E8F1ED' }}>328 Verified Reviews</span>
+            </div>
+          </div>
+
+          <div className="card" style={{ padding: 16, background: '#FFFFFF' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <span style={{ fontSize: '0.65rem', fontWeight: 800, background: '#E8F1ED', color: '#0D5148', padding: '4px 10px', borderRadius: 999, letterSpacing: '0.08em' }}>CERTIFIED HOME BREEDER</span>
+              <span style={{ fontSize: '0.65rem', fontWeight: 800, background: '#E8F1ED', color: '#0D5148', padding: '4px 10px', borderRadius: 999 }}>VERIFIED</span>
+            </div>
+            <h4 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#12332F', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+              BlueWave Companion Kennels <CheckCircle size={16} color="#0D5148" />
+            </h4>
+            <p style={{ fontSize: '0.78rem', color: '#60736F', marginBottom: 12 }}>Ernakulam, Kochi</p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.8rem', paddingTop: 10, borderTop: '1px solid #D6E3DE' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 700, color: '#0D5148' }}><Star size={14} fill="#0D5148" /> 4.8 Rating</span>
+              <span style={{ color: '#60736F' }}>194 Verified Reviews</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 8. TRENDING REELS Horizontal Carousel */}
+      <div style={{ marginBottom: 34 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <div>
+            <p className="section-label">TRENDING REELS</p>
+            <h2 className="serif-heading" style={{ fontSize: '1.35rem' }}>Watch pet reels</h2>
+          </div>
           <button
             onClick={() => setViewMode('reels')}
-            style={{ background: 'none', border: 'none', color: '#D4AF37', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+            style={{ background: 'none', border: 'none', color: '#0D5148', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
           >
-            View all <ChevronRight size={15} />
+            View all <ChevronRight size={16} />
           </button>
         </div>
 
-        {/* Carousel Row */}
         <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
           {products.slice(0, 6).map((product, idx) => {
             const reel = product.primaryReel || product.reels?.[0];
@@ -322,18 +464,15 @@ export default function FeedPage() {
               <div
                 key={product._id}
                 onClick={() => openFullReelAt(idx)}
-                className="glass"
+                className="card"
                 style={{
                   width: 165,
                   height: 230,
-                  borderRadius: 20,
                   flexShrink: 0,
                   position: 'relative',
                   overflow: 'hidden',
                   cursor: 'pointer',
-                  border: '1px solid rgba(212, 175, 55, 0.3)',
-                  boxShadow: '0 8px 25px rgba(0,0,0,0.5)',
-                  background: '#040704',
+                  padding: 0,
                 }}
               >
                 {reel ? (
@@ -345,35 +484,20 @@ export default function FeedPage() {
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
                 ) : (
-                  <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #0d1a12, #16281c)' }} />
+                  <div style={{ width: '100%', height: '100%', background: '#E8F1ED' }} />
                 )}
 
-                {/* Dark Gradient Overlay */}
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(4,7,4,0.95) 0%, rgba(0,0,0,0.1) 60%)' }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(8,47,43,0.9) 0%, transparent 60%)' }} />
 
-                {/* Play Badge Top */}
-                <div style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(10,18,13,0.7)', backdropFilter: 'blur(8px)', padding: 6, borderRadius: '50%' }}>
-                  <Play size={13} fill="#FFE58F" color="#D4AF37" />
+                <div style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(255,255,255,0.9)', padding: 6, borderRadius: '50%' }}>
+                  <Play size={12} fill="#0D5148" color="#0D5148" />
                 </div>
 
-                {/* Details Bottom */}
                 <div style={{ position: 'absolute', bottom: 10, left: 10, right: 10, color: '#fff' }}>
-                  <p style={{ fontSize: '0.82rem', fontWeight: 800, color: '#F5F5EC', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2 }}>
+                  <p style={{ fontSize: '0.84rem', fontWeight: 700, color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2 }}>
                     {product.name}
                   </p>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyBetween: 'space-between', gap: 4, fontSize: '0.7rem', color: '#A3B8A8' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <MapPin size={10} color="#D4AF37" /> {product.location?.city || 'Kerala'}
-                    </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 'auto' }}>
-                      <Heart size={10} color="#ef4444" fill="#ef4444" /> {product.likesCount || 0}
-                    </span>
-                  </div>
-                  {product.price > 0 && (
-                    <div style={{ marginTop: 4, fontSize: '0.8rem', fontWeight: 800, color: '#FFE58F' }}>
-                      ₹{product.price.toLocaleString('en-IN')}
-                    </div>
-                  )}
+                  <p style={{ fontSize: '0.7rem', color: '#E8F1ED' }}>₹{product.price?.toLocaleString() || '0'}</p>
                 </div>
               </div>
             );
@@ -381,193 +505,52 @@ export default function FeedPage() {
         </div>
       </div>
 
-      {/* 8. Categories Grid (2 Columns Photographic Cards Matching Reference Screenshot) */}
+      {/* 9. CURATED AROUND YOUR LOCATION (Product Grid) */}
       <div style={{ marginBottom: 30 }}>
-        <h2 style={{ fontSize: '1.15rem', fontWeight: 600, color: '#FFFFFF', marginBottom: 16, textAlign: 'center', letterSpacing: '-0.01em' }}>
-          Categories
-        </h2>
-
-        {/* 2-Column Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginBottom: 14 }}>
-          {CATEGORIES.map((cat) => (
-            <div
-              key={cat.id}
-              onClick={() => {
-                if (cat.featureKey) {
-                  setComingSoonFeature(cat.featureKey);
-                } else {
-                  navigate(`/search?category=${cat.tag}`);
-                }
-              }}
-              style={{
-                height: 140,
-                borderRadius: 22,
-                padding: 14,
-                background: cat.bg,
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                cursor: 'pointer',
-                position: 'relative',
-                overflow: 'hidden',
-                boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)',
-                transition: 'transform 0.2s ease',
-              }}
-            >
-              {/* Plus icon top left */}
-              <div style={{
-                position: 'absolute',
-                top: 14,
-                left: 14,
-                zIndex: 10,
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                background: 'rgba(255, 255, 255, 0.08)',
-                backdropFilter: 'blur(8px)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-                <Plus size={16} color="rgba(255, 255, 255, 0.45)" />
-              </div>
-
-              {/* Text details bottom left */}
-              <div style={{ position: 'absolute', bottom: 14, left: 14, zIndex: 10, maxWidth: '65%' }}>
-                <h4 style={{ fontSize: '1.05rem', fontWeight: 600, color: '#FFFFFF', marginBottom: 2, letterSpacing: '-0.01em' }}>
-                  {cat.name}
-                </h4>
-                <p style={{ fontSize: '0.78rem', color: '#D4AF37', fontWeight: 500, margin: 0 }}>
-                  {cat.count}
-                </p>
-              </div>
-
-              {/* Animal Photo overlapping right side */}
-              <div style={{
-                position: 'absolute',
-                top: 0,
-                right: 0,
-                bottom: 0,
-                width: '58%',
-                overflow: 'hidden',
-              }}>
-                <img
-                  src={cat.image}
-                  alt={cat.name}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    objectPosition: 'center',
-                  }}
-                />
-                {/* Soft gradient mask blending image into background */}
-                <div style={{
-                  position: 'absolute',
-                  inset: 0,
-                  background: 'linear-gradient(to right, rgba(14, 13, 11, 0.95) 0%, rgba(14, 13, 11, 0.4) 40%, transparent 100%)',
-                }} />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Adopt, Don't Shop Full Width Banner */}
-        <div
-          onClick={() => setComingSoonFeature('adoption')}
-          style={{
-            height: 165,
-            borderRadius: 22,
-            padding: '20px 20px',
-            background: 'linear-gradient(135deg, rgba(34, 38, 25, 0.88) 0%, rgba(12, 16, 11, 0.96) 100%)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            position: 'relative',
-            overflow: 'hidden',
-            cursor: 'pointer',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-          }}
-        >
-          {/* Left Content Stack */}
-          <div style={{ zIndex: 10, maxWidth: '58%' }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#FFFFFF', marginBottom: 6, letterSpacing: '-0.01em' }}>
-              Adopt, Don’t Shop
-            </h3>
-            <p style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.7)', lineHeight: 1.35, marginBottom: 14 }}>
-              Give them a home,<br />they will give you<br />a lifetime of love.
-            </p>
-            <button
-              onClick={(e) => { e.stopPropagation(); setComingSoonFeature('adoption'); }}
-              style={{
-                background: 'rgba(255, 255, 255, 0.12)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                color: '#FFFFFF',
-                padding: '8px 18px',
-                borderRadius: 12,
-                fontSize: '0.78rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                width: 'fit-content',
-              }}
-            >
-              Explore Now
-            </button>
-          </div>
-
-          {/* Right Side Golden Retriever Puppy Photo */}
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            bottom: 0,
-            width: '52%',
-            overflow: 'hidden',
-          }}>
-            <img
-              src="https://images.unsplash.com/photo-1552053831-71594a27632d?w=500&auto=format&fit=crop&q=80"
-              alt="Golden Retriever Puppy"
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                objectPosition: 'center',
-              }}
-            />
-            {/* Soft gradient mask */}
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'linear-gradient(to right, rgba(12, 16, 11, 0.98) 0%, rgba(12, 16, 11, 0.4) 40%, transparent 100%)',
-            }} />
-          </div>
-        </div>
-      </div>
-
-      {/* 9. Recommended Listings */}
-      <div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <h2 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#FFE58F', fontFamily: 'Cinzel, serif' }}>
-            Recommended Pets
+        <p className="section-label">CURATED AROUND YOUR LOCATION</p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <h2 className="serif-heading" style={{ fontSize: '1.35rem' }}>
+            Available near Kochi
           </h2>
-          <span style={{ fontSize: '0.76rem', color: '#A3B8A8' }}>Near Kerala</span>
+          <button
+            onClick={() => navigate('/search')}
+            style={{ background: 'none', border: 'none', color: '#0D5148', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+          >
+            View all <ChevronRight size={16} />
+          </button>
         </div>
 
-        {loading && products.length === 0 ? <Spinner /> : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {products.map(product => (
-              <ProductCard key={product._id} product={product} />
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spinner size={36} /></div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 14 }}>
+            {products.map((p) => (
+              <ProductCard key={p._id} product={p} />
             ))}
           </div>
         )}
       </div>
 
-      {/* Coming Soon Reusable Modal */}
-      <ComingSoonModal
-        isOpen={!!comingSoonFeature}
-        onClose={() => setComingSoonFeature(null)}
-        feature={comingSoonFeature}
-      />
+      {/* Modal for Coming Soon Features */}
+      {comingSoonFeature && (
+        <Modal title="Feature Coming Soon" onClose={() => setComingSoonFeature(null)}>
+          <div style={{ textAlign: 'center', padding: '20px 0' }}>
+            <h3 style={{ fontSize: '1.1rem', color: '#0D5148', fontWeight: 700, marginBottom: 8 }}>
+              {comingSoonFeature.toUpperCase()} SERVICES
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: '#60736F', marginBottom: 20 }}>
+              We are currently onboarding verified local partners across Kerala for {comingSoonFeature}.
+            </p>
+            <button
+              onClick={() => setComingSoonFeature(null)}
+              className="btn-primary"
+              style={{ width: '100%' }}
+            >
+              Understood
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
