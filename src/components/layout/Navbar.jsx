@@ -3,6 +3,13 @@ import { Search, Bell, Download, Smartphone, ShoppingBag, Heart, Scissors, Packa
 import Logo from '../ui/Logo';
 import { useAuth } from '../../context/AuthContext';
 
+const getFullSrc = (url) => {
+  if (!url) return '';
+  if (url.startsWith('http') || url.startsWith('blob:')) return url;
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -139,7 +146,7 @@ export default function Navbar() {
               border: '1px solid rgba(212,175,55,0.2)'
             }}
           >
-            <Search size={20} color="#D4AF37" />
+            <Search size={18} color="#D4AF37" />
           </div>
 
           {/* Messages */}
@@ -156,7 +163,7 @@ export default function Navbar() {
               border: '1px solid rgba(212,175,55,0.2)'
             }}
           >
-            <MessageCircle size={20} color="#D4AF37" />
+            <MessageCircle size={18} color="#D4AF37" />
             {unreadCount > 0 && (
               <div style={{
                 position: 'absolute',
@@ -185,7 +192,7 @@ export default function Navbar() {
               border: '1px solid rgba(212,175,55,0.2)'
             }}
           >
-            <Bell size={20} color="#D4AF37" />
+            <Bell size={18} color="#D4AF37" />
             {notificationCount > 0 && (
               <div style={{
                 position: 'absolute',
@@ -200,20 +207,29 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Profile */}
+          {/* Circular Profile Photo Avatar */}
           <div 
             onClick={() => navigate('/profile')}
             style={{ 
               cursor: 'pointer', 
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              overflow: 'hidden',
+              border: '2px solid #D4AF37',
+              background: 'linear-gradient(135deg, #FFE58F, #D4AF37)',
               display: 'flex', 
               alignItems: 'center', 
-              background: 'rgba(255,255,255,0.05)',
-              padding: 9,
-              borderRadius: 12,
-              border: '1px solid rgba(212,175,55,0.2)'
+              justifyContent: 'center',
+              boxShadow: '0 0 10px rgba(212, 175, 55, 0.3)',
+              flexShrink: 0,
             }}
           >
-            <User size={20} color="#D4AF37" />
+            {user?.avatar ? (
+              <img src={getFullSrc(user.avatar)} alt={user?.name || 'Profile'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0f0c08' }}>{user?.name?.[0] || '🐾'}</span>
+            )}
           </div>
         </div>
       </nav>

@@ -186,60 +186,7 @@ export default function FeedPage() {
   // ── Render Mobile Landing Homepage View ──────────────────────────────────────────
   return (
     <div style={{ padding: '16px 16px 100px', maxWidth: 680, margin: '0 auto' }}>
-      {/* 1. Mobile Header Top Bar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <img src="/logo.png" alt="Kerala Pets Logo" style={{ height: 40, width: 'auto', objectFit: 'contain' }} />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button
-            onClick={() => navigate('/notifications')}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: '50%',
-              background: 'rgba(15, 29, 20, 0.75)',
-              border: '1px solid rgba(212, 175, 55, 0.25)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              color: '#FFE58F',
-              position: 'relative',
-            }}
-          >
-            <Bell size={18} />
-            {unreadNotificationsCount > 0 && (
-              <div style={{
-                position: 'absolute', top: 2, right: 2, width: 10, height: 10, borderRadius: '50%', background: '#ef4444', border: '2px solid #080d09'
-              }} />
-            )}
-          </button>
-          <div
-            onClick={() => navigate('/profile')}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: '50%',
-              overflow: 'hidden',
-              border: '2px solid #D4AF37',
-              cursor: 'pointer',
-              background: 'linear-gradient(135deg, #FFE58F, #D4AF37)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {user?.avatar ? (
-              <img src={getFullSrc(user.avatar)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : (
-              <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f0c08' }}>{user?.name?.[0] || '🐾'}</span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* 2. Greeting Header */}
+      {/* Greeting Header */}
       <div style={{ marginBottom: 18 }}>
         <h1 style={{ fontSize: '1.45rem', fontWeight: 800, color: '#F5F5EC', marginBottom: 2, fontFamily: 'Cinzel, serif' }}>
           Hey, Pet Lover! 🐾
