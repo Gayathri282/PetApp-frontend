@@ -26,10 +26,11 @@ export default function AdminPanel() {
   const [takingDown, setTakingDown] = useState(false);
 
   const getFullSrc = (url) => {
-    if (!url) return '';
-    if (url.startsWith('http')) return url;
+    if (!url || typeof url !== 'string') return '';
+    const cleanUrl = url.replace(/\\/g, '/');
+    if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://') || cleanUrl.startsWith('blob:')) return cleanUrl;
     const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+    return `${baseUrl}${cleanUrl.startsWith('/') ? '' : '/'}${cleanUrl}`;
   };
 
   useEffect(() => { if(!isAdmin) navigate('/feed'); }, [isAdmin]);
