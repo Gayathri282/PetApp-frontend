@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Share2, Plus, LogOut, Film, Package, X, Upload, Edit2 } from 'lucide-react';
@@ -20,6 +20,7 @@ export default function ProfilePage() {
 
   const { user, isVendor, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const toast = useToast();
   const [showShare, setShowShare] = useState(false);
   const [tab, setTab] = useState('reels');
@@ -36,6 +37,13 @@ export default function ProfilePage() {
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deletingAccount, setDeletingAccount] = useState(false);
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get('action') === 'add') {
+      setShowAddMenu(true);
+    }
+  }, [location.search]);
 
   useEffect(() => {
     if (isVendor || isAdmin) {
@@ -76,7 +84,7 @@ export default function ProfilePage() {
   if (!user) return <Spinner />;
 
   return (
-    <div style={{ padding: '20px 16px 40px', maxWidth: 680, margin: '0 auto' }}>
+    <div style={{ padding: '20px 16px 40px', maxWidth: 680, margin: '0 auto', paddingBottom: 90 }}>
       {/* Profile header */}
       <div className="animate-fade-in" style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 28 }}>
         <div style={{ width: 76, height: 76, borderRadius: '50%', overflow: 'hidden', border: '3px solid #D4AF37', flexShrink: 0, background: 'linear-gradient(135deg, #FFE58F, #D4AF37)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)' }}>
@@ -86,10 +94,15 @@ export default function ProfilePage() {
           <h1 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#F5F5EC', marginBottom: 2 }}>{user.name}</h1>
           <p style={{ fontSize: '0.82rem', color: '#FFE58F', fontWeight: 600 }}>{user.role === 'vendor' ? '✨ Verified Vendor' : user.role === 'admin' ? '🛡️ Admin' : '🐾 Pet Lover'}</p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => setShowEditProfile(true)} className="btn-ghost" style={{ padding: '8px 14px', borderRadius: 12, fontSize: '0.78rem', fontWeight: 600, border: '1px solid rgba(212,175,55,0.3)', color: '#F5F5EC' }}>Edit Profile</button>
-          <button onClick={() => setShowShare(true)} className="btn-ghost" style={{ padding: 10, borderRadius: 12, border: '1px solid rgba(212,175,55,0.3)' }}><Share2 size={18} color="#D4AF37" /></button>
-          <button onClick={handleLogout} className="btn-ghost" style={{ padding: 10, borderRadius: 12, border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444' }}><LogOut size={18} /></button>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {(isVendor || isAdmin) && (
+            <button onClick={() => setShowAddMenu(true)} className="btn-primary" style={{ padding: '8px 12px', borderRadius: 12, fontSize: '0.78rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Plus size={15} /> Post
+            </button>
+          )}
+          <button onClick={() => setShowEditProfile(true)} className="btn-ghost" style={{ padding: '8px 12px', borderRadius: 12, fontSize: '0.78rem', fontWeight: 600, border: '1px solid rgba(212,175,55,0.3)', color: '#F5F5EC' }}>Edit</button>
+          <button onClick={() => setShowShare(true)} className="btn-ghost" style={{ padding: 9, borderRadius: 12, border: '1px solid rgba(212,175,55,0.3)' }}><Share2 size={16} color="#D4AF37" /></button>
+          <button onClick={handleLogout} className="btn-ghost" style={{ padding: 9, borderRadius: 12, border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444' }}><LogOut size={16} /></button>
         </div>
       </div>
 
@@ -952,7 +965,7 @@ function FileDropZone({ accept, onChange, label, multiple = false }) {
       onDragOver={e => { e.preventDefault(); setDragging(true); }}
       onDragLeave={() => setDragging(false)}
       onDrop={handleDrop}
-      style={{ border: `2px dashed ${dragging ? '#818cf8' : 'rgba(255,255,255,0.1)'}`, borderRadius: 14, padding: '24px 16px', textAlign: 'center', cursor: 'pointer', transition: 'all 0.2s', background: dragging ? 'rgba(99,102,241,0.08)' : 'rgba(255,255,255,0.02)' }}
+      style={{ border: `2px dashed ${dragging ? '#D4AF37' : 'rgba(212,175,55,0.2)'}`, borderRadius: 14, padding: '24px 16px', textAlign: 'center', cursor: 'pointer', transition: 'all 0.2s', background: dragging ? 'rgba(212,175,55,0.12)' : 'rgba(255,255,255,0.02)' }}
     >
       <Upload size={24} color="#64748b" style={{ marginBottom: 8 }} />
       <p style={{ fontSize: '0.8rem', color: '#64748b' }}>{label}</p>

@@ -29,21 +29,38 @@
     <meta name="twitter:image" content="/logo.png" />
 
     <!-- PWA / Theme -->
-    <meta name="theme-color" content="#0b0914" />
+    <meta name="theme-color" content="#080d09" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="KerelaPets" />
+    <meta name="apple-mobile-web-app-title" content="Kerala Pets" />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
+    <style>
+      html, body {
+        background-color: #080d09 !important;
+        color: #F5F5EC;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div style="position:fixed; inset:0; background:#080d09; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; z-index:99999;">
+        <img src="/logo.png" alt="Kerala Pets" style="width:140px; height:auto; filter:drop-shadow(0 4px 15px rgba(212,175,55,0.4));" />
+        <div style="width:36px; height:36px; border:3px solid rgba(212,175,55,0.2); border-top-color:#D4AF37; border-radius:50%; animation:spin 0.7s linear infinite;"></div>
+        <span style="font-size:0.82rem; color:#A3B8A8; letter-spacing:0.08em; text-transform:uppercase; font-family:sans-serif;">Kerala Pets</span>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

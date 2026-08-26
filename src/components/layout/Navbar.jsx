@@ -21,33 +21,41 @@ export default function Navbar() {
 
   return (
     <>
+      <style>{`
+        @media (max-width: 768px) {
+          .desktop-nav-menu { display: none !important; }
+          .desktop-only-action { display: none !important; }
+          .main-navbar-container { height: 58px !important; padding: 0 16px !important; }
+        }
+      `}</style>
       {!isStandalone && wasInstalled && !canInstall && (
-        <div style={{ position:'fixed', top:0, left:0, right:0, zIndex:99, background:'linear-gradient(to right, #D4AF37, #AA7C11)', padding:'8px 20px', display:'flex', alignItems:'center', justifyContent:'space-between', boxShadow:'0 4px 15px rgba(0,0,0,0.3)' }}>
+        <div style={{ position:'fixed', top:0, left:0, right:0, zIndex:99, background:'linear-gradient(to right, #D4AF37, #AA7C11)', padding:'8px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', boxShadow:'0 4px 15px rgba(0,0,0,0.3)' }}>
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
             <Smartphone size={18} color="#0f0c08" />
-            <span style={{ color:'#0f0c08', fontSize:'0.85rem', fontWeight:700 }}>Better experience in the KeralaPets app</span>
+            <span style={{ color:'#0f0c08', fontSize:'0.82rem', fontWeight:700 }}>Better experience in the KeralaPets app</span>
           </div>
           <button 
             onClick={() => window.location.reload()} 
-            style={{ background:'#0f0c08', color:'#D4AF37', border:'none', padding:'6px 14px', borderRadius:8, fontSize:'0.8rem', fontWeight:700, cursor:'pointer' }}
+            style={{ background:'#0f0c08', color:'#D4AF37', border:'none', padding:'6px 14px', borderRadius:8, fontSize:'0.78rem', fontWeight:700, cursor:'pointer' }}
           >
             Open App
           </button>
         </div>
       )}
       <nav
+        className="main-navbar-container"
         style={{
           position: 'fixed',
           top: 0,
           left: 0,
           right: 0,
           zIndex: 100,
-          height: 70,
+          height: 66,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '0 24px',
-          background: 'rgba(15, 12, 9, 0.85)',
+          background: 'rgba(10, 18, 13, 0.9)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
           borderBottom: '1px solid rgba(212, 175, 55, 0.25)',
@@ -59,10 +67,10 @@ export default function Navbar() {
           onClick={() => navigate('/feed')}
           style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}
         >
-          <Logo size={42} showText={true} layout="horizontal" />
+          <Logo size={38} showText={true} layout="horizontal" />
         </div>
 
-        {/* Center: Desktop Navigation Quick Links */}
+        {/* Center: Desktop Navigation Quick Links (Hidden on Mobile) */}
         <div className="desktop-nav-menu" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           {desktopMenuItems.map((item, idx) => {
             const IconComp = item.icon;
@@ -93,10 +101,11 @@ export default function Navbar() {
           })}
         </div>
 
-        {/* Right: Actions (Search, Messages, Notifications, Profile, Install) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        {/* Right: Actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {canInstall && (
             <button 
+              className="desktop-only-action"
               onClick={installApp}
               style={{ 
                 cursor: 'pointer', 
@@ -104,16 +113,16 @@ export default function Navbar() {
                 alignItems: 'center', 
                 gap: 8,
                 background: 'linear-gradient(135deg, #FFE58F, #D4AF37, #AA7C11)',
-                padding: '8px 16px',
+                padding: '8px 14px',
                 borderRadius: 12,
                 border: 'none',
                 color: '#0f0c08',
-                fontSize: '0.82rem',
+                fontSize: '0.8rem',
                 fontWeight: 700,
                 boxShadow: '0 4px 15px rgba(212, 175, 55, 0.4)'
               }}
             >
-              <Download size={16} /> Install App
+              <Download size={15} /> Install App
             </button>
           )}
 

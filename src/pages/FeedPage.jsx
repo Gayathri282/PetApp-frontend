@@ -4,8 +4,9 @@ import ReelCard from '../components/reel/ReelCard';
 import ProductCard from '../components/product/ProductCard';
 import Spinner from '../components/ui/Spinner';
 import Modal from '../components/ui/Modal';
+import ComingSoonModal from '../components/ui/ComingSoonModal';
 import { getFeed, getLatestTimestamp, trackInterest } from '../api';
-import { Smartphone, Download, RefreshCw, Bell, Search, Heart, MapPin, Play, Film, ChevronRight } from 'lucide-react';
+import { Smartphone, Download, RefreshCw, Bell, Search, Heart, MapPin, Play, Film, ChevronRight, ShoppingBag, Scissors, Package, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const CATEGORY_AVATARS = [
@@ -22,7 +23,7 @@ const CATEGORY_GRID_ITEMS = [
   { name: 'Birds', count: '45+ Listings', tag: 'bird', img: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=300&auto=format&fit=crop&q=80' },
   { name: 'Fish', count: '30+ Listings', tag: 'fish', img: 'https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?w=300&auto=format&fit=crop&q=80' },
   { name: 'Small Pets', count: '20+ Listings', tag: 'rabbit', img: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=300&auto=format&fit=crop&q=80' },
-  { name: 'Pet Services', count: '60+ Listings', tag: 'grooming', img: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=300&auto=format&fit=crop&q=80' },
+  { name: 'Pet Services', count: 'Coming Soon', featureKey: 'services', img: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=300&auto=format&fit=crop&q=80' },
 ];
 
 export default function FeedPage() {
@@ -36,6 +37,7 @@ export default function FeedPage() {
   const [showNewReels, setShowNewReels] = useState(false);
   const [viewMode, setViewMode] = useState('home'); // 'home' | 'reels'
   const [selectedReelIndex, setSelectedReelIndex] = useState(0);
+  const [comingSoonFeature, setComingSoonFeature] = useState(null);
 
   const containerRef = useRef(null);
   const isFetching = useRef(false);
@@ -185,16 +187,16 @@ export default function FeedPage() {
   return (
     <div style={{ padding: '16px 16px 100px', maxWidth: 680, margin: '0 auto' }}>
       {/* 1. Mobile Header Top Bar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <img src="/logo.png" alt="Kerala Pets Logo" style={{ height: 42, width: 'auto', objectFit: 'contain' }} />
+          <img src="/logo.png" alt="Kerala Pets Logo" style={{ height: 40, width: 'auto', objectFit: 'contain' }} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <button
             onClick={() => navigate('/notifications')}
             style={{
-              width: 42,
-              height: 42,
+              width: 40,
+              height: 40,
               borderRadius: '50%',
               background: 'rgba(15, 29, 20, 0.75)',
               border: '1px solid rgba(212, 175, 55, 0.25)',
@@ -206,7 +208,7 @@ export default function FeedPage() {
               position: 'relative',
             }}
           >
-            <Bell size={20} />
+            <Bell size={18} />
             {unreadNotificationsCount > 0 && (
               <div style={{
                 position: 'absolute', top: 2, right: 2, width: 10, height: 10, borderRadius: '50%', background: '#ef4444', border: '2px solid #080d09'
@@ -216,8 +218,8 @@ export default function FeedPage() {
           <div
             onClick={() => navigate('/profile')}
             style={{
-              width: 42,
-              height: 42,
+              width: 40,
+              height: 40,
               borderRadius: '50%',
               overflow: 'hidden',
               border: '2px solid #D4AF37',
@@ -231,18 +233,18 @@ export default function FeedPage() {
             {user?.avatar ? (
               <img src={getFullSrc(user.avatar)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
-              <span style={{ fontSize: '1rem', fontWeight: 800, color: '#0f0c08' }}>{user?.name?.[0] || '🐾'}</span>
+              <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f0c08' }}>{user?.name?.[0] || '🐾'}</span>
             )}
           </div>
         </div>
       </div>
 
       {/* 2. Greeting Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#F5F5EC', marginBottom: 4, fontFamily: 'Cinzel, serif' }}>
+      <div style={{ marginBottom: 18 }}>
+        <h1 style={{ fontSize: '1.45rem', fontWeight: 800, color: '#F5F5EC', marginBottom: 2, fontFamily: 'Cinzel, serif' }}>
           Hey, Pet Lover! 🐾
         </h1>
-        <p style={{ fontSize: '0.92rem', color: '#A3B8A8', fontWeight: 500 }}>
+        <p style={{ fontSize: '0.88rem', color: '#A3B8A8', fontWeight: 500 }}>
           What are you looking for today?
         </p>
       </div>
@@ -252,16 +254,16 @@ export default function FeedPage() {
         onClick={() => navigate('/search')}
         style={{
           position: 'relative',
-          marginBottom: 24,
+          marginBottom: 20,
           cursor: 'pointer',
         }}
       >
         <Search size={18} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#D4AF37' }} />
         <div
           style={{
-            padding: '14px 16px 14px 44px',
+            padding: '13px 16px 13px 44px',
             borderRadius: 16,
-            fontSize: '0.9rem',
+            fontSize: '0.88rem',
             background: 'rgba(15, 29, 20, 0.75)',
             border: '1px solid rgba(212, 175, 55, 0.25)',
             color: '#8c9e90',
@@ -273,7 +275,7 @@ export default function FeedPage() {
       </div>
 
       {/* 4. Horizontal Scrollable Category Avatars */}
-      <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 12, marginBottom: 28, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+      <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 10, marginBottom: 20, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
         {CATEGORY_AVATARS.map((cat) => (
           <div
             key={cat.name}
@@ -281,8 +283,8 @@ export default function FeedPage() {
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0, cursor: 'pointer' }}
           >
             <div style={{
-              width: 64,
-              height: 64,
+              width: 60,
+              height: 60,
               borderRadius: '50%',
               padding: 2,
               background: 'linear-gradient(135deg, #FFE58F, #D4AF37)',
@@ -290,27 +292,88 @@ export default function FeedPage() {
             }}>
               <img src={cat.img} alt={cat.name} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
             </div>
-            <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#F5F5EC' }}>{cat.name}</span>
+            <span style={{ fontSize: '0.76rem', fontWeight: 600, color: '#F5F5EC' }}>{cat.name}</span>
           </div>
         ))}
       </div>
 
-      {/* 5. Trending Reels Carousel */}
-      <div style={{ marginBottom: 32 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#FFE58F', display: 'flex', alignItems: 'center', gap: 6 }}>
+      {/* 5. Compact Explore Discovery Row (Section 4) */}
+      <div style={{ marginBottom: 26 }}>
+        <p style={{ fontSize: '0.74rem', fontWeight: 700, color: '#A3B8A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+          Explore Features
+        </p>
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+          <button
+            onClick={() => navigate('/search')}
+            className="tag-pill active"
+            style={{
+              whiteSpace: 'nowrap',
+              background: 'linear-gradient(135deg, rgba(212,175,55,0.3), rgba(16,185,129,0.3))',
+              color: '#FFE58F',
+              border: '1px solid rgba(212,175,55,0.6)',
+              padding: '6px 14px',
+              fontSize: '0.78rem',
+              borderRadius: 20,
+              fontWeight: 700,
+            }}
+          >
+            🛍️ Buy & Sell
+          </button>
+          <button
+            onClick={() => setComingSoonFeature('adoption')}
+            className="tag-pill"
+            style={{
+              whiteSpace: 'nowrap',
+              padding: '6px 14px',
+              fontSize: '0.78rem',
+              borderRadius: 20,
+            }}
+          >
+            ❤️ Adoption <span style={{ fontSize: '0.6rem', color: '#FFE58F', background: 'rgba(212,175,55,0.2)', padding: '2px 6px', borderRadius: 8, marginLeft: 4, fontWeight: 700 }}>Soon</span>
+          </button>
+          <button
+            onClick={() => setComingSoonFeature('services')}
+            className="tag-pill"
+            style={{
+              whiteSpace: 'nowrap',
+              padding: '6px 14px',
+              fontSize: '0.78rem',
+              borderRadius: 20,
+            }}
+          >
+            ✂️ Pet Services <span style={{ fontSize: '0.6rem', color: '#FFE58F', background: 'rgba(212,175,55,0.2)', padding: '2px 6px', borderRadius: 8, marginLeft: 4, fontWeight: 700 }}>Soon</span>
+          </button>
+          <button
+            onClick={() => setComingSoonFeature('essentials')}
+            className="tag-pill"
+            style={{
+              whiteSpace: 'nowrap',
+              padding: '6px 14px',
+              fontSize: '0.78rem',
+              borderRadius: 20,
+            }}
+          >
+            📦 Essentials <span style={{ fontSize: '0.6rem', color: '#FFE58F', background: 'rgba(212,175,55,0.2)', padding: '2px 6px', borderRadius: 8, marginLeft: 4, fontWeight: 700 }}>Soon</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 6. Trending Reels Carousel */}
+      <div style={{ marginBottom: 30 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <h2 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#FFE58F', display: 'flex', alignItems: 'center', gap: 6 }}>
             Trending Reels 🔥
           </h2>
           <button
             onClick={() => setViewMode('reels')}
-            style={{ background: 'none', border: 'none', color: '#D4AF37', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+            style={{ background: 'none', border: 'none', color: '#D4AF37', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
           >
-            View all <ChevronRight size={16} />
+            View all <ChevronRight size={15} />
           </button>
         </div>
 
         {/* Carousel Row */}
-        <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 12, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
           {products.slice(0, 6).map((product, idx) => {
             const reel = product.primaryReel || product.reels?.[0];
             return (
@@ -319,8 +382,8 @@ export default function FeedPage() {
                 onClick={() => openFullReelAt(idx)}
                 className="glass"
                 style={{
-                  width: 170,
-                  height: 240,
+                  width: 165,
+                  height: 230,
                   borderRadius: 20,
                   flexShrink: 0,
                   position: 'relative',
@@ -348,15 +411,15 @@ export default function FeedPage() {
 
                 {/* Play Badge Top */}
                 <div style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(10,18,13,0.7)', backdropFilter: 'blur(8px)', padding: 6, borderRadius: '50%' }}>
-                  <Play size={14} fill="#FFE58F" color="#D4AF37" />
+                  <Play size={13} fill="#FFE58F" color="#D4AF37" />
                 </div>
 
                 {/* Details Bottom */}
-                <div style={{ position: 'absolute', bottom: 12, left: 12, right: 12, color: '#fff' }}>
-                  <p style={{ fontSize: '0.85rem', fontWeight: 800, color: '#F5F5EC', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2 }}>
+                <div style={{ position: 'absolute', bottom: 10, left: 10, right: 10, color: '#fff' }}>
+                  <p style={{ fontSize: '0.82rem', fontWeight: 800, color: '#F5F5EC', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2 }}>
                     {product.name}
                   </p>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyBetween: 'space-between', gap: 4, fontSize: '0.72rem', color: '#A3B8A8' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyBetween: 'space-between', gap: 4, fontSize: '0.7rem', color: '#A3B8A8' }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                       <MapPin size={10} color="#D4AF37" /> {product.location?.city || 'Kerala'}
                     </span>
@@ -365,7 +428,7 @@ export default function FeedPage() {
                     </span>
                   </div>
                   {product.price > 0 && (
-                    <div style={{ marginTop: 4, fontSize: '0.82rem', fontWeight: 800, color: '#FFE58F' }}>
+                    <div style={{ marginTop: 4, fontSize: '0.8rem', fontWeight: 800, color: '#FFE58F' }}>
                       ₹{product.price.toLocaleString('en-IN')}
                     </div>
                   )}
@@ -376,93 +439,108 @@ export default function FeedPage() {
         </div>
       </div>
 
-      {/* 6. "Adopt, Don't Shop" Banner Card */}
+      {/* 7. "Adopt, Don't Shop" Teaser Banner (Points 10 & 15) */}
       <div
         className="glass"
+        onClick={() => setComingSoonFeature('adoption')}
         style={{
           borderRadius: 22,
-          padding: '20px 22px',
-          marginBottom: 32,
+          padding: '18px 20px',
+          marginBottom: 30,
           background: 'linear-gradient(135deg, rgba(15, 29, 20, 0.85), rgba(10, 18, 13, 0.95))',
           border: '1px solid rgba(212, 175, 55, 0.3)',
           display: 'flex',
           alignItems: 'center',
-          gap: 16,
+          gap: 14,
           position: 'relative',
           overflow: 'hidden',
+          cursor: 'pointer',
           boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
         }}
       >
         <div style={{ flex: 1 }}>
-          <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#F5F5EC', marginBottom: 6, fontFamily: 'Cinzel, serif' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#F5F5EC', marginBottom: 4, fontFamily: 'Cinzel, serif' }}>
             Adopt, Don't Shop
           </h3>
-          <p style={{ fontSize: '0.78rem', color: '#A3B8A8', lineHeight: 1.4, marginBottom: 14 }}>
+          <p style={{ fontSize: '0.76rem', color: '#A3B8A8', lineHeight: 1.4, marginBottom: 12 }}>
             Give them a loving home, they will give you a lifetime of love.
           </p>
           <button
             className="btn-primary"
-            onClick={() => navigate('/search?tag=adoption')}
-            style={{ padding: '8px 18px', fontSize: '0.78rem', borderRadius: 12 }}
+            onClick={(e) => { e.stopPropagation(); setComingSoonFeature('adoption'); }}
+            style={{ padding: '7px 16px', fontSize: '0.76rem', borderRadius: 12 }}
           >
             Explore Now
           </button>
         </div>
-        <div style={{ width: 100, height: 100, borderRadius: 16, overflow: 'hidden', flexShrink: 0, border: '2px solid rgba(212,175,55,0.4)' }}>
+        <div style={{ width: 90, height: 90, borderRadius: 16, overflow: 'hidden', flexShrink: 0, border: '2px solid rgba(212,175,55,0.4)' }}>
           <img src="https://images.unsplash.com/photo-1552053831-71594a27632d?w=300&auto=format&fit=crop&q=80" alt="Puppy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
       </div>
 
-      {/* 7. Categories Grid (2 Columns Mobile) */}
-      <div style={{ marginBottom: 32 }}>
-        <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#FFE58F', marginBottom: 14, fontFamily: 'Cinzel, serif' }}>
+      {/* 8. Categories Grid (2 Columns Mobile) */}
+      <div style={{ marginBottom: 30 }}>
+        <h2 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#FFE58F', marginBottom: 12, fontFamily: 'Cinzel, serif' }}>
           Browse Categories
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
           {CATEGORY_GRID_ITEMS.map((cat) => (
             <div
               key={cat.name}
-              onClick={() => navigate(`/search?tag=${cat.tag}`)}
+              onClick={() => {
+                if (cat.featureKey) {
+                  setComingSoonFeature(cat.featureKey);
+                } else {
+                  navigate(`/search?tag=${cat.tag}`);
+                }
+              }}
               className="glass"
               style={{
-                borderRadius: 20,
-                padding: 14,
+                borderRadius: 18,
+                padding: 12,
                 background: 'rgba(15, 29, 20, 0.75)',
                 border: '1px solid rgba(212, 175, 55, 0.22)',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 12,
+                gap: 10,
                 transition: 'all 0.2s ease',
               }}
             >
-              <img src={cat.img} alt={cat.name} style={{ width: 48, height: 48, borderRadius: 14, objectFit: 'cover', border: '1px solid rgba(212,175,55,0.3)' }} />
+              <img src={cat.img} alt={cat.name} style={{ width: 44, height: 44, borderRadius: 12, objectFit: 'cover', border: '1px solid rgba(212,175,55,0.3)' }} />
               <div>
-                <h4 style={{ fontSize: '0.88rem', fontWeight: 700, color: '#F5F5EC', marginBottom: 2 }}>{cat.name}</h4>
-                <p style={{ fontSize: '0.7rem', color: '#A3B8A8' }}>{cat.count}</p>
+                <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#F5F5EC', marginBottom: 2 }}>{cat.name}</h4>
+                <p style={{ fontSize: '0.68rem', color: '#A3B8A8' }}>{cat.count}</p>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* 8. Recommended Listings (2 Columns Grid) */}
+      {/* 9. Recommended Listings */}
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#FFE58F', fontFamily: 'Cinzel, serif' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <h2 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#FFE58F', fontFamily: 'Cinzel, serif' }}>
             Recommended Pets
           </h2>
-          <span style={{ fontSize: '0.78rem', color: '#A3B8A8' }}>Near Kerala</span>
+          <span style={{ fontSize: '0.76rem', color: '#A3B8A8' }}>Near Kerala</span>
         </div>
 
         {loading && products.length === 0 ? <Spinner /> : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {products.map(product => (
               <ProductCard key={product._id} product={product} />
             ))}
           </div>
         )}
       </div>
+
+      {/* Coming Soon Reusable Modal */}
+      <ComingSoonModal
+        isOpen={!!comingSoonFeature}
+        onClose={() => setComingSoonFeature(null)}
+        feature={comingSoonFeature}
+      />
     </div>
   );
 }

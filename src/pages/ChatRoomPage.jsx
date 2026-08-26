@@ -116,14 +116,14 @@ export default function ChatRoomPage() {
             <span 
               key={`link-${i}`} 
               onClick={() => navigate(path, { state: { from: 'chat' } })}
-              style={{ color: '#818cf8', textDecoration: 'underline', fontWeight: 600, cursor:'pointer' }}
+              style={{ color: '#FFE58F', textDecoration: 'underline', fontWeight: 600, cursor:'pointer' }}
             >
               {linkText}
             </span>
           );
         } else {
           result.push(
-            <a key={`link-${i}`} href={linkUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#818cf8', textDecoration: 'underline', fontWeight: 600 }}>
+            <a key={`link-${i}`} href={linkUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#FFE58F', textDecoration: 'underline', fontWeight: 600 }}>
               {linkText}
             </a>
           );
@@ -138,7 +138,7 @@ export default function ChatRoomPage() {
       return urlParts.map((part, i) => {
         if (urlRegex.test(part)) {
           return (
-            <a key={i} href={part} target="_blank" rel="noopener noreferrer" style={{ color: '#818cf8', textDecoration: 'underline', wordBreak: 'break-all' }}>
+            <a key={i} href={part} target="_blank" rel="noopener noreferrer" style={{ color: '#FFE58F', textDecoration: 'underline', wordBreak: 'break-all' }}>
               {part}
             </a>
           );
@@ -153,13 +153,13 @@ export default function ChatRoomPage() {
   if (loading) return <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'80vh' }}><Spinner size={48} /></div>;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', background: '#0f0d1a', position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:200 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', background: '#080d09', position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:200 }}>
       {/* Header */}
-      <div style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(15,13,26,0.8)', backdropFilter:'blur(20px)' }}>
-        <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
+      <div style={{ padding: '16px', borderBottom: '1px solid rgba(212, 175, 55, 0.25)', display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(10, 18, 13, 0.92)', backdropFilter:'blur(20px)' }}>
+        <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: '#FFE58F', cursor: 'pointer' }}>
           <ArrowLeft size={24} />
         </button>
-        <div style={{ width: 40, height: 40, borderRadius: '50%', overflow: 'hidden', background: otherUser?.role === 'admin' ? '#fb923c' : '#6366f1' }}>
+        <div style={{ width: 40, height: 40, borderRadius: '50%', overflow: 'hidden', border: '2px solid #D4AF37', background: 'linear-gradient(135deg, #FFE58F, #D4AF37)' }}>
           {otherUser?.avatar ? (
             <img src={getFullSrc(otherUser.avatar)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (

@@ -231,8 +231,8 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
               }
             }}
             style={{
-              background: '#818cf8', border: 'none', borderRadius: 12,
-              padding: '10px 20px', color: '#fff', fontWeight: 700,
+              background: 'linear-gradient(135deg, #FFE58F, #D4AF37)', color: '#0f0c08', border: 'none', borderRadius: 12,
+              padding: '10px 20px', fontWeight: 700,
               cursor: 'pointer', fontSize: '0.8rem', marginTop: 8
             }}
           >

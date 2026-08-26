@@ -120,10 +120,10 @@ export default function AdminPanel() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display:'flex', gap:4, marginBottom:24, background:'rgba(255,255,255,0.04)', borderRadius:14, padding:4 }}>
+      <div style={{ display:'flex', gap:4, marginBottom:24, background:'rgba(15,29,20,0.75)', border: '1px solid rgba(212,175,55,0.2)', borderRadius:14, padding:4 }}>
         {tabs.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px 0', borderRadius:10, border:'none', cursor:'pointer', fontSize:'0.8rem', fontWeight:600, transition:'all 0.2s', background: tab===t.key?'linear-gradient(135deg,rgba(99,102,241,0.2),rgba(139,92,246,0.15))':'none', color: tab===t.key?'#a5b4fc':'#64748b' }}>
-            <t.icon size={16} />{t.label}
+          <button key={t.key} onClick={() => setTab(t.key)} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px 0', borderRadius:10, border: tab===t.key?'1px solid rgba(212,175,55,0.4)':'1px solid transparent', cursor:'pointer', fontSize:'0.8rem', fontWeight:600, transition:'all 0.2s', background: tab===t.key?'linear-gradient(135deg,rgba(212,175,55,0.2),rgba(16,185,129,0.15))':'none', color: tab===t.key?'#FFE58F':'#A3B8A8' }}>
+            <t.icon size={16} color={tab===t.key?'#D4AF37':'#A3B8A8'} />{t.label}
           </button>
         ))}
       </div>
@@ -133,20 +133,20 @@ export default function AdminPanel() {
           {/* Stats */}
           {tab === 'stats' && stats && (
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:12 }}>
-              {[{label:'Users',value:stats.users,color:'#818cf8'},{label:'Vendors',value:stats.vendors,color:'#22c55e'},{label:'Products',value:stats.products,color:'#a855f7'},{label:'Pending Apps',value:stats.pendingApps,color:'#eab308'},{label:'Open Enquiries',value:stats.pendingEnquiries,color:'#ef4444'}].map(s => (
+              {[{label:'Users',value:stats.users,color:'#FFE58F'},{label:'Vendors',value:stats.vendors,color:'#D4AF37'},{label:'Products',value:stats.products,color:'#D4AF37'},{label:'Pending Apps',value:stats.pendingApps,color:'#D4AF37'}].map(s => (
                 <div key={s.label} className="glass" style={{ padding:20, borderRadius:16, textAlign:'center' }}>
                   <p style={{ fontSize:'2rem', fontWeight:800, color:s.color }}>{s.value}</p>
-                  <p style={{ fontSize:'0.78rem', color:'#94a3b8', fontWeight:500 }}>{s.label}</p>
+                  <p style={{ fontSize:'0.78rem', color:'#A3B8A8', fontWeight:500 }}>{s.label}</p>
                 </div>
               ))}
               
               <div 
                 className="glass" 
                 onClick={() => navigate('/chat')}
-                style={{ gridColumn:'1 / -1', padding:20, borderRadius:16, display:'flex', alignItems:'center', justifyContent:'center', gap:12, cursor:'pointer', border:'1px solid rgba(139,92,246,0.3)', background:'rgba(139,92,246,0.05)' }}
+                style={{ gridColumn:'1 / -1', padding:20, borderRadius:16, display:'flex', alignItems:'center', justifyContent:'center', gap:12, cursor:'pointer', border:'1px solid rgba(212,175,55,0.3)', background:'rgba(212,175,55,0.08)' }}
               >
-                <MessageSquare size={20} color="#a855f7" />
-                <span style={{ fontWeight:700, fontSize:'1rem' }}>View All Enquiries in Messages</span>
+                <MessageSquare size={20} color="#D4AF37" />
+                <span style={{ fontWeight:700, fontSize:'1rem', color:'#FFE58F' }}>View {stats.pendingEnquiries} Open Enquiries</span>
               </div>
             </div>
           )}
@@ -158,21 +158,21 @@ export default function AdminPanel() {
               {apps.map(app => (
                 <div key={app._id} className="glass" style={{ padding:16, borderRadius:16 }}>
                   <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
-                    <div style={{ width:40, height:40, borderRadius:'50%', overflow:'hidden', background:'linear-gradient(135deg,#6366f1,#8b5cf6)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                      {app.applicant?.avatar ? <img src={getFullSrc(app.applicant.avatar)} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : <span style={{ fontWeight:700 }}>{app.applicant?.name?.[0]}</span>}
+                    <div style={{ width:40, height:40, borderRadius:'50%', overflow:'hidden', background:'linear-gradient(135deg,#FFE58F,#D4AF37)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                      {app.applicant?.avatar ? <img src={getFullSrc(app.applicant.avatar)} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : <span style={{ fontWeight:700, color:'#0f0c08' }}>{app.applicant?.name?.[0]}</span>}
                     </div>
                     <div style={{ flex:1, minWidth:0 }}>
                       <p style={{ fontWeight:700, fontSize:'0.9rem' }}>{app.applicant?.name}</p>
                       <p style={{ fontSize:'0.75rem', color:'#94a3b8' }}>{app.applicant?.email}</p>
                     </div>
-                    <span style={{ fontSize:'0.7rem', padding:'3px 10px', borderRadius:999, fontWeight:600, background: app.status==='pending'?'rgba(234,179,8,0.12)':app.status==='approved'?'rgba(34,197,94,0.12)':'rgba(239,68,68,0.12)', color: app.status==='pending'?'#eab308':app.status==='approved'?'#22c55e':'#ef4444' }}>{app.status}</span>
+                    <span style={{ fontSize:'0.7rem', padding:'3px 10px', borderRadius:999, fontWeight:600, background: app.status==='pending'?'rgba(212,175,55,0.12)':app.status==='approved'?'rgba(34,197,94,0.12)':'rgba(239,68,68,0.12)', color: app.status==='pending'?'#D4AF37':app.status==='approved'?'#22c55e':'#ef4444' }}>{app.status}</span>
                   </div>
                   <p style={{ fontSize:'0.85rem', fontWeight:600, marginBottom:4 }}>{app.businessName}</p>
-                  <p style={{ fontSize:'0.8rem', color:'#818cf8', marginBottom:4 }}>📞 {app.contactNumber}</p>
+                  <p style={{ fontSize:'0.8rem', color:'#D4AF37', marginBottom:4 }}>📞 {app.contactNumber}</p>
                   <p style={{ fontSize:'0.8rem', color:'#94a3b8', marginBottom:12 }}>{app.description}</p>
                   {app.status === 'pending' && (
                     <div style={{ display:'flex', gap:8 }}>
-                      <button className="btn-primary" style={{ flex:1, padding:'8px 0', fontSize:'0.8rem' }} onClick={() => handleReview(app._id,'approved')}><Check size={15} /> Approve</button>
+                      <button className="btn-primary" style={{ flex:1, padding:'8px 0', fontSize:'0.8rem', background: '#D4AF37' }} onClick={() => handleReview(app._id,'approved')}><Check size={15} /> Approve</button>
                       <button className="btn-danger" style={{ flex:1, padding:'8px 0', fontSize:'0.8rem' }} onClick={() => handleReview(app._id,'rejected')}><X size={15} /> Reject</button>
                     </div>
                   )}
@@ -200,7 +200,7 @@ export default function AdminPanel() {
                     <div style={{ flex:1, minWidth:0 }}>
                       <p style={{ fontWeight:700, fontSize:'0.9rem', marginBottom:2 }}>{p.name}</p>
                       <p style={{ fontSize:'0.75rem', color:'#94a3b8', marginBottom:4 }}>By {p.vendor?.name} • {p.category}</p>
-                      <p style={{ fontSize:'0.8rem', fontWeight:700, color:'#818cf8', marginBottom:6 }}>₹{p.price}</p>
+                      <p style={{ fontSize:'0.8rem', fontWeight:700, color:'#D4AF37', marginBottom:6 }}>₹{p.price}</p>
                       {p.description && (
                         <p style={{ fontSize:'0.7rem', color:'#64748b', marginBottom:10, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>{p.description}</p>
                       )}
