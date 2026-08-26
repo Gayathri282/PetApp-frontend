@@ -84,32 +84,37 @@ export default function ReelCard({ product, onLikeUpdate }) {
   const handleEnquiry = async () => {
     // ✅ Guard: must be logged in
     if (!user) {
-      toast.error('Please log in to register interest');
+      toast.error('Please log in to enquire about this pet');
+      navigate('/login');
       return;
     }
 
-    if (!user.contactNumber && tempPhone.length < 10) {
-      toast.error('Please enter a valid 10-digit contact number');
-      return;
-    }
+    const vendorId = product.vendor?._id || (typeof product.vendor === 'string' ? product.vendor : null);
 
     setSending(true);
     try {
-      if (!user.contactNumber) {
-        await updateProfile({ contactNumber: tempPhone });
-        await refreshUser();
+      if (vendorId && user._id !== vendorId) {
+        await sendMessage({
+          receiverId: vendorId,
+          content: 'Hey, I would like to know more about this',
+          productId: product._id,
+        });
+        toast.success('Enquiry sent to seller!');
+        setShowEnquiry(false);
+        navigate(`/chat/${vendorId}`);
+        return;
       }
 
       await submitEnquiry({
         productId: product._id,
-        message: 'Interested in this product',
+        message: 'Hey, I would like to know more about this',
       });
 
-      toast.success('Interest registered! Admin will contact you.');
+      toast.success('Enquiry registered! Seller will contact you.');
       setShowEnquiry(false);
       setTempPhone('');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to register interest');
+      toast.error(err.response?.data?.message || 'Failed to send enquiry');
     } finally {
       setSending(false);
     }

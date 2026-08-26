@@ -95,7 +95,12 @@ export default function ProfilePage() {
           <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#12332F', marginBottom: 2 }}>{user.name}</h1>
           <p style={{ fontSize: '0.8rem', color: '#0D5148', fontWeight: 700 }}>{user.role === 'vendor' ? 'Verified Vendor' : user.role === 'admin' ? 'Admin' : 'Pet Lover'}</p>
         </div>
-        <div style={{ display: 'flex', gap: 6 }}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {(user.role === 'admin' || isAdmin) && (
+            <button onClick={() => navigate('/admin')} className="btn-primary" style={{ padding: '8px 12px', borderRadius: 12, fontSize: '0.78rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4, background: '#0D5148' }}>
+              Admin Panel
+            </button>
+          )}
           {(isVendor || isAdmin) && (
             <button onClick={() => setShowAddMenu(true)} className="btn-primary" style={{ padding: '8px 12px', borderRadius: 12, fontSize: '0.78rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
               <Plus size={15} /> Post

@@ -235,10 +235,10 @@ ${canonicalUrl}`;
         await updateProfile({ contactNumber: tempPhone });
         await refreshUser();
       }
-      const vendorId = product.vendor?._id || product.vendor;
+      const vendorId = product.vendor?._id || (typeof product.vendor === 'string' ? product.vendor : null);
       if (vendorId) {
-        await sendMessage(vendorId, `Hi, I am interested in buying ${product.name}!`, product._id);
-        toast.success('Interest registered! Opened vendor chat.');
+        await sendMessage({ receiverId: vendorId, content: 'Hey, I would like to know more about this', productId: product._id });
+        toast.success('Enquiry sent to seller!');
         setShowEnquiry(false);
         navigate(`/chat/${vendorId}`);
         return;

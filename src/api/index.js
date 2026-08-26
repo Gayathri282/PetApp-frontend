@@ -76,14 +76,24 @@ export const updateEnquiry = (id, status) =>
 export const adminDeleteProduct = (id, reason = '') => api.delete(`/api/admin/products/${id}`, { data: { reason } });
 
 export const getAllAdminProducts = (status = '', q = '') =>
-  api.get(`/api/admin/products?status=${status}&q=${q}`);
+  api.get(`/api/admin/products?status=${status}&q=${encodeURIComponent(q)}`);
+
+export const adminGetReels = (status = '', q = '') =>
+  api.get(`/api/admin/reels?status=${status}&q=${encodeURIComponent(q)}`);
+export const adminReviewReel = (id, status, reason = '') =>
+  api.put(`/api/admin/reels/${id}/status`, { status, reason });
+export const adminDeleteReel = (id, reason = '') =>
+  api.delete(`/api/admin/reels/${id}`, { data: { reason } });
 
 export const deleteMyAccount = () => api.delete('/auth/me');
 
 export const getPendingProducts = () => api.get('/api/admin/products/pending');
 export const reviewProduct = (id, status, reason = '') => 
   api.put(`/api/admin/products/${id}/review`, { status, reason });
-export const adminGetUsers = (q = '') => api.get(`/api/admin/users?q=${encodeURIComponent(q)}`);
+export const adminGetUsers = (status = '', q = '') =>
+  api.get(`/api/admin/users?status=${status}&q=${encodeURIComponent(q)}`);
+export const adminSuspendUser = (id, suspend = true, reason = '') =>
+  api.put(`/api/admin/users/${id}/suspend`, { suspend, reason });
 export const adminDeleteUser = (id, reason = '') => api.delete(`/api/admin/users/${id}`, { data: { reason } });
 
 // ── Media / Cloudinary ────────────────────────────────

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useLayoutEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, Volume2, VolumeX, Heart, Send, MessageCircle, Play, Pause, RefreshCw, MapPin, CheckCircle, ShieldCheck } from 'lucide-react';
 import { getPlayableVideoUrl, getPosterUrl, normalizeMediaItem, logVideoDiagnostics } from '../../utils/media';
 import { useAuth } from '../../context/AuthContext';
@@ -134,16 +135,21 @@ function SingleReelItem({
     }
   };
 
-  // Contact / Message Seller handler
-  const handleContactSeller = async (e) => {
-    e.stopPropagation();
+  const navigate = useNavigate();
+  const [enquiring, setEnquiring] = useState(false);
+
+  // Contact / Message Seller handler (Enquire)
+  const handleEnquiry = async (e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
     if (!user) {
-      toast.error('Please log in to contact seller');
+      toast.error('Please log in to enquire about this pet');
+      navigate('/login');
       return;
     }
-    const vendorId = item.vendor?._id || item.vendor;
+
+    const vendorId = item.vendor?._id || (typeof item.vendor === 'string' ? item.vendor : null) || item.sellerId || item.vendorId;
     if (!vendorId) {
-      toast.info(`Seller contact: ${item.vendor?.phone || 'Contact via Kerala Pets'}`);
+      toast.error('Unable to contact this seller right now.');
       return;
     }
     if (user._id === vendorId) {
@@ -151,16 +157,26 @@ function SingleReelItem({
       return;
     }
 
-    const priceStr = item.price > 0 ? `₹${item.price.toLocaleString('en-IN')}` : 'Price on request';
-    const textMsg = `Hi, I'm interested in your pet listing:\n\n🐾 ${item.name || 'Pet'}\n💰 ${priceStr}`;
+    if (enquiring) return;
+    setEnquiring(true);
+
+    const exactMsg = 'Hey, I would like to know more about this';
+    const targetProductId = item._id || item.id;
 
     try {
-      await sendMessage({ recipientId: vendorId, text: textMsg });
-      toast.success('Interest sent to seller via Chat');
-    } catch {
-      toast.info('Contact seller initiated');
+      await sendMessage({ receiverId: vendorId, content: exactMsg, productId: targetProductId });
+      toast.success('Enquiry sent to seller!');
+      if (onClose) onClose();
+      navigate(`/chat/${vendorId}`);
+    } catch (err) {
+      console.error('[ENQUIRE ERROR]', err);
+      toast.error(err?.response?.data?.message || 'Failed to send enquiry. Please try again.');
+    } finally {
+      setEnquiring(false);
     }
   };
+
+  const handleContactSeller = handleEnquiry;
 
   // Share handler
   const handleShare = (e) => {
@@ -486,7 +502,8 @@ function SingleReelItem({
 
         {/* Contact / Enquiry Button */}
         <button
-          onClick={handleContactSeller}
+          onClick={handleEnquiry}
+          disabled={enquiring}
           style={{
             display: 'flex',
             flexDirection: 'column',
@@ -495,8 +512,9 @@ function SingleReelItem({
             background: 'none',
             border: 'none',
             color: '#FFFFFF',
-            cursor: 'pointer',
+            cursor: enquiring ? 'not-allowed' : 'pointer',
             padding: 0,
+            opacity: enquiring ? 0.7 : 1,
           }}
         >
           <div
@@ -516,7 +534,7 @@ function SingleReelItem({
             <MessageCircle size={22} color="#FFFFFF" />
           </div>
           <span style={{ fontSize: '0.72rem', fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
-            Enquire
+            {enquiring ? 'Enquiring...' : 'Enquire'}
           </span>
         </button>
 
