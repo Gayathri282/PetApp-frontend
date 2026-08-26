@@ -230,16 +230,19 @@ export default function FeedPage() {
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0, cursor: 'pointer' }}
           >
             <div style={{
-              width: 60,
-              height: 60,
+              width: 58,
+              height: 58,
               borderRadius: '50%',
               padding: 2,
               background: 'linear-gradient(135deg, #FFE58F, #D4AF37)',
-              boxShadow: '0 4px 15px rgba(212, 175, 55, 0.25)',
+              boxShadow: '0 0 14px rgba(212, 175, 55, 0.28)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}>
               <img src={cat.img} alt={cat.name} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
             </div>
-            <span style={{ fontSize: '0.76rem', fontWeight: 600, color: '#F5F5EC' }}>{cat.name}</span>
+            <span style={{ fontSize: '0.76rem', fontWeight: 600, color: '#F5F5EC', fontFamily: 'Cinzel, serif' }}>{cat.name}</span>
           </div>
         ))}
       </div>
@@ -386,7 +389,7 @@ export default function FeedPage() {
         </div>
       </div>
 
-      {/* 7. "Adopt, Don't Shop" Teaser Banner (Points 10 & 15) */}
+      {/* 7. "Adopt, Don't Shop" Teaser Banner */}
       <div
         className="glass"
         onClick={() => setComingSoonFeature('adoption')}
@@ -425,10 +428,10 @@ export default function FeedPage() {
         </div>
       </div>
 
-      {/* 8. Categories Grid (2 Columns Mobile) */}
-      <div style={{ marginBottom: 30 }}>
-        <h2 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#FFE58F', marginBottom: 12, fontFamily: 'Cinzel, serif' }}>
-          Browse Categories
+      {/* 8. Categories Grid (2 Columns Photographic Cards Matching Reference Design) */}
+      <div style={{ marginBottom: 32 }}>
+        <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#FFE58F', marginBottom: 14, fontFamily: 'Cinzel, serif', letterSpacing: '0.02em' }}>
+          Categories
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
           {CATEGORY_GRID_ITEMS.map((cat) => (
@@ -443,21 +446,58 @@ export default function FeedPage() {
               }}
               className="glass"
               style={{
-                borderRadius: 18,
-                padding: 12,
-                background: 'rgba(15, 29, 20, 0.75)',
-                border: '1px solid rgba(212, 175, 55, 0.22)',
+                height: 122,
+                borderRadius: 20,
+                padding: '14px 14px',
+                background: 'linear-gradient(135deg, rgba(20, 36, 26, 0.88), rgba(8, 14, 10, 0.96))',
+                border: '1px solid rgba(212, 175, 55, 0.25)',
                 cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                transition: 'all 0.2s ease',
+                position: 'relative',
+                overflow: 'hidden',
+                boxShadow: '0 8px 25px rgba(0, 0, 0, 0.45)',
+                transition: 'all 0.25s ease',
               }}
             >
-              <img src={cat.img} alt={cat.name} style={{ width: 44, height: 44, borderRadius: 12, objectFit: 'cover', border: '1px solid rgba(212,175,55,0.3)' }} />
-              <div>
-                <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#F5F5EC', marginBottom: 2 }}>{cat.name}</h4>
-                <p style={{ fontSize: '0.68rem', color: '#A3B8A8' }}>{cat.count}</p>
+              {/* Decorative Sparkle icon top left */}
+              <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 10 }}>
+                <Sparkles size={13} color="#D4AF37" style={{ opacity: 0.7 }} />
+              </div>
+
+              {/* Text details bottom left */}
+              <div style={{ position: 'absolute', bottom: 12, left: 12, zIndex: 10, maxWidth: '65%' }}>
+                <h4 style={{ fontSize: '0.98rem', fontWeight: 800, color: '#F5F5EC', marginBottom: 2, fontFamily: 'Cinzel, serif', letterSpacing: '0.01em' }}>
+                  {cat.name}
+                </h4>
+                <p style={{ fontSize: '0.72rem', color: '#A3B8A8', fontWeight: 500, margin: 0 }}>
+                  {cat.count}
+                </p>
+              </div>
+
+              {/* Large photographic pet image overlapping right side */}
+              <div style={{
+                position: 'absolute',
+                top: -6,
+                right: -6,
+                bottom: -6,
+                width: '60%',
+                overflow: 'hidden',
+              }}>
+                <img
+                  src={cat.img}
+                  alt={cat.name}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    objectPosition: 'center',
+                  }}
+                />
+                {/* Gradient mask blending image seamlessly into dark glass card */}
+                <div style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'linear-gradient(to right, rgba(10, 18, 13, 0.98) 0%, rgba(10, 18, 13, 0.5) 45%, transparent 100%)',
+                }} />
               </div>
             </div>
           ))}
