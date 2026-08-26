@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import { ArrowLeft, RefreshCw, AlertTriangle } from 'lucide-react';
+import { RefreshCw, AlertTriangle } from 'lucide-react';
 
 export default class ErrorBoundary extends Component {
   constructor(props) {
@@ -26,8 +26,8 @@ export default class ErrorBoundary extends Component {
       return (
         <div style={{
           minHeight: '100dvh',
-          background: '#080d09',
-          color: '#F5F5EC',
+          background: '#F3F8F5',
+          color: '#12332F',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -37,8 +37,8 @@ export default class ErrorBoundary extends Component {
           fontFamily: 'Inter, sans-serif'
         }}>
           <div style={{
-            background: 'rgba(239, 68, 68, 0.12)',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
+            background: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid rgba(239, 68, 68, 0.25)',
             borderRadius: '50%',
             width: 72,
             height: 72,
@@ -50,37 +50,19 @@ export default class ErrorBoundary extends Component {
             <AlertTriangle size={36} color="#ef4444" />
           </div>
 
-          <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#FFE58F', marginBottom: 8, fontFamily: 'Cinzel, serif' }}>
-            Application Error Caught
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#12332F', marginBottom: 8, fontFamily: 'Playfair Display, serif' }}>
+            Something went wrong
           </h2>
 
-          <p style={{ fontSize: '0.85rem', color: '#A3B8A8', maxWidth: 360, lineHeight: 1.5, marginBottom: 20 }}>
-            {this.state.error?.message || 'A runtime error occurred while rendering this component.'}
+          <p style={{ fontSize: '0.88rem', color: '#60736F', maxWidth: 360, lineHeight: 1.5, marginBottom: 24 }}>
+            Please try again.
           </p>
-
-          {process.env.NODE_ENV === 'development' && this.state.error && (
-            <div style={{
-              background: 'rgba(0, 0, 0, 0.6)',
-              border: '1px solid rgba(212, 175, 55, 0.2)',
-              borderRadius: 12,
-              padding: 14,
-              maxWidth: '90%',
-              fontSize: '0.72rem',
-              color: '#f87171',
-              textAlign: 'left',
-              overflowX: 'auto',
-              marginBottom: 24,
-              fontFamily: 'monospace'
-            }}>
-              {this.state.error.toString()}
-            </div>
-          )}
 
           <button
             onClick={this.handleReset}
             style={{
-              background: 'linear-gradient(135deg, #FFE58F, #D4AF37)',
-              color: '#0f0c08',
+              background: '#0D5148',
+              color: '#FFFFFF',
               border: 'none',
               borderRadius: 14,
               padding: '12px 28px',
@@ -90,10 +72,10 @@ export default class ErrorBoundary extends Component {
               display: 'flex',
               alignItems: 'center',
               gap: 8,
-              boxShadow: '0 8px 20px rgba(212, 175, 55, 0.3)'
+              boxShadow: '0 4px 14px rgba(13, 81, 72, 0.25)'
             }}
           >
-            <RefreshCw size={16} /> Return to Feed
+            <RefreshCw size={16} /> Go Home
           </button>
         </div>
       );

@@ -218,11 +218,42 @@ View Product:
 ${canonicalUrl}`;
 
     try {
-      await sendMessage({ recipientId: vendorId, text: textMsg });
-    } catch (err) {
-      console.warn('SendMessage notice:', err);
+      await sendMessage(vendorId, textMsg, product._id);
+      toast.success('Opened vendor chat');
+      navigate(`/chat/${vendorId}`);
+    } catch {
+      toast.error('Failed to open chat with vendor');
     }
-    navigate(`/chat/${vendorId}`, { state: { from: 'product', productId: product._id } });
+  };
+
+  const handleEnquiry = async () => {
+    if (!product) return;
+    setSending(true);
+    try {
+      if (tempPhone) {
+        await updateProfile({ contactNumber: tempPhone });
+        await refreshUser();
+      }
+      const vendorId = product.vendor?._id || product.vendor;
+      if (vendorId) {
+        await sendMessage(vendorId, `Hi, I am interested in buying ${product.name}!`, product._id);
+        toast.success('Interest registered! Opened vendor chat.');
+        setShowEnquiry(false);
+        navigate(`/chat/${vendorId}`);
+        return;
+      }
+      await submitEnquiry({
+        productId: product._id,
+        userPhone: tempPhone || user?.contactNumber,
+      });
+      toast.success('Interest registered! Vendor/Admin will contact you.');
+      setShowEnquiry(false);
+    } catch (err) {
+      console.error('[ENQUIRY ERROR]', err);
+      toast.error('Failed to submit interest');
+    } finally {
+      setSending(false);
+    }
   };
 
   if (loading) {
