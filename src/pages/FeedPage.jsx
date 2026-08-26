@@ -8,6 +8,7 @@ import Modal from '../components/ui/Modal';
 import Spinner from '../components/ui/Spinner';
 import { getFeed, getLatestTimestamp } from '../api';
 import { CATEGORIES } from '../data/categories';
+import { getPlayableVideoUrl, getPosterUrl, getFullSrc, logVideoDiagnostics } from '../utils/media';
 
 export default function FeedPage() {
   const navigate = useNavigate();
@@ -417,7 +418,15 @@ export default function FeedPage() {
 
         <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
           {products.slice(0, 6).map((product, idx) => {
-            const reel = product.primaryReel || product.reels?.[0];
+            const videoUrl = getPlayableVideoUrl(product);
+            const posterUrl = getPosterUrl(product);
+
+            if (videoUrl) {
+              console.log("REEL ITEM:", product);
+              console.log("REEL VIDEO URL:", videoUrl);
+              logVideoDiagnostics("Watch Pet Reels", product);
+            }
+
             return (
               <div
                 key={product._id}
@@ -451,22 +460,22 @@ export default function FeedPage() {
                   padding: 0,
                 }}
               >
-                {reel?.videoUrl ? (
+                {videoUrl ? (
                   <video
-                    poster={reel.thumbnail ? getFullSrc(reel.thumbnail) : (product.images?.[0] ? getFullSrc(product.images[0]) : undefined)}
-                    src={getFullSrc(reel.videoUrl)}
+                    poster={posterUrl}
+                    src={videoUrl}
                     muted
                     playsInline
                     preload="metadata"
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    onLoadStart={() => console.log('[TRENDING REEL] Load start:', reel.videoUrl)}
+                    onLoadStart={() => console.log('[TRENDING REEL] Load start:', videoUrl)}
                     onLoadedMetadata={() => console.log('[TRENDING REEL] Metadata loaded')}
                     onCanPlay={() => console.log('[TRENDING REEL] Can play')}
                     onPlay={() => console.log('[TRENDING REEL] Playing preview')}
                     onError={(e) => console.error('[TRENDING REEL ERROR]', e.currentTarget.error)}
                   />
-                ) : product.images?.[0] ? (
-                  <img src={getFullSrc(product.images[0])} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : posterUrl ? (
+                  <img src={posterUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
                   <div style={{ width: '100%', height: '100%', background: '#E8F1ED', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Play size={24} color="#0D5148" />

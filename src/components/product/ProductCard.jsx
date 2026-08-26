@@ -18,31 +18,27 @@ const STATUS_CONFIG = {
   },
 };
 
-const ProductCard = memo(({ product, style = {} }) => {
-  const getFullSrc = (url) => {
-    if (!url || typeof url !== 'string') return '';
-    const cleanUrl = url.replace(/\\/g, '/');
-    if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://') || cleanUrl.startsWith('blob:')) return cleanUrl;
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    return `${baseUrl}${cleanUrl.startsWith('/') ? '' : '/'}${cleanUrl}`;
-  };
+import { getPlayableVideoUrl, getPosterUrl, getFullSrc, logVideoDiagnostics } from '../../utils/media';
 
+const ProductCard = memo(({ product, style = {} }) => {
   const navigate = useNavigate();
   const videoRef = useRef(null);
   const [hovering, setHovering] = useState(false);
   const [liked, setLiked] = useState(false);
-  const reel = product.primaryReel || product.reels?.[0];
 
   const status = product.status; // 'pending' | 'approved' | 'rejected'
   const statusCfg = STATUS_CONFIG[status] || null;
   const isClickable = status === 'approved';
 
-  const posterUrl = reel?.thumbnail 
-    ? getFullSrc(reel.thumbnail) 
-    : (product.images?.[0] ? getFullSrc(product.images[0]) : undefined);
-
-  const videoUrl = reel?.videoUrl ? getFullSrc(reel.videoUrl) : undefined;
+  const posterUrl = getPosterUrl(product);
+  const videoUrl = getPlayableVideoUrl(product);
   const imageUrl = product.images?.[0] ? getFullSrc(product.images[0]) : undefined;
+
+  if (videoUrl) {
+    console.log("WORKING VIDEO ITEM:", product);
+    console.log("WORKING VIDEO URL:", videoUrl);
+    logVideoDiagnostics("Available near Kochi", product);
+  }
 
   const handleMouseEnter = () => {
     if (isClickable && videoRef.current) {

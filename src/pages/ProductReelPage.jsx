@@ -9,6 +9,7 @@ import { getProduct, toggleLike, submitEnquiry, updateProfile, getAdminUser, sen
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { getSoundPreference, setSoundPreference } from '../hooks/useSoundPreference';
+import { getPlayableVideoUrl, getPosterUrl, getFullSrc, logVideoDiagnostics } from '../utils/media';
 
 export default function ProductReelPage() {
   const getFullSrc = (url) => {
@@ -343,35 +344,41 @@ ${canonicalUrl}`;
       {/* Reels */}
       <div className="reel-container" ref={containerRef} style={{ height: '100dvh', overflowY: 'scroll', scrollSnapType: 'y mandatory' }}>
         {(() => {
-          const reelsList = (product.reels && product.reels.length > 0)
-            ? product.reels
-            : [{ videoUrl: '', thumbnail: product.images?.[0] || '', isFallback: true }];
+          logVideoDiagnostics('ProductReelPage', product);
 
-          return reelsList.map((reel, i) => (
-            <div key={`${product._id}-${i}`} className="reel-item" data-index={i} style={{ position: 'relative', height: '100dvh', scrollSnapAlign: 'start', overflow: 'hidden' }}>
-              {reel.videoUrl ? (
-                <VideoPlayer 
-                  key={`${product._id}-reel-${i}`} 
-                  src={reel.videoUrl} 
-                  muted={isMuted}
-                  externalRef={(el) => (videoRefs.current[i] = el)}
-                />
-              ) : (
-                <div style={{ width: '100%', height: '100%', background: '#0D5148', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                  {reel.thumbnail || product.images?.[0] ? (
-                    <img 
-                      src={getFullSrc(reel.thumbnail || product.images?.[0])} 
-                      alt={product.name} 
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                    />
-                  ) : (
-                    <div style={{ color: '#FFFFFF', textAlign: 'center', padding: 20 }}>
-                      <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>{product.name}</p>
-                      <p style={{ fontSize: '0.82rem', opacity: 0.8 }}>Listing Image Preview</p>
-                    </div>
-                  )}
-                </div>
-              )}
+          const rawReels = (product.reels && product.reels.length > 0)
+            ? product.reels
+            : [product];
+
+          return rawReels.map((reelItem, i) => {
+            const videoUrl = getPlayableVideoUrl(reelItem) || getPlayableVideoUrl(product);
+            const posterUrl = getPosterUrl(reelItem) || getPosterUrl(product);
+
+            return (
+              <div key={`${product._id}-${i}`} className="reel-item" data-index={i} style={{ position: 'relative', height: '100dvh', scrollSnapAlign: 'start', overflow: 'hidden' }}>
+                {videoUrl ? (
+                  <VideoPlayer 
+                    key={`${product._id}-reel-${i}`} 
+                    src={videoUrl} 
+                    muted={isMuted}
+                    externalRef={(el) => (videoRefs.current[i] = el)}
+                  />
+                ) : (
+                  <div style={{ width: '100%', height: '100%', background: '#0D5148', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                    {posterUrl ? (
+                      <img 
+                        src={posterUrl} 
+                        alt={product.name} 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                      />
+                    ) : (
+                      <div style={{ color: '#FFFFFF', textAlign: 'center', padding: 20 }}>
+                        <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>{product.name}</p>
+                        <p style={{ fontSize: '0.82rem', opacity: 0.8 }}>Listing Image Preview</p>
+                      </div>
+                    )}
+                  </div>
+                )}
 
             {/* Bottom Gradient Overlay */}
             <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '40%', background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', pointerEvents: 'none', zIndex: 5 }} />
@@ -381,9 +388,9 @@ ${canonicalUrl}`;
 
               <button onClick={() => handleLike(i)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', color: '#fff', padding: 0 }}>
                 <div style={{ display: 'flex', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} className={likeAnimating === i ? 'animate-icon-tap' : ''}>
-                  <Heart size={26} fill={reel.isLiked ? '#ef4444' : 'none'} color={reel.isLiked ? '#ef4444' : '#fff'} strokeWidth={2.2} />
+                  <Heart size={26} fill={reelItem.isLiked ? '#ef4444' : 'none'} color={reelItem.isLiked ? '#ef4444' : '#fff'} strokeWidth={2.2} />
                 </div>
-                <span style={{ fontSize: '0.7rem', fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{reel.isLiked ? product.likeCount : (product.likeCount || 0)}</span>
+                <span style={{ fontSize: '0.7rem', fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{reelItem.isLiked ? product.likeCount : (product.likeCount || 0)}</span>
               </button>
 
               {/* Sound Toggle */}
@@ -472,9 +479,10 @@ ${canonicalUrl}`;
               </div>
             </div>
           </div>
-        ));
-      })()}
-    </div>
+        );
+      });
+    })()}
+  </div>
 
       <ShareModal isOpen={showShare} onClose={() => setShowShare(false)} url={window.location.href} />
       <Modal isOpen={showEnquiry} onClose={() => setShowEnquiry(false)} title="Register Interest">

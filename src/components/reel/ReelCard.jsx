@@ -10,6 +10,8 @@ import { useAuth } from '../../context/AuthContext';
 import { getSoundPreference, setSoundPreference } from '../../hooks/useSoundPreference';
 import { openReel } from '../../utils/navigation';
 
+import { getPlayableVideoUrl, logVideoDiagnostics } from '../../utils/media';
+
 export default function ReelCard({ product, onLikeUpdate }) {
   const navigate = useNavigate();
   const toast = useToast();
@@ -21,23 +23,13 @@ export default function ReelCard({ product, onLikeUpdate }) {
   const [showShare, setShowShare] = useState(false);
   const [showEnquiry, setShowEnquiry] = useState(false);
   const [sending, setSending] = useState(false);
-  // Default to unmuted per user request.
-  // Note: mobile browsers may still fallback to muted for autoplay to work.
   const [isMuted, setIsMuted] = useState(!getSoundPreference());
   const [shareAnimating, setShareAnimating] = useState(false);
   const [tempPhone, setTempPhone] = useState('');
   const videoRef = useRef(null);
 
-  const getFullSrc = (url) => {
-    if (!url || typeof url !== 'string') return '';
-    const cleanUrl = url.replace(/\\/g, '/');
-    if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://') || cleanUrl.startsWith('blob:')) return cleanUrl;
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    return `${baseUrl}${cleanUrl.startsWith('/') ? '' : '/'}${cleanUrl}`;
-  };
-
-  const reel = product.primaryReel || product.reels?.[0];
-  if (!reel) return null;
+  const videoUrl = getPlayableVideoUrl(product);
+  logVideoDiagnostics('ReelCard', product);
 
   // ─── Handlers ───────────────────────────────────────────────────────────────
 
@@ -172,7 +164,7 @@ ${canonicalUrl}`;
         overflow: 'hidden',
       }}
     >
-      <VideoPlayer src={reel.videoUrl} muted={isMuted} externalRef={videoRef} />
+      <VideoPlayer src={videoUrl} muted={isMuted} externalRef={videoRef} />
 
       {/* Bottom gradient overlay */}
       <div

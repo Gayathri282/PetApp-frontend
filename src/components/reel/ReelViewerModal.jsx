@@ -1,37 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
 import { X, Play, RefreshCw, Volume2, VolumeX, ShieldCheck, MapPin } from 'lucide-react';
 
+import { getPlayableVideoUrl, getPosterUrl, logVideoDiagnostics } from '../../utils/media';
+
 export default function ReelViewerModal({ isOpen, onClose, reel, product }) {
   const videoRef = useRef(null);
   const [hasError, setHasError] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const getFullSrc = (url) => {
-    if (!url || typeof url !== 'string') return '';
-    const cleanUrl = url.replace(/\\/g, '/');
-    if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://') || cleanUrl.startsWith('blob:')) return cleanUrl;
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    return `${baseUrl}${cleanUrl.startsWith('/') ? '' : '/'}${cleanUrl}`;
-  };
-
-  const getVideoUrl = (item) => {
-    if (!item) return '';
-    const r = item.primaryReel || item.reels?.[0] || item;
-    const raw = r?.videoUrl || r?.video_url || r?.mediaUrl || r?.media_url || r?.video || r?.src || item?.videoUrl || item?.video_url || item?.src || '';
-    return getFullSrc(raw);
-  };
-
-  const getPosterUrl = (item) => {
-    if (!item) return '';
-    const r = item.primaryReel || item.reels?.[0] || item;
-    const raw = r?.thumbnail || r?.poster || item?.images?.[0] || item?.image || item?.thumbnail || '';
-    return getFullSrc(raw);
-  };
-
   const itemData = product || reel;
-  const videoUrl = getVideoUrl(itemData);
+  const videoUrl = getPlayableVideoUrl(itemData);
   const posterUrl = getPosterUrl(itemData);
+
+  if (isOpen && itemData) {
+    logVideoDiagnostics('ReelViewerModal', itemData);
+  }
 
   useEffect(() => {
     setHasError(false);
