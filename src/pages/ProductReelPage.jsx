@@ -349,12 +349,29 @@ ${canonicalUrl}`;
 
           return reelsList.map((reel, i) => (
             <div key={`${product._id}-${i}`} className="reel-item" data-index={i} style={{ position: 'relative', height: '100dvh', scrollSnapAlign: 'start', overflow: 'hidden' }}>
-              <VideoPlayer 
-                key={`${product._id}-reel-${i}`} 
-                src={reel.videoUrl} 
-                muted={isMuted}
-                externalRef={(el) => (videoRefs.current[i] = el)}
-              />
+              {reel.videoUrl ? (
+                <VideoPlayer 
+                  key={`${product._id}-reel-${i}`} 
+                  src={reel.videoUrl} 
+                  muted={isMuted}
+                  externalRef={(el) => (videoRefs.current[i] = el)}
+                />
+              ) : (
+                <div style={{ width: '100%', height: '100%', background: '#0D5148', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                  {reel.thumbnail || product.images?.[0] ? (
+                    <img 
+                      src={getFullSrc(reel.thumbnail || product.images?.[0])} 
+                      alt={product.name} 
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                    />
+                  ) : (
+                    <div style={{ color: '#FFFFFF', textAlign: 'center', padding: 20 }}>
+                      <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>{product.name}</p>
+                      <p style={{ fontSize: '0.82rem', opacity: 0.8 }}>Listing Image Preview</p>
+                    </div>
+                  )}
+                </div>
+              )}
 
             {/* Bottom Gradient Overlay */}
             <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '40%', background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', pointerEvents: 'none', zIndex: 5 }} />
