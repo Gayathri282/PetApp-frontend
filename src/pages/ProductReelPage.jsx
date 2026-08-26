@@ -25,6 +25,7 @@ export default function ProductReelPage() {
   const { user, refreshUser } = useAuth();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showShare, setShowShare] = useState(false);
   const [showEnquiry, setShowEnquiry] = useState(false);
   const [enquiryMsg, setEnquiryMsg] = useState('');
@@ -47,16 +48,39 @@ export default function ProductReelPage() {
   })());
 
   useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+    setError(null);
+
     (async () => {
       try {
+        console.log('[PRODUCT/REEL] Route ID:', id);
+        console.log('[PRODUCT/REEL] Fetching product details from API...');
         const { data } = await getProduct(id);
-        setProduct(data.product);
-      } catch { toast.error('Product not found'); navigate(-1); }
-      finally { setLoading(false); }
+        console.log('[PRODUCT/REEL] Response received:', data?.product?._id);
+
+        if (isMounted) {
+          if (data?.product) {
+            setProduct(data.product);
+          } else {
+            console.warn('[PRODUCT/REEL] No product record in response payload');
+            setError('Product unavailable');
+          }
+        }
+      } catch (err) {
+        console.error('[PRODUCT/REEL] Fetch Error:', err?.response?.data || err.message);
+        if (isMounted) {
+          setError(err?.response?.data?.message || 'Product unavailable');
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
     })();
 
-    // Clear saved reel position when leaving so re-entry always starts fresh
     return () => {
+      isMounted = false;
       sessionStorage.removeItem(`reel_pos_${id}`);
     };
   }, [id]);
@@ -199,15 +223,68 @@ ${canonicalUrl}`;
   };
 
   if (loading) {
-    const isFromChat = location.state?.from === 'chat';
-    // If we're already in the app (especially from chat), don't show the full-page spinner
-    // Just show a clean dark background while the product data loads
-    if (isFromChat || window.history.length > 1) {
-      return <div style={{ background: '#000', height: '100dvh' }} />;
-    }
-    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh' }}><Spinner size={48} /></div>;
+    return (
+      <div style={{
+        height: '100dvh',
+        background: '#080d09',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 12
+      }}>
+        <img src="/logo.png" alt="Kerala Pets" style={{ width: 100, height: 'auto', opacity: 0.8 }} />
+        <Spinner size={32} />
+      </div>
+    );
   }
-  if (!product) return null;
+
+  if (error || !product) {
+    return (
+      <div style={{
+        height: '100dvh',
+        background: '#080d09',
+        color: '#F5F5EC',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 24,
+        textAlign: 'center',
+        gap: 16
+      }}>
+        <div style={{ fontSize: '3.5rem' }}>🐾</div>
+        <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#FFE58F', fontFamily: 'Cinzel, serif' }}>
+          Product Unavailable
+        </h2>
+        <p style={{ fontSize: '0.88rem', color: '#A3B8A8', maxWidth: 320, lineHeight: 1.5 }}>
+          This listing may have been removed or is no longer available.
+        </p>
+        <button
+          onClick={() => {
+            if (location.state?.from === 'chat' || window.history.length > 1) {
+              navigate(-1);
+            } else {
+              navigate('/feed');
+            }
+          }}
+          style={{
+            background: 'linear-gradient(135deg, #FFE58F, #D4AF37)',
+            color: '#0f0c08',
+            border: 'none',
+            borderRadius: 14,
+            padding: '10px 24px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            fontSize: '0.88rem',
+            marginTop: 8
+          }}
+        >
+          ← Back
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: '#000' }}>
