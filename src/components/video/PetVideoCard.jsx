@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { Play } from 'lucide-react';
-import { normalizeMediaItem, logVideoDiagnostics } from '../../utils/media';
+import { normalizeMediaItem, logVideoDiagnostics, generateVideoThumbnail } from '../../utils/media';
 
 /**
  * PetVideoCard - Unified Reusable Video Player Component
@@ -25,8 +25,34 @@ export default function PetVideoCard({
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [generatedPoster, setGeneratedPoster] = useState('');
 
   const isSelfActive = Boolean(activeVideoId && activeVideoId === normalized.id);
+
+  // Auto-generate thumbnail from video frame when backend provides none
+  useEffect(() => {
+    if (!normalized.thumbnail && normalized.url && !generatedPoster) {
+      let cancelled = false;
+      generateVideoThumbnail(normalized.url).then((blobUrl) => {
+        if (!cancelled && blobUrl) {
+          setGeneratedPoster(blobUrl);
+        }
+      });
+      return () => { cancelled = true; };
+    }
+  }, [normalized.thumbnail, normalized.url, generatedPoster]);
+
+  // Revoke generated blob URL on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (generatedPoster) {
+        URL.revokeObjectURL(generatedPoster);
+      }
+    };
+  }, [generatedPoster]);
+
+  // The effective poster: backend thumbnail first, then auto-generated frame
+  const effectivePoster = normalized.thumbnail || generatedPoster;
 
   // Diagnostic logger (Step 10 requirement)
   useEffect(() => {
@@ -134,6 +160,7 @@ export default function PetVideoCard({
   };
 
   const isVideoVisible = (isSelfActive || isHovered) && isLoaded && !hasError;
+  const showPoster = effectivePoster;
 
   return (
     <div
@@ -152,9 +179,9 @@ export default function PetVideoCard({
       }}
     >
       {/* 1. Base Thumbnail Layer (ALWAYS RENDERED - Never a blank/black screen) */}
-      {normalized.thumbnail ? (
+      {showPoster ? (
         <img
-          src={normalized.thumbnail}
+          src={effectivePoster}
           alt={normalized.name || 'Pet Video'}
           style={{
             width: '100%',
@@ -188,7 +215,7 @@ export default function PetVideoCard({
         <video
           ref={videoRef}
           src={normalized.url}
-          poster={normalized.thumbnail}
+          poster={effectivePoster || undefined}
           playsInline
           preload="metadata"
           muted

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Play, ChevronRight, CheckCircle, Star, ShieldCheck } from 'lucide-react';
+import { Search, MapPin, Play, ChevronRight, CheckCircle, Star, ShieldCheck, ShoppingBag } from 'lucide-react';
 import ReelCard from '../components/reel/ReelCard';
 import ProductCard from '../components/product/ProductCard';
 import PetVideoCard from '../components/video/PetVideoCard';
@@ -171,8 +171,11 @@ export default function FeedPage() {
     );
   }
 
-  // Slice maximum 3 products for single-row "Available near Kochi" section
-  const nearbyProducts = products.slice(0, 3);
+  // ── Data Filtering ─────────────────────────────────────────────────────────────
+  // All pet reels — no filtering
+  const allPetReels = products;
+  // Only pets currently listed for sale
+  const onSaleReels = products.filter(p => p.isOnSale === true);
 
   return (
     <div style={{ padding: '16px 16px 100px', maxWidth: 680, margin: '0 auto', background: '#F3F8F5', minHeight: '100dvh' }}>
@@ -315,12 +318,12 @@ export default function FeedPage() {
         </button>
       </div>
 
-      {/* 5. AVAILABLE NEAR KOCHI (Single Row — Max 3 Cards) */}
+      {/* 5. ON SALE (Horizontal Scrolling Row — All On-Sale Pets) */}
       <div style={{ marginBottom: 34 }}>
-        <p className="section-label">CURATED AROUND YOUR LOCATION</p>
+        <p className="section-label">PETS ON SALE</p>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
           <h2 className="serif-heading" style={{ fontSize: '1.35rem' }}>
-            Available near Kochi
+            On Sale
           </h2>
           <button
             onClick={() => navigate('/search')}
@@ -332,16 +335,54 @@ export default function FeedPage() {
 
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spinner size={36} /></div>
+        ) : onSaleReels.length === 0 ? (
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '40px 20px',
+            background: '#FFFFFF',
+            borderRadius: 20,
+            border: '1px solid #D6E3DE',
+            gap: 12,
+          }}>
+            <ShoppingBag size={36} color="#0D5148" opacity={0.5} />
+            <p style={{ fontSize: '0.92rem', fontWeight: 600, color: '#60736F', margin: 0 }}>No pets currently on sale</p>
+          </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
-            {nearbyProducts.map((p) => (
-              <ProductCard
+          <div
+            className="on-sale-scroll"
+            style={{
+              display: 'flex',
+              gap: 16,
+              overflowX: 'auto',
+              overflowY: 'hidden',
+              flexWrap: 'nowrap',
+              scrollSnapType: 'x mandatory',
+              paddingBottom: 10,
+              scrollbarWidth: 'none',
+              WebkitOverflowScrolling: 'touch',
+            }}
+          >
+            <style>{`.on-sale-scroll::-webkit-scrollbar { display: none; }`}</style>
+            {onSaleReels.map((p) => (
+              <div
                 key={p._id}
-                product={p}
-                activeVideoId={activeVideoId}
-                setActiveVideoId={setActiveVideoId}
-                onVideoClick={(item) => handleOpenReels(item, products)}
-              />
+                className="on-sale-card"
+                style={{
+                  flex: '0 0 auto',
+                  width: 220,
+                  scrollSnapAlign: 'start',
+                }}
+              >
+                <ProductCard
+                  product={p}
+                  activeVideoId={activeVideoId}
+                  setActiveVideoId={setActiveVideoId}
+                  onVideoClick={(item) => handleOpenReels(item, onSaleReels)}
+                />
+              </div>
             ))}
           </div>
         )}
@@ -425,7 +466,7 @@ export default function FeedPage() {
         </div>
       </div>
 
-      {/* 8. WATCH PET REELS (Trending Reels Horizontal Carousel) */}
+      {/* 8. WATCH PET REELS (Trending Reels Horizontal Carousel — ALL Reels) */}
       <div style={{ marginBottom: 34 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
           <div>
@@ -433,7 +474,7 @@ export default function FeedPage() {
             <h2 className="serif-heading" style={{ fontSize: '1.35rem' }}>Watch pet reels</h2>
           </div>
           <button
-            onClick={() => handleOpenReels(products[0], products)}
+            onClick={() => handleOpenReels(allPetReels[0], allPetReels)}
             style={{ background: 'none', border: 'none', color: '#0D5148', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
           >
             View all <ChevronRight size={16} />
@@ -441,7 +482,7 @@ export default function FeedPage() {
         </div>
 
         <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-          {products.slice(0, 6).map((product) => (
+          {allPetReels.map((product) => (
             <div
               key={product._id}
               className="card"
@@ -459,7 +500,7 @@ export default function FeedPage() {
                 item={product}
                 activeVideoId={activeVideoId}
                 setActiveVideoId={setActiveVideoId}
-                onVideoClick={(item) => handleOpenReels(item, products)}
+                onVideoClick={(item) => handleOpenReels(item, allPetReels)}
                 mediaHeight={230}
                 sectionName="Watch Pet Reels"
               >

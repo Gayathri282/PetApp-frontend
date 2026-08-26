@@ -117,6 +117,88 @@ export const normalizeMediaItem = (item) => {
 };
 
 /**
+ * Generates a thumbnail image from a video URL by extracting a frame.
+ * Creates an offscreen <video>, seeks to ~1s, draws to a <canvas>, returns a blob: URL.
+ * Returns '' on failure so existing fallback UI still works.
+ *
+ * @param {string} videoUrl - Full playable video URL
+ * @returns {Promise<string>} blob: URL of the captured frame, or '' on failure
+ */
+export const generateVideoThumbnail = (videoUrl) => {
+  return new Promise((resolve) => {
+    if (!videoUrl || typeof videoUrl !== 'string') {
+      resolve('');
+      return;
+    }
+
+    const video = document.createElement('video');
+    video.crossOrigin = 'anonymous';
+    video.preload = 'metadata';
+    video.muted = true;
+    video.playsInline = true;
+
+    // Timeout safety — don't hang forever
+    const timeout = setTimeout(() => {
+      cleanup();
+      resolve('');
+    }, 8000);
+
+    const cleanup = () => {
+      clearTimeout(timeout);
+      video.removeEventListener('seeked', onSeeked);
+      video.removeEventListener('loadeddata', onLoaded);
+      video.removeEventListener('error', onError);
+      try {
+        video.removeAttribute('src');
+        video.load();
+      } catch {}
+    };
+
+    const onSeeked = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth || 320;
+        canvas.height = video.videoHeight || 240;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(
+          (blob) => {
+            cleanup();
+            if (blob) {
+              resolve(URL.createObjectURL(blob));
+            } else {
+              resolve('');
+            }
+          },
+          'image/jpeg',
+          0.75
+        );
+      } catch {
+        cleanup();
+        resolve('');
+      }
+    };
+
+    const onLoaded = () => {
+      // Seek to 1 second or 10% of duration, whichever is smaller
+      const seekTime = Math.min(1, (video.duration || 2) * 0.1);
+      video.currentTime = seekTime;
+    };
+
+    const onError = () => {
+      cleanup();
+      resolve('');
+    };
+
+    video.addEventListener('loadeddata', onLoaded, { once: true });
+    video.addEventListener('seeked', onSeeked, { once: true });
+    video.addEventListener('error', onError, { once: true });
+
+    video.src = videoUrl;
+  });
+};
+
+/**
  * Diagnostic logger for video items & URLs
  */
 export const logVideoDiagnostics = (sectionName, item) => {

@@ -50,7 +50,7 @@ const ProductCard = memo(({ product, activeVideoId, setActiveVideoId, onVideoCli
         setActiveVideoId={setActiveVideoId}
         onVideoClick={onVideoClick}
         mediaHeight={180}
-        sectionName="Available near Kochi"
+        sectionName="On Sale"
       >
         {/* Favorite Button Overlay */}
         <button
