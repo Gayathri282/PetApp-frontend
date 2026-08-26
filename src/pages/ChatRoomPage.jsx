@@ -225,7 +225,7 @@ export default function ChatRoomPage() {
                   color: '#fff',
                   fontSize: '0.9rem',
                   lineHeight: 1.4,
-                  boxShadow: isMine ? '0 4px 15px rgba(99,102,241,0.2)' : 'none',
+                  boxShadow: isMine ? '0 4px 15px rgba(212,175,55,0.25)' : 'none',
                   whiteSpace: 'pre-wrap'
                 }}
               >

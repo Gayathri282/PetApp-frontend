@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Search, MapPin, SlidersHorizontal, X } from 'lucide-react';
 import ProductCard from '../components/product/ProductCard';
 import Spinner from '../components/ui/Spinner';
@@ -7,10 +8,25 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { searchProducts, getFeed } from '../api';
 
-const TAGS = ['dog','cat','bird','fish','grooming','adoption','accessories','food','toys'];
+const TAGS = ['dog', 'cat', 'bird', 'fish', 'other', 'grooming', 'adoption', 'accessories', 'food', 'toys'];
 const SPECIAL_TAGS = ['On Sale', 'Not For Sale', 'Near Me'];
 
+const CATEGORY_MAP = {
+  dogs: 'dog',
+  dog: 'dog',
+  cats: 'cat',
+  cat: 'cat',
+  birds: 'bird',
+  bird: 'bird',
+  fish: 'fish',
+  others: 'other',
+  other: 'other',
+  accessories: 'other',
+  rabbit: 'other',
+};
+
 export default function SearchPage() {
+  const location = useLocation();
   const [query, setQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState(['on sale']);
   const [results, setResults] = useState([]);
@@ -26,6 +42,19 @@ export default function SearchPage() {
   const { user, refreshUser } = useAuth();
   const [showLocPrompt, setShowLocPrompt] = useState(false);
   const toast = useToast();
+
+  // Listen to URL search params (e.g. /search?category=dog or /search)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const rawCat = params.get('category') || params.get('tag');
+    if (rawCat) {
+      const normalized = rawCat.toLowerCase();
+      const mappedTag = CATEGORY_MAP[normalized] || normalized;
+      setSelectedTags([mappedTag]);
+    } else {
+      setSelectedTags(['on sale']);
+    }
+  }, [location.search]);
 
   const toggleTag = (tag) => {
     if (tag === 'near me' && (!user?.location?.coordinates || (user.location.coordinates[0] === 0 && user.location.coordinates[1] === 0))) {

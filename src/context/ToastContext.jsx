@@ -50,20 +50,20 @@ export function ToastProvider({ children }) {
               pointerEvents: 'auto',
               padding: '14px 22px',
               borderRadius: 14,
-              color: '#fff',
+              color: toast.type === 'info' ? '#FFE58F' : '#fff',
               fontSize: '0.875rem',
-              fontWeight: 500,
+              fontWeight: 600,
               maxWidth: 360,
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              boxShadow: '0 10px 40px rgba(0,0,0,0.4)',
+              border: toast.type === 'info' ? '1px solid rgba(212,175,55,0.4)' : '1px solid rgba(255,255,255,0.1)',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.6)',
               background:
                 toast.type === 'success'
-                  ? 'linear-gradient(135deg, rgba(34,197,94,0.85), rgba(22,163,74,0.85))'
+                  ? 'linear-gradient(135deg, rgba(34,197,94,0.9), rgba(22,163,74,0.9))'
                   : toast.type === 'error'
-                  ? 'linear-gradient(135deg, rgba(239,68,68,0.85), rgba(220,38,38,0.85))'
-                  : 'linear-gradient(135deg, rgba(99,102,241,0.85), rgba(139,92,246,0.85))',
+                  ? 'linear-gradient(135deg, rgba(239,68,68,0.9), rgba(220,38,38,0.9))'
+                  : 'linear-gradient(135deg, rgba(15,29,20,0.95), rgba(10,18,13,0.95))',
             }}
           >
             {toast.message}

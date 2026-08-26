@@ -14,7 +14,7 @@ const CATEGORY_AVATARS = [
   { name: 'Cats', count: '89+', tag: 'cat', img: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=150&auto=format&fit=crop&q=80' },
   { name: 'Birds', count: '45+', tag: 'bird', img: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=150&auto=format&fit=crop&q=80' },
   { name: 'Fish', count: '30+', tag: 'fish', img: 'https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?w=150&auto=format&fit=crop&q=80' },
-  { name: 'Others', count: '20+', tag: 'accessories', img: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=150&auto=format&fit=crop&q=80' },
+  { name: 'Others', count: '20+', tag: 'other', img: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=150&auto=format&fit=crop&q=80' },
 ];
 
 const CATEGORY_GRID_ITEMS = [
@@ -22,7 +22,7 @@ const CATEGORY_GRID_ITEMS = [
   { name: 'Cats', count: '89+ Listings', tag: 'cat', img: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=300&auto=format&fit=crop&q=80' },
   { name: 'Birds', count: '45+ Listings', tag: 'bird', img: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=300&auto=format&fit=crop&q=80' },
   { name: 'Fish', count: '30+ Listings', tag: 'fish', img: 'https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?w=300&auto=format&fit=crop&q=80' },
-  { name: 'Small Pets', count: '20+ Listings', tag: 'rabbit', img: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=300&auto=format&fit=crop&q=80' },
+  { name: 'Small Pets', count: '20+ Listings', tag: 'other', img: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=300&auto=format&fit=crop&q=80' },
   { name: 'Pet Services', count: 'Coming Soon', featureKey: 'services', img: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=300&auto=format&fit=crop&q=80' },
 ];
 
@@ -279,7 +279,7 @@ export default function FeedPage() {
         {CATEGORY_AVATARS.map((cat) => (
           <div
             key={cat.name}
-            onClick={() => navigate(`/search?tag=${cat.tag}`)}
+            onClick={() => navigate(`/search?category=${cat.tag}`)}
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0, cursor: 'pointer' }}
           >
             <div style={{
@@ -491,7 +491,7 @@ export default function FeedPage() {
                 if (cat.featureKey) {
                   setComingSoonFeature(cat.featureKey);
                 } else {
-                  navigate(`/search?tag=${cat.tag}`);
+                  navigate(`/search?category=${cat.tag}`);
                 }
               }}
               className="glass"
