@@ -21,6 +21,7 @@ const CATEGORY_MAP = {
   fish: 'fish',
   others: 'other',
   other: 'other',
+  services: 'services',
   accessories: 'other',
   rabbit: 'other',
 };

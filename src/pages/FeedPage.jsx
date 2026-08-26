@@ -8,59 +8,7 @@ import ComingSoonModal from '../components/ui/ComingSoonModal';
 import { getFeed, getLatestTimestamp, trackInterest } from '../api';
 import { Smartphone, Download, RefreshCw, Bell, Search, Heart, MapPin, Play, Film, ChevronRight, ShoppingBag, Scissors, Package, Sparkles, Home, Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-
-const CATEGORY_AVATARS = [
-  { name: 'Dogs', count: '125+', tag: 'dog', img: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=200&auto=format&fit=crop&q=80' },
-  { name: 'Cats', count: '89+', tag: 'cat', img: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=200&auto=format&fit=crop&q=80' },
-  { name: 'Birds', count: '45+', tag: 'bird', img: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=200&auto=format&fit=crop&q=80' },
-  { name: 'Fish', count: '30+', tag: 'fish', img: 'https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?w=200&auto=format&fit=crop&q=80' },
-  { name: 'Others', count: '20+', tag: 'other', img: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=200&auto=format&fit=crop&q=80' },
-];
-
-const CATEGORY_GRID_ITEMS = [
-  {
-    name: 'Dogs',
-    count: '125+ Listings',
-    tag: 'dog',
-    bg: 'linear-gradient(135deg, rgba(50, 42, 22, 0.85) 0%, rgba(18, 16, 10, 0.96) 100%)',
-    img: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400&auto=format&fit=crop&q=80'
-  },
-  {
-    name: 'Cats',
-    count: '89+ Listings',
-    tag: 'cat',
-    bg: 'linear-gradient(135deg, rgba(38, 33, 26, 0.85) 0%, rgba(14, 13, 11, 0.96) 100%)',
-    img: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&auto=format&fit=crop&q=80'
-  },
-  {
-    name: 'Birds',
-    count: '45+ Listings',
-    tag: 'bird',
-    bg: 'linear-gradient(135deg, rgba(30, 44, 25, 0.85) 0%, rgba(12, 18, 11, 0.96) 100%)',
-    img: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=400&auto=format&fit=crop&q=80'
-  },
-  {
-    name: 'Fish',
-    count: '30+ Listings',
-    tag: 'fish',
-    bg: 'linear-gradient(135deg, rgba(18, 40, 34, 0.85) 0%, rgba(10, 18, 15, 0.96) 100%)',
-    img: 'https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?w=400&auto=format&fit=crop&q=80'
-  },
-  {
-    name: 'Small Pets',
-    count: '20+ Listings',
-    tag: 'other',
-    bg: 'linear-gradient(135deg, rgba(30, 38, 32, 0.85) 0%, rgba(12, 16, 14, 0.96) 100%)',
-    img: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=400&auto=format&fit=crop&q=80'
-  },
-  {
-    name: 'Pet Services',
-    count: '60+ Listings',
-    featureKey: 'services',
-    bg: 'linear-gradient(135deg, rgba(46, 40, 24, 0.85) 0%, rgba(18, 16, 10, 0.96) 100%)',
-    img: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=400&auto=format&fit=crop&q=80'
-  },
-];
+import { CATEGORIES } from '../data/categories';
 
 export default function FeedPage() {
   const navigate = useNavigate();
@@ -250,10 +198,16 @@ export default function FeedPage() {
 
       {/* 4. Horizontal Scrollable Category Avatars */}
       <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 10, marginBottom: 20, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-        {CATEGORY_AVATARS.map((cat) => (
+        {CATEGORIES.map((cat) => (
           <div
-            key={cat.name}
-            onClick={() => navigate(`/search?category=${cat.tag}`)}
+            key={cat.id}
+            onClick={() => {
+              if (cat.featureKey) {
+                setComingSoonFeature(cat.featureKey);
+              } else {
+                navigate(`/search?category=${cat.tag}`);
+              }
+            }}
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0, cursor: 'pointer' }}
           >
             <div style={{
@@ -266,8 +220,13 @@ export default function FeedPage() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              overflow: 'hidden',
             }}>
-              <img src={cat.img} alt={cat.name} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+              <img
+                src={cat.image}
+                alt={cat.name}
+                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', objectPosition: 'center' }}
+              />
             </div>
             <span style={{ fontSize: '0.76rem', fontWeight: 600, color: '#F5F5EC', fontFamily: 'Cinzel, serif' }}>{cat.name}</span>
           </div>
@@ -424,9 +383,9 @@ export default function FeedPage() {
 
         {/* 2-Column Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginBottom: 14 }}>
-          {CATEGORY_GRID_ITEMS.map((cat) => (
+          {CATEGORIES.map((cat) => (
             <div
-              key={cat.name}
+              key={cat.id}
               onClick={() => {
                 if (cat.featureKey) {
                   setComingSoonFeature(cat.featureKey);
@@ -485,7 +444,7 @@ export default function FeedPage() {
                 overflow: 'hidden',
               }}>
                 <img
-                  src={cat.img}
+                  src={cat.image}
                   alt={cat.name}
                   style={{
                     width: '100%',
