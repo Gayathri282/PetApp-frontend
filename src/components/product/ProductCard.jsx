@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Play, Clock, XCircle, Heart, MapPin, CheckCircle, MessageCircle } from 'lucide-react';
-import { useRef, useState, useEffect, memo } from 'react';
+import { useRef, useState, memo } from 'react';
 import { openReel } from '../../utils/navigation';
 
 const STATUS_CONFIG = {
@@ -37,23 +37,35 @@ const ProductCard = memo(({ product, style = {} }) => {
   const statusCfg = STATUS_CONFIG[status] || null;
   const isClickable = status === 'approved';
 
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !reel?.videoUrl || !hovering) return;
+  const posterUrl = reel?.thumbnail 
+    ? getFullSrc(reel.thumbnail) 
+    : (product.images?.[0] ? getFullSrc(product.images[0]) : undefined);
 
-    const fullSrc = getFullSrc(reel.videoUrl);
-    video.src = fullSrc;
+  const videoUrl = reel?.videoUrl ? getFullSrc(reel.videoUrl) : undefined;
+  const imageUrl = product.images?.[0] ? getFullSrc(product.images[0]) : undefined;
 
-    return () => {
-      video.src = '';
-    };
-  }, [hovering, reel]);
+  const handleMouseEnter = () => {
+    if (isClickable && videoRef.current) {
+      setHovering(true);
+      videoRef.current.play().catch(() => {});
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setHovering(false);
+    if (videoRef.current) {
+      videoRef.current.pause();
+      try {
+        videoRef.current.currentTime = 0;
+      } catch {}
+    }
+  };
 
   return (
     <div
       onClick={() => isClickable && openReel(navigate, product)}
-      onMouseEnter={() => { if (isClickable) { setHovering(true); videoRef.current?.play().catch(()=>{}); } }}
-      onMouseLeave={() => { setHovering(false); if(videoRef.current){videoRef.current.pause();videoRef.current.currentTime=0;} }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       className="card animate-fade-in"
       style={{
         display: 'flex',
@@ -69,13 +81,14 @@ const ProductCard = memo(({ product, style = {} }) => {
         ...style,
       }}
     >
-      {/* Thumbnail Container */}
+      {/* Media Container */}
       <div style={{ width: '100%', height: 180, position: 'relative', background: '#E8F1ED', overflow: 'hidden' }}>
-        {reel ? (
+        {videoUrl ? (
           <>
             <video
               ref={videoRef}
-              poster={reel.thumbnail ? getFullSrc(reel.thumbnail) : (product.images?.[0] ? getFullSrc(product.images[0]) : undefined)}
+              src={videoUrl}
+              poster={posterUrl}
               muted
               loop
               playsInline
@@ -83,24 +96,22 @@ const ProductCard = memo(({ product, style = {} }) => {
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
             {!hovering && (
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.15)' }}>
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.18)' }}>
                 <div style={{ background: 'rgba(13,81,72,0.85)', padding: 10, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
                   <Play size={20} fill="#FFFFFF" color="#FFFFFF" />
                 </div>
               </div>
             )}
           </>
+        ) : imageUrl ? (
+          <img src={imageUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
-          product.images?.[0] ? (
-            <img src={getFullSrc(product.images[0])} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          ) : (
-            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#E8F1ED' }}>
-              <Play size={28} color="#0D5148" />
-            </div>
-          )
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#E8F1ED' }}>
+            <Play size={28} color="#0D5148" />
+          </div>
         )}
 
-        {/* Favorite Icon */}
+        {/* Favorite Button Overlay */}
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -126,7 +137,7 @@ const ProductCard = memo(({ product, style = {} }) => {
           <Heart size={16} fill={liked ? '#ef4444' : 'none'} color={liked ? '#ef4444' : '#0D5148'} />
         </button>
 
-        {/* Availability Badge Overlay */}
+        {/* Availability / Status Badge Overlay */}
         <div style={{
           position: 'absolute',
           bottom: 10,
@@ -143,7 +154,6 @@ const ProductCard = memo(({ product, style = {} }) => {
           {product.isOnSale ? 'AVAILABLE TODAY' : 'VERIFIED LISTING'}
         </div>
 
-        {/* Status Overlay */}
         {statusCfg && (
           <div style={{
             position: 'absolute', top: 10, left: 10,
@@ -158,7 +168,7 @@ const ProductCard = memo(({ product, style = {} }) => {
         )}
       </div>
 
-      {/* Product Content Details */}
+      {/* Product Card Details */}
       <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
         <h3 style={{
           fontSize: '0.98rem',
@@ -173,7 +183,7 @@ const ProductCard = memo(({ product, style = {} }) => {
 
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
           <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#12332F' }}>
-            ₹{product.price?.toLocaleString() || '0'}
+            ₹{product.price?.toLocaleString('en-IN') || '0'}
           </span>
           <span style={{ fontSize: '0.72rem', color: '#60736F', fontWeight: 500 }}>
             / listing
@@ -190,10 +200,10 @@ const ProductCard = memo(({ product, style = {} }) => {
         {/* Location */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.74rem', color: '#60736F' }}>
           <MapPin size={13} color="#0D5148" />
-          <span>Kochi, Kerala</span>
+          <span>{product.location?.city || 'Kochi, Kerala'}</span>
         </div>
 
-        {/* Action Button */}
+        {/* Contact Action Button */}
         <button
           onClick={(e) => {
             e.stopPropagation();

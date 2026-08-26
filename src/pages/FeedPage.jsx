@@ -466,14 +466,18 @@ export default function FeedPage() {
               >
                 {reel ? (
                   <video
-                    poster={reel.thumbnail ? getFullSrc(reel.thumbnail) : undefined}
+                    poster={reel.thumbnail ? getFullSrc(reel.thumbnail) : (product.images?.[0] ? getFullSrc(product.images[0]) : undefined)}
                     src={getFullSrc(reel.videoUrl)}
                     muted
                     preload="metadata"
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
+                ) : product.images?.[0] ? (
+                  <img src={getFullSrc(product.images[0])} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
-                  <div style={{ width: '100%', height: '100%', background: '#E8F1ED' }} />
+                  <div style={{ width: '100%', height: '100%', background: '#E8F1ED', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Play size={24} color="#0D5148" />
+                  </div>
                 )}
 
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(8,47,43,0.9) 0%, transparent 60%)' }} />
