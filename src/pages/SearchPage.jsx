@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, MapPin } from 'lucide-react';
+import { Search, MapPin, SlidersHorizontal, X } from 'lucide-react';
 import ProductCard from '../components/product/ProductCard';
 import Spinner from '../components/ui/Spinner';
 import Modal from '../components/ui/Modal';
@@ -12,13 +12,16 @@ const SPECIAL_TAGS = ['On Sale', 'Not For Sale', 'Near Me'];
 
 export default function SearchPage() {
   const [query, setQuery] = useState('');
-  // Default to 'on sale' enabled
   const [selectedTags, setSelectedTags] = useState(['on sale']);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [initialProducts, setInitialProducts] = useState([]);
   const [initialLoading, setInitialLoading] = useState(true);
+
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [priceMax, setPriceMax] = useState(50000);
+  const [sortBy, setSortBy] = useState('newest');
 
   const { user, refreshUser } = useAuth();
   const [showLocPrompt, setShowLocPrompt] = useState(false);
@@ -53,12 +56,9 @@ export default function SearchPage() {
     });
   };
 
-  // Load initial products on mount
   useEffect(() => {
     (async () => {
       try {
-        // Because default is 'on sale', let's load initial products with 'on sale' filter
-        // We can just rely on the doSearch effect to trigger the search initially
         setInitialLoading(false);
       } catch (err) {
         console.error('Failed to load initial products:', err);
@@ -73,7 +73,16 @@ export default function SearchPage() {
     setSearched(true);
     try {
       const { data } = await searchProducts(query, selectedTags.join(','));
-      setResults(data.products || []);
+      let productsList = data.products || [];
+      if (priceMax && priceMax < 50000) {
+        productsList = productsList.filter(p => !p.price || p.price <= priceMax);
+      }
+      if (sortBy === 'price_asc') {
+        productsList.sort((a, b) => (a.price || 0) - (b.price || 0));
+      } else if (sortBy === 'price_desc') {
+        productsList.sort((a, b) => (b.price || 0) - (a.price || 0));
+      }
+      setResults(productsList);
     } catch (err) {
       console.error('Search failed:', err);
       setResults([]);
@@ -84,40 +93,61 @@ export default function SearchPage() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      // If there are tags or query, do a search
       if (query || selectedTags.length) doSearch();
       else { setResults([]); setSearched(false); }
     }, 400);
     return () => clearTimeout(timer);
-  }, [query, selectedTags]);
+  }, [query, selectedTags, priceMax, sortBy]);
 
   const displayProducts = searched ? results : initialProducts;
   const isLoading = searched ? loading : initialLoading;
 
   return (
-    <div style={{ padding:'20px 16px 40px', maxWidth:680, margin:'0 auto' }}>
-      {/* Search input */}
-      <div style={{ position:'relative', marginBottom:20 }}>
-        <Search size={18} style={{ position:'absolute', left:16, top:'50%', transform:'translateY(-50%)', color:'#D4AF37' }} />
-        <input 
-          className="input-field" 
-          placeholder="Search pets, products, breeds..." 
-          value={query} 
-          onChange={e => setQuery(e.target.value)} 
-          style={{ 
-            paddingLeft:44, 
-            borderRadius:16, 
-            fontSize:'0.95rem',
+    <div style={{ padding:'20px 16px 40px', maxWidth:680, margin:'0 auto', paddingBottom: 90 }}>
+      {/* Search Input Bar with Filter Button */}
+      <div style={{ display: 'flex', gap: 10, marginBottom: 16, alignItems: 'center' }}>
+        <div style={{ position:'relative', flex: 1 }}>
+          <Search size={18} style={{ position:'absolute', left:16, top:'50%', transform:'translateY(-50%)', color:'#D4AF37' }} />
+          <input 
+            className="input-field" 
+            placeholder="Search pets, products, breeds..." 
+            value={query} 
+            onChange={e => setQuery(e.target.value)} 
+            style={{ 
+              paddingLeft:44, 
+              borderRadius:16, 
+              fontSize:'0.92rem',
+              background: 'rgba(15, 29, 20, 0.75)',
+              border: '1px solid rgba(212, 175, 55, 0.25)',
+              color: '#F5F5EC',
+              boxShadow: '0 8px 25px rgba(0, 0, 0, 0.4)',
+              height: 48,
+            }} 
+          />
+        </div>
+        <button
+          onClick={() => setShowFilterModal(true)}
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: 16,
             background: 'rgba(15, 29, 20, 0.75)',
-            border: '1px solid rgba(212, 175, 55, 0.25)',
-            color: '#F5F5EC',
+            border: '1px solid rgba(212, 175, 55, 0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            color: '#FFE58F',
+            flexShrink: 0,
             boxShadow: '0 8px 25px rgba(0, 0, 0, 0.4)',
-          }} 
-        />
+          }}
+        >
+          <SlidersHorizontal size={20} />
+        </button>
       </div>
 
-      {/* Filter Chips */}
-      <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:24 }}>
+      {/* Horizontal Scrollable Filter Chips */}
+      <div style={{ display:'flex', gap:8, overflowX:'auto', paddingBottom:8, marginBottom:14, scrollbarWidth:'none', msOverflowStyle:'none', WebkitOverflowScrolling:'touch' }}>
         {SPECIAL_TAGS.map(tag => {
           const isActive = selectedTags.includes(tag.toLowerCase());
           let activeStyle = {};
@@ -127,15 +157,18 @@ export default function SearchPage() {
             if (tag === 'Near Me') activeStyle = { background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.3), rgba(170, 124, 17, 0.3))', color: '#FFE58F', border: '1px solid rgba(212, 175, 55, 0.6)' };
           }
           return (
-            <button key={tag} className={`tag-pill ${isActive ? 'active' : ''}`} style={activeStyle} onClick={() => toggleTag(tag.toLowerCase())}>
+            <button key={tag} className={`tag-pill ${isActive ? 'active' : ''}`} style={{ whiteSpace: 'nowrap', ...activeStyle }} onClick={() => toggleTag(tag.toLowerCase())}>
               {tag}
             </button>
           );
         })}
-        <div style={{ width: '100%', height: 1, background: 'rgba(212,175,55,0.1)', margin: '4px 0' }} />
+      </div>
+
+      {/* Horizontal Scrollable Category Chips */}
+      <div style={{ display:'flex', gap:8, overflowX:'auto', paddingBottom:8, marginBottom:20, scrollbarWidth:'none', msOverflowStyle:'none', WebkitOverflowScrolling:'touch' }}>
         {TAGS.map(tag => (
-          <button key={tag} className={`tag-pill ${selectedTags.includes(tag)?'active':''}`} onClick={() => toggleTag(tag)}>
-            {tag}
+          <button key={tag} className={`tag-pill ${selectedTags.includes(tag)?'active':''}`} style={{ whiteSpace: 'nowrap' }} onClick={() => toggleTag(tag)}>
+            #{tag}
           </button>
         ))}
       </div>
@@ -152,19 +185,87 @@ export default function SearchPage() {
           )}
         </div>
       )}
-      {/* Location Prompt Modal */}
-      <Modal isOpen={showLocPrompt} onClose={() => setShowLocPrompt(false)} title="Set Your Location">
-        <div style={{ padding: 24, textAlign: 'center' }}>
-          <div style={{ background: 'rgba(139,92,246,0.1)', width: 64, height: 64, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-            <MapPin size={32} color="#8b5cf6" />
+      {/* Mobile Bottom Sheet Filter Modal */}
+      <Modal isOpen={showFilterModal} onClose={() => setShowFilterModal(false)} title="Filter & Sort">
+        <div style={{ padding: '8px 4px 16px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {/* Price Range Filter */}
+          <div>
+            <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#FFE58F', display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+              <span>Max Price</span>
+              <span>₹{priceMax >= 50000 ? 'Any' : priceMax.toLocaleString('en-IN')}</span>
+            </label>
+            <input 
+              type="range" 
+              min="500" 
+              max="50000" 
+              step="500" 
+              value={priceMax} 
+              onChange={e => setPriceMax(Number(e.target.value))} 
+              style={{ width: '100%', accentColor: '#D4AF37' }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#A3B8A8', marginTop: 4 }}>
+              <span>₹500</span>
+              <span>₹25,000</span>
+              <span>₹50,000+</span>
+            </div>
           </div>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 10 }}>Where are you?</h3>
-          <p style={{ fontSize: '0.9rem', color: '#94a3b8', marginBottom: 24, lineHeight: 1.5 }}>
-            To find pets and vendors near you, we need your current location. This helps us show you results within your city.
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <button className="btn-primary" onClick={handleSetLocation} style={{ width: '100%' }}>Use Current Location</button>
-            <button onClick={() => setShowLocPrompt(false)} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.85rem', cursor: 'pointer' }}>Maybe Later</button>
+
+          {/* Sort By */}
+          <div>
+            <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#FFE58F', display: 'block', marginBottom: 10 }}>Sort By</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[
+                { id: 'newest', label: 'Newest First' },
+                { id: 'price_asc', label: 'Price: Low to High' },
+                { id: 'price_desc', label: 'Price: High to Low' },
+              ].map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => setSortBy(opt.id)}
+                  style={{
+                    padding: '12px 16px',
+                    borderRadius: 12,
+                    textAlign: 'left',
+                    background: sortBy === opt.id ? 'rgba(212, 175, 55, 0.2)' : 'rgba(255,255,255,0.03)',
+                    border: sortBy === opt.id ? '1px solid rgba(212, 175, 55, 0.5)' : '1px solid rgba(255,255,255,0.06)',
+                    color: sortBy === opt.id ? '#FFE58F' : '#F5F5EC',
+                    fontSize: '0.88rem',
+                    fontWeight: sortBy === opt.id ? 700 : 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+            <button 
+              onClick={() => { setPriceMax(50000); setSortBy('newest'); }}
+              style={{
+                flex: 1,
+                padding: 14,
+                borderRadius: 14,
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: '#A3B8A8',
+                fontWeight: 600,
+                fontSize: '0.88rem',
+                cursor: 'pointer',
+              }}
+            >
+              Reset
+            </button>
+            <button 
+              className="btn-primary" 
+              onClick={() => { setShowFilterModal(false); doSearch(); }} 
+              style={{ flex: 2, padding: 14 }}
+            >
+              Apply Filters
+            </button>
           </div>
         </div>
       </Modal>
