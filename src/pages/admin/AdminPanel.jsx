@@ -291,16 +291,16 @@ export default function AdminPanel() {
               {allUsers.length === 0 && <p style={{ textAlign:'center', color:'#64748b', padding:40 }}>No users found</p>}
               {allUsers.map(u => (
                 <div key={u._id} className="glass" style={{ padding:14, borderRadius:16, display:'flex', alignItems:'center', gap:12 }}>
-                  <div style={{ width:40, height:40, borderRadius:'50%', overflow:'hidden', background:'linear-gradient(135deg,#6366f1,#8b5cf6)', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
-                    {u.avatar ? <img src={getFullSrc(u.avatar)} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : <span style={{ fontWeight:700 }}>{u.name?.[0]}</span>}
+                  <div style={{ width:40, height:40, borderRadius:'50%', overflow:'hidden', background:'linear-gradient(135deg, #FFE58F, #D4AF37)', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                    {u.avatar ? <img src={getFullSrc(u.avatar)} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : <span style={{ fontWeight:700, color:'#0f0c08' }}>{u.name?.[0]}</span>}
                   </div>
                   <div style={{ flex:1, minWidth:0 }}>
                     <p style={{ fontWeight:700, fontSize:'0.85rem', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{u.name}</p>
-                    <p style={{ fontSize:'0.7rem', color:'#94a3b8', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{u.email}</p>
+                    <p style={{ fontSize:'0.7rem', color:'#A3B8A8', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{u.email}</p>
                   </div>
                   <span style={{ fontSize:'0.65rem', padding:'2px 8px', borderRadius:99, fontWeight:700, flexShrink:0,
-                    background: u.role==='admin'?'rgba(251,146,60,0.15)':u.role==='vendor'?'rgba(99,102,241,0.15)':'rgba(255,255,255,0.07)',
-                    color: u.role==='admin'?'#fb923c':u.role==='vendor'?'#818cf8':'#94a3b8'
+                    background: u.role==='admin'?'rgba(251,146,60,0.15)':u.role==='vendor'?'rgba(212,175,55,0.15)':'rgba(255,255,255,0.07)',
+                    color: u.role==='admin'?'#fb923c':u.role==='vendor'?'#FFE58F':'#A3B8A8'
                   }}>{u.role}</span>
                   {u.role !== 'admin' && (
                     <button
@@ -359,7 +359,7 @@ export default function AdminPanel() {
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <p style={{ fontSize: '1.15rem', fontWeight: 800, color: '#818cf8', marginBottom: 2 }}>₹{p.price}</p>
+                  <p style={{ fontSize: '1.15rem', fontWeight: 800, color: '#FFE58F', marginBottom: 2 }}>₹{p.price}</p>
                   {p.isOnSale && <span style={{ fontSize: '0.6rem', padding: '3px 8px', borderRadius: 6, background: 'rgba(34,197,94,0.15)', color: '#22c55e', fontWeight: 700, letterSpacing: '0.05em' }}>ON SALE</span>}
                 </div>
               </div>
@@ -373,7 +373,7 @@ export default function AdminPanel() {
               {p.tags && p.tags.length > 0 && (
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 4 }}>
                   {p.tags.map(t => (
-                    <span key={t} style={{ fontSize: '0.65rem', padding: '4px 10px', borderRadius: 8, background: 'rgba(129,140,248,0.08)', color: '#a5b4fc', border: '1px solid rgba(129,140,246,0.1)', fontWeight: 600 }}>#{t}</span>
+                    <span key={t} style={{ fontSize: '0.65rem', padding: '4px 10px', borderRadius: 8, background: 'rgba(212,175,55,0.1)', color: '#FFE58F', border: '1px solid rgba(212,175,55,0.2)', fontWeight: 600 }}>#{t}</span>
                   ))}
                 </div>
               )}

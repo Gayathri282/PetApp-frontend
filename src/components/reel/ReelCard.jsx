@@ -4,7 +4,7 @@ import { Heart, Send, Zap, Layers, Volume2, VolumeX } from 'lucide-react';
 import VideoPlayer from './VideoPlayer';
 import ShareModal from '../ui/ShareModal';
 import Modal from '../ui/Modal';
-import { toggleLike, submitEnquiry, updateProfile, trackInterest } from '../../api';
+import { toggleLike, submitEnquiry, updateProfile, trackInterest, sendMessage } from '../../api';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { getSoundPreference, setSoundPreference } from '../../hooks/useSoundPreference';
@@ -119,6 +119,43 @@ export default function ReelCard({ product, onLikeUpdate }) {
     } finally {
       setSending(false);
     }
+  };
+
+  const handleBuy = async (e) => {
+    if (e) e.stopPropagation();
+    if (!user) {
+      toast.error('Please log in to contact vendor');
+      navigate('/login');
+      return;
+    }
+    const vendorId = product.vendor?._id || product.vendor;
+    if (!vendorId) {
+      toast.error('Vendor information unavailable');
+      return;
+    }
+    if (user._id === vendorId) {
+      toast.info('This is your own listing');
+      return;
+    }
+
+    const canonicalUrl = `${window.location.origin}/product/${product._id}`;
+    const priceStr = product.price > 0 ? `₹${product.price.toLocaleString('en-IN')}` : 'Price on request';
+
+    const textMsg = `Hi, I'm interested in this pet:
+
+🐾 ${product.name}
+💰 ${priceStr}
+👤 Seller: ${product.vendor?.name || 'Vendor'}
+
+View Product:
+${canonicalUrl}`;
+
+    try {
+      await sendMessage({ recipientId: vendorId, text: textMsg });
+    } catch (err) {
+      console.warn('SendMessage notice:', err);
+    }
+    navigate(`/chat/${vendorId}`, { state: { from: 'product', productId: product._id } });
   };
 
   // ─── Render ──────────────────────────────────────────────────────────────────
@@ -296,10 +333,7 @@ export default function ReelCard({ product, onLikeUpdate }) {
         {/* Buy / Enquiry */}
         {product.isOnSale && (
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowEnquiry(true);
-            }}
+            onClick={handleBuy}
             className="animate-zap-pulse"
             style={{
               display: 'flex',

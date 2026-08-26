@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Heart, Send, Zap, Layers, ArrowLeft, ShoppingBag } from 'lucide-react';
+import { Heart, Send, Zap, Layers, ArrowLeft, ShoppingBag, Volume2, VolumeX } from 'lucide-react';
 import VideoPlayer from '../components/reel/VideoPlayer';
 import ShareModal from '../components/ui/ShareModal';
 import Modal from '../components/ui/Modal';
@@ -8,6 +8,7 @@ import Spinner from '../components/ui/Spinner';
 import { getProduct, toggleLike, submitEnquiry, updateProfile, getAdminUser, sendMessage } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
+import { getSoundPreference, setSoundPreference } from '../hooks/useSoundPreference';
 
 export default function ProductReelPage() {
   const getFullSrc = (url) => {
@@ -31,8 +32,10 @@ export default function ProductReelPage() {
   const [likeAnimating, setLikeAnimating] = useState(null);
   const [shareAnimating, setShareAnimating] = useState(false);
   const [tempPhone, setTempPhone] = useState('');
+  const [isMuted, setIsMuted] = useState(!getSoundPreference());
 
   const containerRef = useRef(null);
+  const videoRefs = useRef({});
   const isRestoring = useRef((() => {
     try {
       const raw = sessionStorage.getItem(`reel_pos_${id}`);
@@ -158,26 +161,41 @@ export default function ProductReelPage() {
     }, 600);
   };
 
-  const handleEnquiry = async () => {
-    if (!user.contactNumber && !tempPhone) {
-      toast.error('Please enter your contact number');
+  const handleBuy = async (e) => {
+    if (e) e.stopPropagation();
+    if (!user) {
+      toast.error('Please log in to contact vendor');
+      navigate('/login');
       return;
     }
-    setSending(true);
-    try {
-      if (!user.contactNumber) {
-        await updateProfile({ contactNumber: tempPhone });
-        await refreshUser();
-      }
-
-      await submitEnquiry({ productId: product._id, message: 'Interested in this product' });
-      toast.success('Interest registered! Admin will contact you.');
-      setShowEnquiry(false);
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to register interest');
-    } finally {
-      setSending(false);
+    const vendorId = product.vendor?._id || product.vendor;
+    if (!vendorId) {
+      toast.error('Vendor information unavailable');
+      return;
     }
+    if (user._id === vendorId) {
+      toast.info('This is your own listing');
+      return;
+    }
+
+    const canonicalUrl = `${window.location.origin}/product/${product._id}`;
+    const priceStr = product.price > 0 ? `₹${product.price.toLocaleString('en-IN')}` : 'Price on request';
+
+    const textMsg = `Hi, I'm interested in this pet:
+
+🐾 ${product.name}
+💰 ${priceStr}
+👤 Seller: ${product.vendor?.name || 'Vendor'}
+
+View Product:
+${canonicalUrl}`;
+
+    try {
+      await sendMessage({ recipientId: vendorId, text: textMsg });
+    } catch (err) {
+      console.warn('SendMessage notice:', err);
+    }
+    navigate(`/chat/${vendorId}`, { state: { from: 'product', productId: product._id } });
   };
 
   if (loading) {
@@ -215,7 +233,12 @@ export default function ProductReelPage() {
       <div className="reel-container" ref={containerRef} style={{ height: '100dvh', overflowY: 'scroll', scrollSnapType: 'y mandatory' }}>
         {product.reels.map((reel, i) => (
           <div key={`${product._id}-${i}`} className="reel-item" data-index={i} style={{ position: 'relative', height: '100dvh', scrollSnapAlign: 'start', overflow: 'hidden' }}>
-            <VideoPlayer key={`${product._id}-reel-${i}`} src={reel.videoUrl} />
+            <VideoPlayer 
+              key={`${product._id}-reel-${i}`} 
+              src={reel.videoUrl} 
+              muted={isMuted}
+              externalRef={(el) => (videoRefs.current[i] = el)}
+            />
 
             {/* Bottom Gradient Overlay */}
             <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '40%', background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', pointerEvents: 'none', zIndex: 5 }} />
@@ -230,20 +253,48 @@ export default function ProductReelPage() {
                 <span style={{ fontSize: '0.7rem', fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{reel.isLiked ? product.likeCount : (product.likeCount || 0)}</span>
               </button>
 
-              <button onClick={handleShare} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', color: '#fff', padding: 0 }}>
-                <div style={{ display: 'flex', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} className={shareAnimating ? 'animate-send-fly' : ''}>
-                  <Send size={24} strokeWidth={2.2} />
+              {/* Sound Toggle */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const newMuted = !isMuted;
+                  setIsMuted(newMuted);
+                  setSoundPreference(!newMuted);
+                  if (videoRefs.current[i]) {
+                    videoRefs.current[i].muted = newMuted;
+                    videoRefs.current[i].volume = 1.0;
+                    if (!newMuted && videoRefs.current[i].paused) {
+                      videoRefs.current[i].play().catch(() => {
+                        videoRefs.current[i].muted = true;
+                        setIsMuted(true);
+                      });
+                    }
+                  }
+                }}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 4,
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#fff',
+                  padding: 0,
+                }}
+              >
+                <div style={{ display: 'flex', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>
+                  {isMuted ? <VolumeX size={24} strokeWidth={2.2} /> : <Volume2 size={24} strokeWidth={2.2} />}
                 </div>
-                <span style={{ fontSize: '0.7rem', fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.5)', opacity: shareAnimating ? 0 : 1 }}>Share</span>
+                <span style={{ fontSize: '0.7rem', fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                  {isMuted ? 'Unmute' : 'Mute'}
+                </span>
               </button>
 
               {/* Buy button */}
               {product.isOnSale && (
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowEnquiry(true);
-                  }}
+                  onClick={handleBuy}
                   className="animate-zap-pulse"
                   style={{
                     display: 'flex',
