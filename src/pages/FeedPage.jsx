@@ -6,7 +6,7 @@ import Spinner from '../components/ui/Spinner';
 import Modal from '../components/ui/Modal';
 import ComingSoonModal from '../components/ui/ComingSoonModal';
 import { getFeed, getLatestTimestamp, trackInterest } from '../api';
-import { Smartphone, Download, RefreshCw, Bell, Search, Heart, MapPin, Play, Film, ChevronRight, ShoppingBag, Scissors, Package, Sparkles, Home } from 'lucide-react';
+import { Smartphone, Download, RefreshCw, Bell, Search, Heart, MapPin, Play, Film, ChevronRight, ShoppingBag, Scissors, Package, Sparkles, Home, Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const CATEGORY_AVATARS = [
@@ -18,12 +18,48 @@ const CATEGORY_AVATARS = [
 ];
 
 const CATEGORY_GRID_ITEMS = [
-  { name: 'Dogs', count: '125+ Listings', tag: 'dog', img: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400&auto=format&fit=crop&q=80' },
-  { name: 'Cats', count: '89+ Listings', tag: 'cat', img: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&auto=format&fit=crop&q=80' },
-  { name: 'Birds', count: '45+ Listings', tag: 'bird', img: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=400&auto=format&fit=crop&q=80' },
-  { name: 'Fish', count: '30+ Listings', tag: 'fish', img: 'https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?w=400&auto=format&fit=crop&q=80' },
-  { name: 'Small Pets', count: '20+ Listings', tag: 'other', img: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=400&auto=format&fit=crop&q=80' },
-  { name: 'Pet Services', count: 'Coming Soon', featureKey: 'services', img: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=400&auto=format&fit=crop&q=80' },
+  {
+    name: 'Dogs',
+    count: '125+ Listings',
+    tag: 'dog',
+    bg: 'linear-gradient(135deg, rgba(50, 42, 22, 0.85) 0%, rgba(18, 16, 10, 0.96) 100%)',
+    img: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400&auto=format&fit=crop&q=80'
+  },
+  {
+    name: 'Cats',
+    count: '89+ Listings',
+    tag: 'cat',
+    bg: 'linear-gradient(135deg, rgba(38, 33, 26, 0.85) 0%, rgba(14, 13, 11, 0.96) 100%)',
+    img: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&auto=format&fit=crop&q=80'
+  },
+  {
+    name: 'Birds',
+    count: '45+ Listings',
+    tag: 'bird',
+    bg: 'linear-gradient(135deg, rgba(30, 44, 25, 0.85) 0%, rgba(12, 18, 11, 0.96) 100%)',
+    img: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=400&auto=format&fit=crop&q=80'
+  },
+  {
+    name: 'Fish',
+    count: '30+ Listings',
+    tag: 'fish',
+    bg: 'linear-gradient(135deg, rgba(18, 40, 34, 0.85) 0%, rgba(10, 18, 15, 0.96) 100%)',
+    img: 'https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?w=400&auto=format&fit=crop&q=80'
+  },
+  {
+    name: 'Small Pets',
+    count: '20+ Listings',
+    tag: 'other',
+    bg: 'linear-gradient(135deg, rgba(30, 38, 32, 0.85) 0%, rgba(12, 16, 14, 0.96) 100%)',
+    img: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=400&auto=format&fit=crop&q=80'
+  },
+  {
+    name: 'Pet Services',
+    count: '60+ Listings',
+    featureKey: 'services',
+    bg: 'linear-gradient(135deg, rgba(46, 40, 24, 0.85) 0%, rgba(18, 16, 10, 0.96) 100%)',
+    img: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=400&auto=format&fit=crop&q=80'
+  },
 ];
 
 export default function FeedPage() {
@@ -380,51 +416,14 @@ export default function FeedPage() {
         </div>
       </div>
 
-      {/* 7. "Adopt, Don't Shop" Teaser Banner */}
-      <div
-        className="glass"
-        onClick={() => setComingSoonFeature('adoption')}
-        style={{
-          borderRadius: 22,
-          padding: '18px 20px',
-          marginBottom: 30,
-          background: 'linear-gradient(135deg, rgba(15, 29, 20, 0.85), rgba(10, 18, 13, 0.95))',
-          border: '1px solid rgba(212, 175, 55, 0.3)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 14,
-          position: 'relative',
-          overflow: 'hidden',
-          cursor: 'pointer',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-        }}
-      >
-        <div style={{ flex: 1 }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#F5F5EC', marginBottom: 4, fontFamily: 'Cinzel, serif' }}>
-            Adopt, Don't Shop
-          </h3>
-          <p style={{ fontSize: '0.76rem', color: '#A3B8A8', lineHeight: 1.4, marginBottom: 12 }}>
-            Give them a loving home, they will give you a lifetime of love.
-          </p>
-          <button
-            className="btn-primary"
-            onClick={(e) => { e.stopPropagation(); setComingSoonFeature('adoption'); }}
-            style={{ padding: '7px 16px', fontSize: '0.76rem', borderRadius: 12 }}
-          >
-            Explore Now
-          </button>
-        </div>
-        <div style={{ width: 90, height: 90, borderRadius: 16, overflow: 'hidden', flexShrink: 0, border: '2px solid rgba(212,175,55,0.4)' }}>
-          <img src="https://images.unsplash.com/photo-1552053831-71594a27632d?w=300&auto=format&fit=crop&q=80" alt="Puppy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        </div>
-      </div>
-
-      {/* 8. Categories Grid (2 Columns Photographic Cards Matching Reference Design) */}
-      <div style={{ marginBottom: 32 }}>
-        <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#FFE58F', marginBottom: 14, fontFamily: 'Cinzel, serif', letterSpacing: '0.02em' }}>
+      {/* 8. Categories Grid (2 Columns Photographic Cards Matching Reference Screenshot) */}
+      <div style={{ marginBottom: 30 }}>
+        <h2 style={{ fontSize: '1.15rem', fontWeight: 600, color: '#FFFFFF', marginBottom: 16, textAlign: 'center', letterSpacing: '-0.01em' }}>
           Categories
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+
+        {/* 2-Column Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginBottom: 14 }}>
           {CATEGORY_GRID_ITEMS.map((cat) => (
             <div
               key={cat.name}
@@ -435,42 +434,54 @@ export default function FeedPage() {
                   navigate(`/search?category=${cat.tag}`);
                 }
               }}
-              className="glass"
               style={{
-                height: 122,
-                borderRadius: 20,
-                padding: '14px 14px',
-                background: 'linear-gradient(135deg, rgba(20, 36, 26, 0.88), rgba(8, 14, 10, 0.96))',
-                border: '1px solid rgba(212, 175, 55, 0.25)',
+                height: 140,
+                borderRadius: 22,
+                padding: 14,
+                background: cat.bg,
+                border: '1px solid rgba(255, 255, 255, 0.08)',
                 cursor: 'pointer',
                 position: 'relative',
                 overflow: 'hidden',
-                boxShadow: '0 8px 25px rgba(0, 0, 0, 0.45)',
-                transition: 'all 0.25s ease',
+                boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)',
+                transition: 'transform 0.2s ease',
               }}
             >
-              {/* Decorative Sparkle icon top left */}
-              <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 10 }}>
-                <Sparkles size={13} color="#D4AF37" style={{ opacity: 0.7 }} />
+              {/* Plus icon top left */}
+              <div style={{
+                position: 'absolute',
+                top: 14,
+                left: 14,
+                zIndex: 10,
+                width: 32,
+                height: 32,
+                borderRadius: '50%',
+                background: 'rgba(255, 255, 255, 0.08)',
+                backdropFilter: 'blur(8px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <Plus size={16} color="rgba(255, 255, 255, 0.45)" />
               </div>
 
               {/* Text details bottom left */}
-              <div style={{ position: 'absolute', bottom: 12, left: 12, zIndex: 10, maxWidth: '65%' }}>
-                <h4 style={{ fontSize: '0.98rem', fontWeight: 800, color: '#F5F5EC', marginBottom: 2, fontFamily: 'Cinzel, serif', letterSpacing: '0.01em' }}>
+              <div style={{ position: 'absolute', bottom: 14, left: 14, zIndex: 10, maxWidth: '65%' }}>
+                <h4 style={{ fontSize: '1.05rem', fontWeight: 600, color: '#FFFFFF', marginBottom: 2, letterSpacing: '-0.01em' }}>
                   {cat.name}
                 </h4>
-                <p style={{ fontSize: '0.72rem', color: '#A3B8A8', fontWeight: 500, margin: 0 }}>
+                <p style={{ fontSize: '0.78rem', color: '#D4AF37', fontWeight: 500, margin: 0 }}>
                   {cat.count}
                 </p>
               </div>
 
-              {/* Large photographic pet image overlapping right side */}
+              {/* Animal Photo overlapping right side */}
               <div style={{
                 position: 'absolute',
-                top: -6,
-                right: -6,
-                bottom: -6,
-                width: '60%',
+                top: 0,
+                right: 0,
+                bottom: 0,
+                width: '58%',
                 overflow: 'hidden',
               }}>
                 <img
@@ -483,15 +494,88 @@ export default function FeedPage() {
                     objectPosition: 'center',
                   }}
                 />
-                {/* Gradient mask blending image seamlessly into dark glass card */}
+                {/* Soft gradient mask blending image into background */}
                 <div style={{
                   position: 'absolute',
                   inset: 0,
-                  background: 'linear-gradient(to right, rgba(10, 18, 13, 0.98) 0%, rgba(10, 18, 13, 0.5) 45%, transparent 100%)',
+                  background: 'linear-gradient(to right, rgba(14, 13, 11, 0.95) 0%, rgba(14, 13, 11, 0.4) 40%, transparent 100%)',
                 }} />
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Adopt, Don't Shop Full Width Banner */}
+        <div
+          onClick={() => setComingSoonFeature('adoption')}
+          style={{
+            height: 165,
+            borderRadius: 22,
+            padding: '20px 20px',
+            background: 'linear-gradient(135deg, rgba(34, 38, 25, 0.88) 0%, rgba(12, 16, 11, 0.96) 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            position: 'relative',
+            overflow: 'hidden',
+            cursor: 'pointer',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+          }}
+        >
+          {/* Left Content Stack */}
+          <div style={{ zIndex: 10, maxWidth: '58%' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#FFFFFF', marginBottom: 6, letterSpacing: '-0.01em' }}>
+              Adopt, Don’t Shop
+            </h3>
+            <p style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.7)', lineHeight: 1.35, marginBottom: 14 }}>
+              Give them a home,<br />they will give you<br />a lifetime of love.
+            </p>
+            <button
+              onClick={(e) => { e.stopPropagation(); setComingSoonFeature('adoption'); }}
+              style={{
+                background: 'rgba(255, 255, 255, 0.12)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                color: '#FFFFFF',
+                padding: '8px 18px',
+                borderRadius: 12,
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                width: 'fit-content',
+              }}
+            >
+              Explore Now
+            </button>
+          </div>
+
+          {/* Right Side Golden Retriever Puppy Photo */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            bottom: 0,
+            width: '52%',
+            overflow: 'hidden',
+          }}>
+            <img
+              src="https://images.unsplash.com/photo-1552053831-71594a27632d?w=500&auto=format&fit=crop&q=80"
+              alt="Golden Retriever Puppy"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                objectPosition: 'center',
+              }}
+            />
+            {/* Soft gradient mask */}
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(to right, rgba(12, 16, 11, 0.98) 0%, rgba(12, 16, 11, 0.4) 40%, transparent 100%)',
+            }} />
+          </div>
         </div>
       </div>
 
