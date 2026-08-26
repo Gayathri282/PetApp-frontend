@@ -30,10 +30,11 @@ export default function FeedPage() {
   const viewedProducts = useRef(new Set());
 
   const getFullSrc = (url) => {
-    if (!url) return '';
-    if (url.startsWith('http') || url.startsWith('blob:')) return url;
+    if (!url || typeof url !== 'string') return '';
+    const cleanUrl = url.replace(/\\/g, '/');
+    if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://') || cleanUrl.startsWith('blob:')) return cleanUrl;
     const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+    return `${baseUrl}${cleanUrl.startsWith('/') ? '' : '/'}${cleanUrl}`;
   };
 
   const loadFeed = useCallback(async (p, customLimit) => {
@@ -61,7 +62,11 @@ export default function FeedPage() {
   }, []);
 
   useEffect(() => {
+    isFetching.current = false;
     loadFeed(1, 10);
+    return () => {
+      isFetching.current = false;
+    };
   }, [loadFeed]);
 
   useEffect(() => { if (page > 1) loadFeed(page); }, [page, loadFeed]);

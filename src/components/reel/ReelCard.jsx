@@ -29,10 +29,11 @@ export default function ReelCard({ product, onLikeUpdate }) {
   const videoRef = useRef(null);
 
   const getFullSrc = (url) => {
-    if (!url) return '';
-    if (url.startsWith('http')) return url;
+    if (!url || typeof url !== 'string') return '';
+    const cleanUrl = url.replace(/\\/g, '/');
+    if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://') || cleanUrl.startsWith('blob:')) return cleanUrl;
     const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+    return `${baseUrl}${cleanUrl.startsWith('/') ? '' : '/'}${cleanUrl}`;
   };
 
   const reel = product.primaryReel || product.reels?.[0];
