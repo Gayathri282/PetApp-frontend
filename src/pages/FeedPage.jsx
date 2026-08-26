@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, MapPin, Play, ChevronRight, CheckCircle, Star, ShieldCheck } from 'lucide-react';
 import ReelCard from '../components/reel/ReelCard';
 import ProductCard from '../components/product/ProductCard';
+import PetVideoCard from '../components/video/PetVideoCard';
 import ReelViewerModal from '../components/reel/ReelViewerModal';
 import Modal from '../components/ui/Modal';
 import Spinner from '../components/ui/Spinner';
@@ -21,6 +22,7 @@ export default function FeedPage() {
   const [comingSoonFeature, setComingSoonFeature] = useState(null);
   const [selectedReelIndex, setSelectedReelIndex] = useState(0);
   const [activeModalItem, setActiveModalItem] = useState(null);
+  const [activeVideoId, setActiveVideoId] = useState(null);
 
   const containerRef = useRef(null);
   const newestTimestamp = useRef(null);
@@ -317,7 +319,12 @@ export default function FeedPage() {
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
             {nearbyProducts.map((p) => (
-              <ProductCard key={p._id} product={p} />
+              <ProductCard
+                key={p._id}
+                product={p}
+                activeVideoId={activeVideoId}
+                setActiveVideoId={setActiveVideoId}
+              />
             ))}
           </div>
         )}
@@ -417,87 +424,37 @@ export default function FeedPage() {
         </div>
 
         <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-          {products.slice(0, 6).map((product, idx) => {
-            const videoUrl = getPlayableVideoUrl(product);
-            const posterUrl = getPosterUrl(product);
-
-            if (videoUrl) {
-              console.log("REEL ITEM:", product);
-              console.log("REEL VIDEO URL:", videoUrl);
-              logVideoDiagnostics("Watch Pet Reels", product);
-            }
-
-            return (
-              <div
-                key={product._id}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setActiveModalItem(product);
-                }}
-                onMouseEnter={(e) => {
-                  const video = e.currentTarget.querySelector('video');
-                  if (video) {
-                    video.muted = true;
-                    video.play().catch(() => {});
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  const video = e.currentTarget.querySelector('video');
-                  if (video) {
-                    video.pause();
-                    try { video.currentTime = 0; } catch {}
-                  }
-                }}
-                className="card"
-                style={{
-                  width: 165,
-                  height: 230,
-                  flexShrink: 0,
-                  position: 'relative',
-                  overflow: 'hidden',
-                  cursor: 'pointer',
-                  padding: 0,
-                }}
+          {products.slice(0, 6).map((product) => (
+            <div
+              key={product._id}
+              className="card"
+              style={{
+                width: 165,
+                height: 230,
+                flexShrink: 0,
+                position: 'relative',
+                overflow: 'hidden',
+                padding: 0,
+                borderRadius: 18,
+              }}
+            >
+              <PetVideoCard
+                item={product}
+                activeVideoId={activeVideoId}
+                setActiveVideoId={setActiveVideoId}
+                mediaHeight={230}
+                sectionName="Watch Pet Reels"
               >
-                {videoUrl ? (
-                  <video
-                    poster={posterUrl}
-                    src={videoUrl}
-                    muted
-                    loop
-                    playsInline
-                    preload="metadata"
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    onLoadStart={() => console.log('[TRENDING REEL] Load start:', videoUrl)}
-                    onLoadedMetadata={() => console.log('[TRENDING REEL] Metadata loaded')}
-                    onCanPlay={() => console.log('[TRENDING REEL] Can play')}
-                    onPlay={() => console.log('[TRENDING REEL] Playing preview')}
-                    onError={(e) => console.error('[TRENDING REEL ERROR]', e.currentTarget.error)}
-                  />
-                ) : posterUrl ? (
-                  <img src={posterUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <div style={{ width: '100%', height: '100%', background: '#E8F1ED', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Play size={24} color="#0D5148" />
-                  </div>
-                )}
-
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(8,47,43,0.9) 0%, transparent 60%)' }} />
-
-                <div style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(255,255,255,0.9)', padding: 6, borderRadius: '50%' }}>
-                  <Play size={12} fill="#0D5148" color="#0D5148" />
-                </div>
-
-                <div style={{ position: 'absolute', bottom: 10, left: 10, right: 10, color: '#fff' }}>
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(8,47,43,0.9) 0%, transparent 60%)', pointerEvents: 'none' }} />
+                <div style={{ position: 'absolute', bottom: 10, left: 10, right: 10, color: '#fff', pointerEvents: 'none' }}>
                   <p style={{ fontSize: '0.84rem', fontWeight: 700, color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2 }}>
                     {product.name}
                   </p>
                   <p style={{ fontSize: '0.7rem', color: '#E8F1ED' }}>₹{product.price?.toLocaleString() || '0'}</p>
                 </div>
-              </div>
-            );
-          })}
+              </PetVideoCard>
+            </div>
+          ))}
         </div>
       </div>
 

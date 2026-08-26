@@ -23,6 +23,7 @@ export default function ProfilePage() {
   const location = useLocation();
   const toast = useToast();
   const [showShare, setShowShare] = useState(false);
+  const [activeVideoId, setActiveVideoId] = useState(null);
   const [tab, setTab] = useState('reels');
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
@@ -166,7 +167,11 @@ export default function ProfilePage() {
               {tab === 'reels' ? (
                 reels.length > 0 ? reels.map(p => (
                   <div key={p._id} style={{ position: 'relative' }}>
-                    <ProductCard product={p} />
+                    <ProductCard
+                      product={p}
+                      activeVideoId={activeVideoId}
+                      setActiveVideoId={setActiveVideoId}
+                    />
                     <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 6, zIndex: 15 }}>
                       <button onClick={() => { setEditingProduct(p); setShowEditReel(true); }} style={{ background: '#0D5148', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff', display: 'flex' }}><Edit2 size={14} /></button>
                       <button onClick={() => handleDelete(p._id)} style={{ background: '#ef4444', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff', display: 'flex' }}><X size={14} /></button>
@@ -176,7 +181,11 @@ export default function ProfilePage() {
               ) : (
                 saleProducts.length > 0 ? saleProducts.map(p => (
                   <div key={p._id} style={{ position: 'relative' }}>
-                    <ProductCard product={p} />
+                    <ProductCard
+                      product={p}
+                      activeVideoId={activeVideoId}
+                      setActiveVideoId={setActiveVideoId}
+                    />
                     <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 6, zIndex: 15 }}>
                       <button onClick={() => { setEditingProduct(p); setShowEditProduct(true); }} style={{ background: '#0D5148', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff', display: 'flex' }}><Edit2 size={14} /></button>
                       <button onClick={() => handleDelete(p._id)} style={{ background: '#ef4444', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff', display: 'flex' }}><X size={14} /></button>

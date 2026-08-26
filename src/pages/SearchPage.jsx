@@ -28,6 +28,7 @@ const CATEGORY_MAP = {
 
 export default function SearchPage() {
   const location = useLocation();
+  const [activeVideoId, setActiveVideoId] = useState(null);
   const [query, setQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState(['on sale']);
   const [results, setResults] = useState([]);
@@ -244,7 +245,14 @@ export default function SearchPage() {
       {/* Product Results */}
       {isLoading ? <Spinner /> : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 14 }}>
-          {Array.isArray(displayProducts) && displayProducts.map(p => <ProductCard key={p._id} product={p} />)}
+          {Array.isArray(displayProducts) && displayProducts.map(p => (
+            <ProductCard
+              key={p._id}
+              product={p}
+              activeVideoId={activeVideoId}
+              setActiveVideoId={setActiveVideoId}
+            />
+          ))}
           {!isLoading && displayProducts.length === 0 && (
             <div style={{ textAlign: 'center', padding: 40, color: '#60736F', gridColumn: '1 / -1' }}>
               <p style={{ fontSize: '1rem', fontWeight: 600, color: '#12332F', marginBottom: 4 }}>No listings found</p>

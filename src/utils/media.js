@@ -99,19 +99,37 @@ export const getPosterUrl = (item) => {
 };
 
 /**
+ * Normalizes item data into a consistent video object layer:
+ * { id, url, thumbnail, name, raw }
+ */
+export const normalizeMediaItem = (item) => {
+  if (!item) return { id: '', url: '', thumbnail: '', name: '', raw: null };
+  const id = item._id || item.id || `media-${Math.random()}`;
+  const url = getPlayableVideoUrl(item);
+  const thumbnail = getPosterUrl(item);
+  return {
+    id: String(id),
+    url,
+    thumbnail,
+    name: item.name || item.title || item.caption || 'Pet Listing',
+    raw: item,
+  };
+};
+
+/**
  * Diagnostic logger for video items & URLs
  */
 export const logVideoDiagnostics = (sectionName, item) => {
   if (!item) return;
-  const videoUrl = getPlayableVideoUrl(item);
+  const norm = normalizeMediaItem(item);
   console.log(`[VIDEO DIAGNOSTIC - ${sectionName.toUpperCase()}] ITEM:`, item);
-  console.log(`[VIDEO DIAGNOSTIC - ${sectionName.toUpperCase()}] VIDEO URL:`, videoUrl);
+  console.log(`[VIDEO DIAGNOSTIC - ${sectionName.toUpperCase()}] NORMALIZED VIDEO:`, norm);
   console.table({
     section: sectionName,
-    id: item._id || item.id || 'N/A',
-    title: item.name || item.title || item.caption || 'N/A',
-    videoUrl: videoUrl,
-    hasVideoUrl: !!videoUrl,
-    videoType: typeof videoUrl,
+    id: norm.id,
+    title: norm.name,
+    videoUrl: norm.url,
+    hasVideoUrl: !!norm.url,
+    videoType: typeof norm.url,
   });
 };

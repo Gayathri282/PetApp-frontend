@@ -18,54 +18,18 @@ const STATUS_CONFIG = {
   },
 };
 
-import { getPlayableVideoUrl, getPosterUrl, getFullSrc, logVideoDiagnostics } from '../../utils/media';
+import PetVideoCard from '../video/PetVideoCard';
 
-const ProductCard = memo(({ product, style = {} }) => {
+const ProductCard = memo(({ product, activeVideoId, setActiveVideoId, style = {} }) => {
   const navigate = useNavigate();
-  const videoRef = useRef(null);
-  const [hovering, setHovering] = useState(false);
   const [liked, setLiked] = useState(false);
 
   const status = product.status; // 'pending' | 'approved' | 'rejected'
   const statusCfg = STATUS_CONFIG[status] || null;
   const isClickable = status === 'approved';
 
-  const posterUrl = getPosterUrl(product);
-  const videoUrl = getPlayableVideoUrl(product);
-  const imageUrl = product.images?.[0] ? getFullSrc(product.images[0]) : undefined;
-
-  if (videoUrl) {
-    console.log("WORKING VIDEO ITEM:", product);
-    console.log("WORKING VIDEO URL:", videoUrl);
-    logVideoDiagnostics("Available near Kochi", product);
-  }
-
-  const handleMouseEnter = () => {
-    if (isClickable && videoRef.current) {
-      setHovering(true);
-      videoRef.current.play().catch(() => {});
-    }
-  };
-
-  const handleMouseLeave = () => {
-    setHovering(false);
-    if (videoRef.current) {
-      videoRef.current.pause();
-      try {
-        videoRef.current.currentTime = 0;
-      } catch {}
-    }
-  };
-
   return (
     <div
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (isClickable) openReel(navigate, product);
-      }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
       className="card animate-fade-in"
       style={{
         display: 'flex',
@@ -74,48 +38,19 @@ const ProductCard = memo(({ product, style = {} }) => {
         background: '#FFFFFF',
         border: '1px solid rgba(13, 81, 72, 0.08)',
         boxShadow: '0 4px 18px rgba(13, 81, 72, 0.05)',
-        cursor: isClickable ? 'pointer' : 'default',
         transition: 'all 0.25s ease',
-        transform: hovering ? 'translateY(-2px)' : 'none',
         overflow: 'hidden',
         ...style,
       }}
     >
-      {/* Media Container */}
-      <div style={{ width: '100%', height: 180, position: 'relative', background: '#E8F1ED', overflow: 'hidden' }}>
-        {videoUrl ? (
-          <>
-            <video
-              ref={videoRef}
-              src={videoUrl}
-              poster={posterUrl}
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              onLoadStart={() => console.log('[CARD PREVIEW] Load start:', videoUrl)}
-              onLoadedMetadata={() => console.log('[CARD PREVIEW] Metadata loaded')}
-              onCanPlay={() => console.log('[CARD PREVIEW] Can play')}
-              onPlay={() => console.log('[CARD PREVIEW] Playing preview')}
-              onError={(e) => console.error('[CARD PREVIEW ERROR]', e.currentTarget.error)}
-            />
-            {!hovering && (
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.18)' }}>
-                <div style={{ background: 'rgba(13,81,72,0.85)', padding: 10, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
-                  <Play size={20} fill="#FFFFFF" color="#FFFFFF" />
-                </div>
-              </div>
-            )}
-          </>
-        ) : imageUrl ? (
-          <img src={imageUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        ) : (
-          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#E8F1ED' }}>
-            <Play size={28} color="#0D5148" />
-          </div>
-        )}
-
+      {/* Media Container using Shared PetVideoCard */}
+      <PetVideoCard
+        item={product}
+        activeVideoId={activeVideoId}
+        setActiveVideoId={setActiveVideoId}
+        mediaHeight={180}
+        sectionName="Available near Kochi"
+      >
         {/* Favorite Button Overlay */}
         <button
           onClick={(e) => {
@@ -137,6 +72,7 @@ const ProductCard = memo(({ product, style = {} }) => {
             cursor: 'pointer',
             boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
             zIndex: 10,
+            pointerEvents: 'auto',
           }}
         >
           <Heart size={16} fill={liked ? '#ef4444' : 'none'} color={liked ? '#ef4444' : '#0D5148'} />
@@ -155,6 +91,7 @@ const ProductCard = memo(({ product, style = {} }) => {
           fontWeight: 800,
           letterSpacing: '0.04em',
           textTransform: 'uppercase',
+          pointerEvents: 'none',
         }}>
           {product.isOnSale ? 'AVAILABLE TODAY' : 'VERIFIED LISTING'}
         </div>
@@ -166,12 +103,13 @@ const ProductCard = memo(({ product, style = {} }) => {
             display: 'flex', alignItems: 'center', gap: 4,
             padding: '4px 10px', borderRadius: 999,
             fontSize: '0.65rem', fontWeight: 800,
+            pointerEvents: 'none',
           }}>
             <statusCfg.icon size={12} color="#fff" />
             <span>{statusCfg.label}</span>
           </div>
         )}
-      </div>
+      </PetVideoCard>
 
       {/* Product Card Details */}
       <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
