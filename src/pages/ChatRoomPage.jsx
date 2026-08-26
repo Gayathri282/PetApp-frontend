@@ -202,6 +202,31 @@ export default function ChatRoomPage() {
       >
         {messages.map((m) => {
           const isMine = m.sender._id.toString() === currentUser._id.toString();
+
+          // Extract product info if present either from populated object or content text
+          let prodInfo = null;
+          if (m.product && typeof m.product === 'object' && m.product._id) {
+            prodInfo = {
+              id: m.product._id,
+              name: m.product.name || 'Pet Listing',
+              price: m.product.price,
+            };
+          } else if (m.content) {
+            const matchName = m.content.match(/Product:\s*(.+)/);
+            const matchUrl = m.content.match(/View product:\s*(https?:\/\/[^\s]+|\/product\/[^\s]+)/);
+            if (matchName || matchUrl) {
+              let id = typeof m.product === 'string' ? m.product : '';
+              if (!id && matchUrl) {
+                const parts = matchUrl[1].split('/product/');
+                if (parts[1]) id = parts[1].trim();
+              }
+              prodInfo = {
+                id: id || '',
+                name: matchName ? matchName[1].trim() : 'Pet Listing',
+              };
+            }
+          }
+
           return (
             <div
               key={m._id}
@@ -213,27 +238,45 @@ export default function ChatRoomPage() {
                 alignItems: isMine ? 'flex-end' : 'flex-start',
               }}
             >
-              {m.product && (
+              {/* Clickable Product Context Card */}
+              {prodInfo && (
                 <div 
-                  onClick={() => navigate(`/product/${m.product._id || m.product}`)}
+                  onClick={() => {
+                    if (prodInfo.id) navigate(`/product/${prodInfo.id}`);
+                  }}
                   style={{
-                    padding: '6px 12px',
-                    borderRadius: 10,
-                    marginBottom: 4,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
+                    padding: '10px 14px',
+                    borderRadius: 14,
+                    marginBottom: 6,
                     background: isMine ? 'rgba(13, 81, 72, 0.12)' : '#FFFFFF',
                     border: '1px solid #D6E3DE',
-                    cursor: 'pointer',
+                    color: '#12332F',
+                    cursor: prodInfo.id ? 'pointer' : 'default',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    minWidth: 220,
                   }}
                 >
-                  <ShoppingBag size={14} color="#0D5148" />
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0D5148' }}>
-                    Listing: {m.product.name || 'Pet Item'}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                    <div style={{ fontSize: '1.2rem', padding: '6px 8px', background: '#E8F1ED', borderRadius: 10, flexShrink: 0 }}>
+                      🐕
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{ fontSize: '0.85rem', fontWeight: 800, margin: 0, color: '#12332F', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {prodInfo.name}
+                      </p>
+                      <p style={{ fontSize: '0.74rem', margin: '2px 0 0', color: '#0D5148', fontWeight: 700 }}>
+                        View product →
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight size={16} color="#0D5148" />
                 </div>
               )}
+
               <div
                 style={{
                   padding: '12px 16px',

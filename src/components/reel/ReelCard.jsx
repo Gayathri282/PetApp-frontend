@@ -91,13 +91,23 @@ export default function ReelCard({ product, onLikeUpdate }) {
 
     const vendorId = product.vendor?._id || (typeof product.vendor === 'string' ? product.vendor : null);
 
+    const targetProductId = product._id || product.id;
+    const productName = product.name || product.title;
+
+    let contentStr = 'Hey, I would like to know more about this';
+    if (targetProductId && productName) {
+      const origin = window.location.origin;
+      const productUrl = product.url || product.productUrl || product.listingUrl || `${origin}/product/${targetProductId}`;
+      contentStr = `Hey, I would like to know more about this\n\nProduct: ${productName}\nView product: ${productUrl}`;
+    }
+
     setSending(true);
     try {
       if (vendorId && user._id !== vendorId) {
         await sendMessage({
           receiverId: vendorId,
-          content: 'Hey, I would like to know more about this',
-          productId: product._id,
+          content: contentStr,
+          productId: targetProductId,
         });
         toast.success('Enquiry sent to seller!');
         setShowEnquiry(false);
@@ -106,8 +116,8 @@ export default function ReelCard({ product, onLikeUpdate }) {
       }
 
       await submitEnquiry({
-        productId: product._id,
-        message: 'Hey, I would like to know more about this',
+        productId: targetProductId,
+        message: contentStr,
       });
 
       toast.success('Enquiry registered! Seller will contact you.');

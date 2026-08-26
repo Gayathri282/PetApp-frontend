@@ -160,11 +160,18 @@ function SingleReelItem({
     if (enquiring) return;
     setEnquiring(true);
 
-    const exactMsg = 'Hey, I would like to know more about this';
-    const targetProductId = item._id || item.id;
+    const targetProductId = item._id || item.id || item.productId;
+    const productName = item.name || item.title;
+
+    let contentStr = 'Hey, I would like to know more about this';
+    if (targetProductId && productName) {
+      const origin = window.location.origin;
+      const productUrl = item.url || item.productUrl || item.listingUrl || `${origin}/product/${targetProductId}`;
+      contentStr = `Hey, I would like to know more about this\n\nProduct: ${productName}\nView product: ${productUrl}`;
+    }
 
     try {
-      await sendMessage({ receiverId: vendorId, content: exactMsg, productId: targetProductId });
+      await sendMessage({ receiverId: vendorId, content: contentStr, productId: targetProductId });
       toast.success('Enquiry sent to seller!');
       if (onClose) onClose();
       navigate(`/chat/${vendorId}`);
