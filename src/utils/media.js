@@ -95,6 +95,12 @@ export const getPosterUrl = (item) => {
     }
   }
 
+  // Auto-generate Cloudinary poster thumbnail from video URL if available
+  const videoUrl = getPlayableVideoUrl(item);
+  if (videoUrl && typeof videoUrl === 'string' && videoUrl.includes('cloudinary.com')) {
+    return videoUrl.replace(/\.(mp4|mov|webm|mkv|avi|flv|wmv)($|\?)/i, '.jpg$2');
+  }
+
   return '';
 };
 

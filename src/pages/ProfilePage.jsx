@@ -42,6 +42,7 @@ export default function ProfilePage() {
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [payModalData, setPayModalData] = useState(null);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);

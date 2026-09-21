@@ -214,7 +214,7 @@ export default function PetVideoCard({
       {normalized.url && !hasError && (
         <video
           ref={videoRef}
-          src={normalized.url}
+          src={normalized.url.includes('#') ? normalized.url : `${normalized.url}#t=0.001`}
           poster={effectivePoster || undefined}
           playsInline
           preload="metadata"
@@ -235,7 +235,7 @@ export default function PetVideoCard({
             position: 'absolute',
             inset: 0,
             zIndex: 2,
-            opacity: isVideoVisible ? 1 : 0,
+            opacity: isVideoVisible ? 1 : (showPoster ? 0 : 1),
             transition: 'opacity 0.2s ease',
             pointerEvents: 'auto',
           }}
