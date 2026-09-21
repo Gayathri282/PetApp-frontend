@@ -60,11 +60,19 @@ function SingleReelItem({
         playPromise
           .then(() => setIsPlaying(true))
           .catch((err) => {
+            if (err.name === 'AbortError') {
+              // Playback request was interrupted by rapid scroll or pause call
+              return;
+            }
             console.warn(`[REEL ${index}] Audio autoplay blocked by browser, attempting muted fallback:`, err);
             video.muted = true;
             video.play()
               .then(() => setIsPlaying(true))
-              .catch(() => setIsPlaying(false));
+              .catch((fallbackErr) => {
+                if (fallbackErr.name !== 'AbortError') {
+                  setIsPlaying(false);
+                }
+              });
           });
       }
     } else {

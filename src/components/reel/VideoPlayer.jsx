@@ -43,6 +43,10 @@ export default function VideoPlayer({ src, poster = '', muted = false, style = {
         setIsPaused(false);
       }
     } catch (error) {
+      if (error.name === 'AbortError') {
+        // Interrupted by pause during scroll/unmount, ignore cleanly
+        return;
+      }
       console.warn('[VIDEO PLAYBACK] Autoplay failed with requested mute settings, attempting muted autoplay:', error);
       try {
         video.muted = true;
@@ -52,6 +56,7 @@ export default function VideoPlayer({ src, poster = '', muted = false, style = {
         setAutoplayBlocked(false);
         setIsPaused(false);
       } catch (err) {
+        if (err.name === 'AbortError') return;
         console.log('[VIDEO PLAYBACK] Autoplay blocked:', err);
         setAutoplayBlocked(true);
         setIsPaused(true);
