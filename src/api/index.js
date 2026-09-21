@@ -63,10 +63,12 @@ export const getApplicationStatus = () => api.get('/api/vendor/application-statu
 export const getVendorProducts = () => api.get('/api/vendor/products');
 export const uploadSingleReel = (data) => api.post('/api/vendor/reel', data);
 export const updateVendorUpiSettings = (data) => api.put('/api/vendor/upi-settings', data);
+export const updateVendorShippingSettings = (data) => api.put('/api/vendor/shipping-settings', data);
 
 // ── Orders & Payments ──────────────────────────────────
 export const createOrder = (data) => api.post('/api/orders', data);
 export const submitOrderPayment = (id, data) => api.put(`/api/orders/${id}/submit-payment`, data);
+export const verifyOrderPayment = (id, data) => api.put(`/api/orders/${id}/verify-payment`, data);
 export const getMyOrders = () => api.get('/api/orders/my-orders');
 export const getVendorOrders = () => api.get('/api/orders/vendor-orders');
 export const updateVendorOrderStatus = (id, status, vendorNotes = '') =>

@@ -227,6 +227,34 @@ export default function ChatRoomPage() {
             }
           }
 
+          const isPurchaseMsg = m.content && (m.content.includes('PURCHASE_REQUEST') || m.content.includes('PAYMENT_VERIFIED') || m.content.includes('PAYMENT_DECLINED'));
+
+          // Parse Purchase Details if purchase message
+          let purchaseDetails = null;
+          if (isPurchaseMsg) {
+            const orderIdMatch = m.content.match(/Order ID:\s*([^\n]+)/);
+            const prodMatch = m.content.match(/Product:\s*([^\n]+)/);
+            const priceMatch = m.content.match(/Product Price:\s*([^\n]+)/);
+            const shipMatch = m.content.match(/Shipping:\s*([^\n]+)/);
+            const totalMatch = m.content.match(/Total:\s*([^\n]+)/);
+            const txMatch = m.content.match(/Transaction ID:\s*([^\n]+)|UPI Transaction ID:\s*([^\n]+)/);
+            const reasonMatch = m.content.match(/Reason:\s*([^\n]+)/);
+            
+            const isVerified = m.content.includes('PAYMENT_VERIFIED');
+            const isDeclined = m.content.includes('PAYMENT_DECLINED');
+
+            purchaseDetails = {
+              orderId: orderIdMatch ? orderIdMatch[1].trim() : '',
+              productName: prodMatch ? prodMatch[1].trim() : 'Pet Product',
+              productPrice: priceMatch ? priceMatch[1].trim() : '',
+              shippingCharge: shipMatch ? shipMatch[1].trim() : '',
+              totalAmount: totalMatch ? totalMatch[1].trim() : '',
+              transactionId: txMatch ? (txMatch[1] || txMatch[2] || '').trim() : '',
+              reason: reasonMatch ? reasonMatch[1].trim() : '',
+              status: isVerified ? 'verified' : isDeclined ? 'declined' : 'pending_verification',
+            };
+          }
+
           return (
             <div
               key={m._id}
@@ -239,7 +267,7 @@ export default function ChatRoomPage() {
               }}
             >
               {/* Clickable Product Context Card */}
-              {prodInfo && (
+              {prodInfo && !isPurchaseMsg && (
                 <div 
                   onClick={() => {
                     if (prodInfo.id) navigate(`/product/${prodInfo.id}`);
@@ -254,7 +282,7 @@ export default function ChatRoomPage() {
                     cursor: prodInfo.id ? 'pointer' : 'default',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'space-between',
+                    justifyContent: 'between',
                     gap: 12,
                     boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
                     minWidth: 220,
@@ -277,28 +305,154 @@ export default function ChatRoomPage() {
                 </div>
               )}
 
-              <div
-                style={{
-                  padding: '12px 16px',
-                  borderRadius: isMine ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
-                  background: isMine ? '#0D5148' : '#FFFFFF',
-                  color: isMine ? '#FFFFFF' : '#111111',
-                  border: isMine ? 'none' : '1px solid #D6E3DE',
-                  fontSize: '0.9rem',
-                  lineHeight: 1.45,
-                  boxShadow: '0 2px 10px rgba(13, 81, 72, 0.04)',
-                  whiteSpace: 'pre-wrap',
-                }}
-              >
-                {renderContent(m.content, isMine)}
-                
-                {/* Admin Only Content */}
-                {m.adminOnlyContent && (
-                  <div style={{ marginTop: 10, paddingTop: 10, borderTop: isMine ? '1px solid rgba(255,255,255,0.2)' : '1px solid #D6E3DE', fontSize: '0.8rem' }}>
-                    {renderContent(m.adminOnlyContent, isMine)}
+              {/* Special Interactive Purchase Request / Verification Card */}
+              {isPurchaseMsg && purchaseDetails ? (
+                <div
+                  style={{
+                    width: '100%',
+                    minWidth: 260,
+                    maxWidth: 340,
+                    background: '#FFFFFF',
+                    border: purchaseDetails.status === 'verified' ? '2px solid #10B981' : purchaseDetails.status === 'declined' ? '2px solid #EF4444' : '2px solid #D97706',
+                    borderRadius: 18,
+                    padding: 16,
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
+                    color: '#111827',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, borderBottom: '1px solid #F3F4F6', pb: 8 }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#111827', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      📦 Purchase Verification
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '0.72rem',
+                        fontWeight: 800,
+                        padding: '3px 8px',
+                        borderRadius: 12,
+                        background: purchaseDetails.status === 'verified' ? '#DEF7EC' : purchaseDetails.status === 'declined' ? '#FDE8E8' : '#FEF3C7',
+                        color: purchaseDetails.status === 'verified' ? '#03543F' : purchaseDetails.status === 'declined' ? '#9B1C1C' : '#92400E',
+                      }}
+                    >
+                      {purchaseDetails.status === 'verified' ? 'Verified ✓' : purchaseDetails.status === 'declined' ? 'Declined ✗' : 'Pending Verification'}
+                    </span>
                   </div>
-                )}
-              </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: '0.85rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#6B7280' }}>Product</span>
+                      <strong style={{ color: '#111827' }}>{purchaseDetails.productName}</strong>
+                    </div>
+                    {purchaseDetails.productPrice && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6B7280' }}>Price</span>
+                        <span>{purchaseDetails.productPrice}</span>
+                      </div>
+                    )}
+                    {purchaseDetails.shippingCharge && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6B7280' }}>Shipping</span>
+                        <span>{purchaseDetails.shippingCharge}</span>
+                      </div>
+                    )}
+                    {purchaseDetails.totalAmount && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed #E5E7EB', paddingTop: 4, fontWeight: 800, fontSize: '0.95rem' }}>
+                        <span>Total Amount</span>
+                        <span style={{ color: '#0D5148' }}>{purchaseDetails.totalAmount}</span>
+                      </div>
+                    )}
+                    <div style={{ background: '#F3F4F6', padding: '6px 10px', borderRadius: 8, marginTop: 4, fontSize: '0.8rem', color: '#374151' }}>
+                      <strong>Transaction ID:</strong> <code>{purchaseDetails.transactionId}</code>
+                    </div>
+                    {purchaseDetails.reason && (
+                      <div style={{ background: '#FEE2E2', color: '#991B1B', padding: '6px 10px', borderRadius: 8, marginTop: 2, fontSize: '0.78rem' }}>
+                        <strong>Reason:</strong> {purchaseDetails.reason}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Vendor verification buttons if current user is Vendor & status is pending */}
+                  {!isMine && purchaseDetails.status === 'pending_verification' && (
+                    <div style={{ display: 'flex', gap: 8, marginTop: 14, paddingTop: 10, borderTop: '1px solid #F3F4F6' }}>
+                      <button
+                        onClick={async () => {
+                          if (!purchaseDetails.orderId) return;
+                          try {
+                            const { verifyOrderPayment } = await import('../api');
+                            await verifyOrderPayment(purchaseDetails.orderId, { action: 'approve' });
+                            window.location.reload();
+                          } catch (err) {
+                            alert(err.response?.data?.message || 'Verification failed');
+                          }
+                        }}
+                        style={{
+                          flex: 1,
+                          padding: '8px',
+                          backgroundColor: '#0D5148',
+                          color: '#FFFFFF',
+                          border: 'none',
+                          borderRadius: 10,
+                          fontSize: '0.8rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Approve Payment
+                      </button>
+                      <button
+                        onClick={async () => {
+                          if (!purchaseDetails.orderId) return;
+                          const reason = prompt('Reason for declining payment (optional):');
+                          if (reason === null) return;
+                          try {
+                            const { verifyOrderPayment } = await import('../api');
+                            await verifyOrderPayment(purchaseDetails.orderId, { action: 'decline', reason });
+                            window.location.reload();
+                          } catch (err) {
+                            alert(err.response?.data?.message || 'Decline failed');
+                          }
+                        }}
+                        style={{
+                          padding: '8px 12px',
+                          backgroundColor: '#FFFFFF',
+                          color: '#DC2626',
+                          border: '1px solid #FCA5A5',
+                          borderRadius: 10,
+                          fontSize: '0.8rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Decline
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div
+                  style={{
+                    padding: '12px 16px',
+                    borderRadius: isMine ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
+                    background: isMine ? '#0D5148' : '#FFFFFF',
+                    color: isMine ? '#FFFFFF' : '#111111',
+                    border: isMine ? 'none' : '1px solid #D6E3DE',
+                    fontSize: '0.9rem',
+                    lineHeight: 1.45,
+                    boxShadow: '0 2px 10px rgba(13, 81, 72, 0.04)',
+                    whiteSpace: 'pre-wrap',
+                  }}
+                >
+                  {renderContent(m.content, isMine)}
+                  
+                  {/* Admin Only Content */}
+                  {m.adminOnlyContent && (
+                    <div style={{ marginTop: 10, paddingTop: 10, borderTop: isMine ? '1px solid rgba(255,255,255,0.2)' : '1px solid #D6E3DE', fontSize: '0.8rem' }}>
+                      {renderContent(m.adminOnlyContent, isMine)}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <span style={{ fontSize: '0.68rem', color: '#60736F', marginTop: 4, fontWeight: 500 }}>
                 {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>

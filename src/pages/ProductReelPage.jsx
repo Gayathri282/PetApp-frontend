@@ -6,7 +6,8 @@ import ShareModal from '../components/ui/ShareModal';
 import Modal from '../components/ui/Modal';
 import Spinner from '../components/ui/Spinner';
 import UpiPaymentModal from '../components/payment/UpiPaymentModal';
-import { getProduct, toggleLike, submitEnquiry, updateProfile, getAdminUser, sendMessage, createOrder } from '../api';
+import ProductBuyModal from '../components/payment/ProductBuyModal';
+import { getProduct, toggleLike, submitEnquiry, updateProfile, getAdminUser, sendMessage } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { getSoundPreference, setSoundPreference } from '../hooks/useSoundPreference';
@@ -31,13 +32,13 @@ export default function ProductReelPage() {
   const [error, setError] = useState(null);
   const [showShare, setShowShare] = useState(false);
   const [showEnquiry, setShowEnquiry] = useState(false);
+  const [showBuyModal, setShowBuyModal] = useState(false);
   const [enquiryMsg, setEnquiryMsg] = useState('');
   const [sending, setSending] = useState(false);
   const [likeAnimating, setLikeAnimating] = useState(null);
   const [shareAnimating, setShareAnimating] = useState(false);
   const [tempPhone, setTempPhone] = useState('');
   const [isMuted, setIsMuted] = useState(!getSoundPreference());
-  const [upiOrderData, setUpiOrderData] = useState(null);
 
   const handleDirectUpiBuy = async () => {
     if (!user) {
@@ -465,10 +466,31 @@ ${canonicalUrl}`;
                 </span>
               </button>
 
-              {/* Buy button */}
-              {product.isOnSale && (
+              {/* Enquire button */}
+              <button
+                onClick={handleBuy}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 4,
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#fff',
+                  padding: 0,
+                }}
+              >
+                <div style={{ display: 'flex', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>
+                  <ShoppingBag size={24} strokeWidth={2.2} />
+                </div>
+                <span style={{ fontSize: '0.7rem', fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>Enquire</span>
+              </button>
+
+              {/* Buy button (Only for Products, not for Reels) */}
+              {(product.type !== 'reel' && product.category !== 'promotional' && product.category !== 'reel') && (
                 <button
-                  onClick={handleDirectUpiBuy}
+                  onClick={() => setShowBuyModal(true)}
                   className="animate-zap-pulse"
                   style={{
                     display: 'flex',
@@ -520,18 +542,11 @@ ${canonicalUrl}`;
 
       <ShareModal isOpen={showShare} onClose={() => setShowShare(false)} url={window.location.href} />
       
-      {upiOrderData && (
-        <UpiPaymentModal
-          order={upiOrderData}
-          product={product}
-          vendor={product.vendor}
-          onClose={() => setUpiOrderData(null)}
-          onSuccess={() => {
-            setUpiOrderData(null);
-            navigate('/profile');
-          }}
-        />
-      )}
+      <ProductBuyModal
+        product={product}
+        isOpen={showBuyModal}
+        onClose={() => setShowBuyModal(false)}
+      />
 
       <Modal isOpen={showEnquiry} onClose={() => setShowEnquiry(false)} title="Register Interest">
         <div style={{ padding: 20 }}>

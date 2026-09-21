@@ -8,6 +8,7 @@ import ShareModal from '../components/ui/ShareModal';
 import Modal from '../components/ui/Modal';
 import Spinner from '../components/ui/Spinner';
 import VendorUpiSettings from '../components/vendor/VendorUpiSettings';
+import VendorShippingSettings from '../components/vendor/VendorShippingSettings';
 import VendorOrdersTab from '../components/orders/VendorOrdersTab';
 import UserOrdersTab from '../components/orders/UserOrdersTab';
 import UpiPaymentModal from '../components/payment/UpiPaymentModal';
@@ -233,7 +234,12 @@ export default function ProfilePage() {
 
               {tab === 'orders' && <VendorOrdersTab />}
 
-              {tab === 'upi' && <VendorUpiSettings user={user} />}
+              {tab === 'upi' && (
+                <>
+                  <VendorUpiSettings user={user} />
+                  <VendorShippingSettings />
+                </>
+              )}
             </div>
           )}
 
