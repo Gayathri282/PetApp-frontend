@@ -38,12 +38,21 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
 
   const productPrice = Math.max(0, Number(product.price) || 0);
 
-  // Kerala-wide shipping charge from product
-  const rawShipping = product.shippingChargeKerala;
-  const isShippingConfigured = rawShipping !== undefined && rawShipping !== null && !isNaN(Number(rawShipping));
-  const shippingChargeKerala = isShippingConfigured ? Math.max(0, Number(rawShipping) || 0) : 0;
+  const shippingGroups = Array.isArray(product.shippingGroups) && product.shippingGroups.length > 0 ? product.shippingGroups : [];
+  const [selectedGroupIndex, setSelectedGroupIndex] = useState(0);
 
-  const totalAmount = productPrice + shippingChargeKerala;
+  const rawShipping = product.shippingChargeKerala;
+  const isShippingConfigured = (rawShipping !== undefined && rawShipping !== null && !isNaN(Number(rawShipping))) || shippingGroups.length > 0;
+
+  const currentShippingCharge = shippingGroups.length > 0
+    ? (Number(shippingGroups[selectedGroupIndex]?.charge) || 0)
+    : (rawShipping !== undefined && rawShipping !== null && !isNaN(Number(rawShipping)) ? Math.max(0, Number(rawShipping)) : 0);
+
+  const currentShippingName = shippingGroups.length > 0
+    ? shippingGroups[selectedGroupIndex]?.name
+    : (currentShippingCharge === 0 ? 'Free Shipping' : 'Flat Kerala Shipping');
+
+  const totalAmount = productPrice + currentShippingCharge;
 
   // Handle Order Initiation (Step 1 -> Step 2)
   const handleInitiateOrder = async () => {
@@ -53,14 +62,13 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
       return;
     }
 
-    if (!isShippingConfigured) {
-      toast.error('Shipping charge across Kerala is not configured by the vendor for this product.');
-      return;
-    }
-
     setLoading(true);
     try {
-      const res = await createOrder({ productId: product._id });
+      const res = await createOrder({
+        productId: product._id,
+        selectedShippingCharge: currentShippingCharge,
+        selectedShippingName: currentShippingName,
+      });
       setOrder(res.data.order);
       setVendorUpi(res.data.vendorUpi || { upiId: upiDetails.upiId || '', upiName: upiDetails.upiName || vendor.name });
       setStep(2);
@@ -142,21 +150,60 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
               </div>
             </div>
 
-            {/* Shipping Policy Notice */}
-            <div style={{ background: isShippingConfigured ? '#F0FDF4' : '#FFFBEB', border: `1px solid ${isShippingConfigured ? '#BBF7D0' : '#FDE68A'}`, borderRadius: 14, padding: 14 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                <ShieldCheck size={18} color={isShippingConfigured ? '#16A34A' : '#D97706'} />
-                <span style={{ fontSize: '0.9rem', fontWeight: 700, color: isShippingConfigured ? '#166534' : '#92400E' }}>
-                  Shipping across Kerala: {isShippingConfigured ? (shippingChargeKerala === 0 ? 'FREE' : `₹${shippingChargeKerala.toLocaleString('en-IN')}`) : 'Unconfigured by Vendor'}
-                </span>
+            {/* Shipping Selection / Policy Notice */}
+            {shippingGroups.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 14, padding: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <ShieldCheck size={18} color="#16A34A" />
+                  <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#166534' }}>Select Delivery Zone / Group:</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {shippingGroups.map((group, idx) => (
+                    <label
+                      key={idx}
+                      onClick={() => setSelectedGroupIndex(idx)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '10px 14px',
+                        borderRadius: 12,
+                        border: selectedGroupIndex === idx ? '2px solid #0D5148' : '1px solid #D1D5DB',
+                        background: selectedGroupIndex === idx ? '#FFFFFF' : 'rgba(255,255,255,0.7)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <input
+                          type="radio"
+                          name="shippingGroup"
+                          checked={selectedGroupIndex === idx}
+                          onChange={() => setSelectedGroupIndex(idx)}
+                        />
+                        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111827' }}>{group.name}</span>
+                      </div>
+                      <span style={{ fontSize: '0.875rem', fontWeight: 700, color: Number(group.charge) === 0 ? '#16A34A' : '#0D5148' }}>
+                        {Number(group.charge) === 0 ? 'FREE' : `₹${Number(group.charge).toLocaleString('en-IN')}`}
+                      </span>
+                    </label>
+                  ))}
+                </div>
               </div>
-              <p style={{ margin: 0, fontSize: '0.825rem', color: isShippingConfigured ? '#15803D' : '#B45309', lineHeight: 1.4 }}>
-                {isShippingConfigured
-                  ? (shippingChargeKerala === 0 ? 'The seller offers free shipping across Kerala.' : `Flat shipping charge of ₹${shippingChargeKerala.toLocaleString('en-IN')} applies across Kerala.`)
-                  : 'The seller has not configured a Kerala shipping charge for this product yet.'
-                }
-              </p>
-            </div>
+            ) : (
+              <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 14, padding: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <ShieldCheck size={18} color="#16A34A" />
+                  <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#166534' }}>
+                    Shipping: {currentShippingCharge === 0 ? 'FREE' : `₹${currentShippingCharge.toLocaleString('en-IN')}`}
+                  </span>
+                </div>
+                <p style={{ margin: 0, fontSize: '0.825rem', color: '#15803D', lineHeight: 1.4 }}>
+                  {isShippingConfigured
+                    ? (currentShippingCharge === 0 ? 'The seller offers free shipping across Kerala.' : `Flat shipping charge of ₹${currentShippingCharge.toLocaleString('en-IN')} applies across Kerala.`)
+                    : 'Vendor did not specify a shipping charge. As per policy, shipping is FREE (₹0) and no extra fees apply.'}
+                </p>
+              </div>
+            )}
 
             {/* Pricing Breakdown Table */}
             <div style={{ borderTop: '1px solid #E5E7EB', borderBottom: '1px solid #E5E7EB', padding: '14px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -165,65 +212,40 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
                 <span style={{ fontWeight: 600 }}>₹{productPrice.toLocaleString('en-IN')}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#4B5563' }}>
-                <span>Shipping across Kerala</span>
-                <span style={{ fontWeight: 600, color: shippingChargeKerala === 0 ? '#16A34A' : '#111827' }}>
-                  {isShippingConfigured ? (shippingChargeKerala === 0 ? 'FREE' : `₹${shippingChargeKerala.toLocaleString('en-IN')}`) : 'Unconfigured'}
+                <span>Shipping ({currentShippingName})</span>
+                <span style={{ fontWeight: 600, color: currentShippingCharge === 0 ? '#16A34A' : '#111827' }}>
+                  {currentShippingCharge === 0 ? 'FREE' : `₹${currentShippingCharge.toLocaleString('en-IN')}`}
                 </span>
               </div>
-              {isShippingConfigured && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.05rem', fontWeight: 800, color: '#111827', paddingTop: 6, borderTop: '1px dashed #E5E7EB' }}>
-                  <span>Total Amount</span>
-                  <span style={{ color: '#0D5148' }}>₹{totalAmount.toLocaleString('en-IN')}</span>
-                </div>
-              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.05rem', fontWeight: 800, color: '#111827', paddingTop: 6, borderTop: '1px dashed #E5E7EB' }}>
+                <span>Total Amount</span>
+                <span style={{ color: '#0D5148' }}>₹{totalAmount.toLocaleString('en-IN')}</span>
+              </div>
             </div>
 
             {/* Actions */}
-            {isShippingConfigured ? (
-              <button
-                onClick={handleInitiateOrder}
-                disabled={loading}
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  backgroundColor: '#0D5148',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  borderRadius: 14,
-                  fontSize: '1rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                  boxShadow: '0 4px 14px rgba(13, 81, 72, 0.25)',
-                }}
-              >
-                {loading ? <Spinner size={20} /> : <>Proceed to Payment <ArrowRight size={18} /></>}
-              </button>
-            ) : (
-              <button
-                onClick={handleOpenChatWithVendor}
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  backgroundColor: '#D97706',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  borderRadius: 14,
-                  fontSize: '0.95rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                }}
-              >
-                Ask Vendor to Configure Shipping in Chat
-              </button>
-            )}
+            <button
+              onClick={handleInitiateOrder}
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '14px',
+                backgroundColor: '#0D5148',
+                color: '#FFFFFF',
+                border: 'none',
+                borderRadius: 14,
+                fontSize: '1rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                boxShadow: '0 4px 14px rgba(13, 81, 72, 0.25)',
+              }}
+            >
+              {loading ? <Spinner size={20} /> : <>Proceed to Payment <ArrowRight size={18} /></>}
+            </button>
           </div>
         )}
 

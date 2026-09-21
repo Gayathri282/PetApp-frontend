@@ -318,7 +318,8 @@ export default function ProfilePage() {
 /* ── Edit Product Modal ───────────────────────── */
 function EditProductModal({ open, product, onClose, onSuccess }) {
   const toast = useToast();
-  const [form, setForm] = useState({ name: '', description: '', category: '', price: '', shippingChargeKerala: '', isOnSale: true, deliveryChargesAdditional: false });
+  const [form, setForm] = useState({ name: '', description: '', category: '', price: '', shippingChargeKerala: '0', isOnSale: true, deliveryChargesAdditional: false });
+  const [shippingGroups, setShippingGroups] = useState([]);
   const [tags, setTags] = useState([]);
   const [newVideos, setNewVideos] = useState([]);
   const [replaceVideos, setReplaceVideos] = useState(false);
@@ -332,10 +333,11 @@ function EditProductModal({ open, product, onClose, onSuccess }) {
         description: product.description || '',
         category: product.category || '',
         price: product.price || '',
-        shippingChargeKerala: product.shippingChargeKerala !== undefined && product.shippingChargeKerala !== null ? String(product.shippingChargeKerala) : '',
+        shippingChargeKerala: product.shippingChargeKerala !== undefined && product.shippingChargeKerala !== null ? String(product.shippingChargeKerala) : '0',
         isOnSale: product.isOnSale ?? true,
         deliveryChargesAdditional: product.deliveryChargesAdditional ?? false
       });
+      setShippingGroups(Array.isArray(product.shippingGroups) ? product.shippingGroups.map(g => ({ name: g.name || '', charge: String(g.charge || 0) })) : []);
       setTags(product.tags || []);
       setNewVideos([]);
       setReplaceVideos(false);
@@ -344,15 +346,16 @@ function EditProductModal({ open, product, onClose, onSuccess }) {
 
   const handleSubmit = async () => {
     if (!form.name) { toast.error('Name is required'); return; }
-    if (form.shippingChargeKerala === '' || form.shippingChargeKerala === null || isNaN(Number(form.shippingChargeKerala)) || Number(form.shippingChargeKerala) < 0) {
-      toast.error('Shipping charge across Kerala is required (enter 0 for free shipping)');
-      return;
-    }
     setLoading(true);
     try {
       const fd = new FormData();
       Object.keys(form).forEach(key => fd.append(key, form[key]));
       fd.append('tags', JSON.stringify(tags));
+      
+      const cleanGroups = shippingGroups
+        .filter(g => g.name.trim() !== '')
+        .map(g => ({ name: g.name.trim(), charge: Math.max(0, parseFloat(g.charge) || 0) }));
+      fd.append('shippingGroups', JSON.stringify(cleanGroups));
 
       // Upload any new videos to Cloudinary first
       if (newVideos.length > 0) {
@@ -375,6 +378,13 @@ function EditProductModal({ open, product, onClose, onSuccess }) {
   return (
     <Modal isOpen={open} onClose={onClose} title="Edit Product">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '65vh', overflowY: 'auto' }}>
+        {/* Vendor Shipping Rule Notice */}
+        <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', padding: 12, borderRadius: 12 }}>
+          <p style={{ margin: 0, fontSize: '0.8rem', color: '#1E40AF', lineHeight: 1.4, fontWeight: 500 }}>
+            📢 <strong>Shipping Notice:</strong> If no shipping charge is specified, shipping will be <strong>FREE (₹0)</strong> for the buyer. No further shipping charges can be requested from the buyer after purchase.
+          </p>
+        </div>
+
         <input className="input-field" placeholder="Product name *" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
         <textarea className="input-field" placeholder="Description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
         <input className="input-field" placeholder="Category" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} />
@@ -382,18 +392,69 @@ function EditProductModal({ open, product, onClose, onSuccess }) {
         
         <div>
           <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#10B981', marginBottom: 4, display: 'block' }}>
-            Shipping charge across Kerala (₹) *
+            Flat Shipping Charge across Kerala (₹)
           </label>
           <input
             className="input-field"
             type="number"
             min="0"
-            placeholder="Shipping charge across Kerala (₹) *"
+            placeholder="Flat Shipping Charge across Kerala (₹)"
             value={form.shippingChargeKerala}
             onChange={e => setForm({ ...form, shippingChargeKerala: e.target.value })}
-            required
           />
-          <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Enter 0 for free shipping across Kerala.</span>
+          <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Leave as 0 for free shipping across Kerala.</span>
+        </div>
+
+        {/* Place Groups / Delivery Zones */}
+        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#10B981' }}>
+              Shipping Groups / Zones (Optional)
+            </label>
+            <button
+              type="button"
+              onClick={() => setShippingGroups([...shippingGroups, { name: '', charge: '' }])}
+              style={{ background: '#E8F1ED', color: '#0D5148', border: 'none', borderRadius: 8, padding: '4px 10px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+            >
+              + Add Place Zone
+            </button>
+          </div>
+          {shippingGroups.map((g, idx) => (
+            <div key={idx} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
+              <input
+                className="input-field"
+                style={{ flex: 2 }}
+                placeholder="Zone (e.g. Inside District)"
+                value={g.name}
+                onChange={e => {
+                  const updated = [...shippingGroups];
+                  updated[idx].name = e.target.value;
+                  setShippingGroups(updated);
+                }}
+              />
+              <input
+                className="input-field"
+                style={{ flex: 1 }}
+                type="number"
+                min="0"
+                placeholder="Charge (₹)"
+                value={g.charge}
+                onChange={e => {
+                  const updated = [...shippingGroups];
+                  updated[idx].charge = e.target.value;
+                  setShippingGroups(updated);
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShippingGroups(shippingGroups.filter((_, i) => i !== idx))}
+                style={{ background: 'none', border: 'none', color: '#EF4444', fontWeight: 700, cursor: 'pointer', padding: 4 }}
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+          <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Buyers can select their zone during purchase.</span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -802,7 +863,8 @@ function UploadReelModal({ open, onClose, onSuccess, user }) {
 /* ── Upload Product Modal ──────────────────────── */
 function UploadProductModal({ open, onClose, onSuccess, user }) {
   const toast = useToast();
-  const [form, setForm] = useState({ name: '', description: '', category: '', price: '', shippingChargeKerala: '', isOnSale: true, deliveryChargesAdditional: false });
+  const [form, setForm] = useState({ name: '', description: '', category: '', price: '', shippingChargeKerala: '0', isOnSale: true, deliveryChargesAdditional: false });
+  const [shippingGroups, setShippingGroups] = useState([]);
   const [tags, setTags] = useState([]);
   const [videos, setVideos] = useState([]);
   const [images, setImages] = useState([]);
@@ -812,10 +874,6 @@ function UploadProductModal({ open, onClose, onSuccess, user }) {
 
   const handleSubmit = async () => {
     if (!form.name || videos.length === 0) { toast.error('Name and at least one video required'); return; }
-    if (form.shippingChargeKerala === '' || form.shippingChargeKerala === null || isNaN(Number(form.shippingChargeKerala)) || Number(form.shippingChargeKerala) < 0) {
-      toast.error('Shipping charge across Kerala is required (enter 0 for free shipping)');
-      return;
-    }
     if (!user?.location?.coordinates || (user.location.coordinates[0] === 0 && user.location.coordinates[1] === 0)) {
       toast.info('Please set your location in profile to help users find you nearby');
       onClose();
@@ -840,9 +898,14 @@ function UploadProductModal({ open, onClose, onSuccess, user }) {
         );
       }
 
+      const cleanGroups = shippingGroups
+        .filter(g => g.name.trim() !== '')
+        .map(g => ({ name: g.name.trim(), charge: Math.max(0, parseFloat(g.charge) || 0) }));
+
       // 3. Send URLs to backend
       const { data } = await createProduct({
         ...form,
+        shippingGroups: JSON.stringify(cleanGroups),
         videoUrls,
         imageUrls,
         tags: JSON.stringify(tags)
@@ -850,7 +913,7 @@ function UploadProductModal({ open, onClose, onSuccess, user }) {
 
       toast.success('Product created!');
       onSuccess(data.product);
-      setForm({ name: '', description: '', category: '', price: '', shippingChargeKerala: '', isOnSale: true, deliveryChargesAdditional: false }); setTags([]); setVideos([]); setImages([]);
+      setForm({ name: '', description: '', category: '', price: '', shippingChargeKerala: '0', isOnSale: true, deliveryChargesAdditional: false }); setShippingGroups([]); setTags([]); setVideos([]); setImages([]);
     } catch (e) {
       console.error('Upload error:', e);
       toast.error(e.response?.data?.message || 'Failed to create product');
@@ -866,6 +929,13 @@ function UploadProductModal({ open, onClose, onSuccess, user }) {
   return (
     <Modal isOpen={open} onClose={onClose} title="Upload Product">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '60vh', overflowY: 'auto' }}>
+        {/* Vendor Shipping Rule Notice */}
+        <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', padding: 12, borderRadius: 12 }}>
+          <p style={{ margin: 0, fontSize: '0.8rem', color: '#1E40AF', lineHeight: 1.4, fontWeight: 500 }}>
+            📢 <strong>Shipping Notice:</strong> If no shipping charge is specified, shipping will be <strong>FREE (₹0)</strong> for the buyer. No further shipping charges can be requested from the buyer after purchase.
+          </p>
+        </div>
+
         <input className="input-field" placeholder="Product name *" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
         <textarea className="input-field" placeholder="Description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
         <input className="input-field" placeholder="Category" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} />
@@ -873,18 +943,69 @@ function UploadProductModal({ open, onClose, onSuccess, user }) {
 
         <div>
           <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#10B981', marginBottom: 4, display: 'block' }}>
-            Shipping charge across Kerala (₹) *
+            Flat Shipping Charge across Kerala (₹)
           </label>
           <input
             className="input-field"
             type="number"
             min="0"
-            placeholder="Shipping charge across Kerala (₹) *"
+            placeholder="Flat Shipping Charge across Kerala (₹)"
             value={form.shippingChargeKerala}
             onChange={e => setForm({ ...form, shippingChargeKerala: e.target.value })}
-            required
           />
-          <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Enter 0 for free shipping across Kerala.</span>
+          <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Leave as 0 for free shipping across Kerala.</span>
+        </div>
+
+        {/* Place Groups / Delivery Zones */}
+        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#10B981' }}>
+              Shipping Groups / Zones (Optional)
+            </label>
+            <button
+              type="button"
+              onClick={() => setShippingGroups([...shippingGroups, { name: '', charge: '' }])}
+              style={{ background: '#E8F1ED', color: '#0D5148', border: 'none', borderRadius: 8, padding: '4px 10px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+            >
+              + Add Place Zone
+            </button>
+          </div>
+          {shippingGroups.map((g, idx) => (
+            <div key={idx} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
+              <input
+                className="input-field"
+                style={{ flex: 2 }}
+                placeholder="Zone (e.g. Inside District)"
+                value={g.name}
+                onChange={e => {
+                  const updated = [...shippingGroups];
+                  updated[idx].name = e.target.value;
+                  setShippingGroups(updated);
+                }}
+              />
+              <input
+                className="input-field"
+                style={{ flex: 1 }}
+                type="number"
+                min="0"
+                placeholder="Charge (₹)"
+                value={g.charge}
+                onChange={e => {
+                  const updated = [...shippingGroups];
+                  updated[idx].charge = e.target.value;
+                  setShippingGroups(updated);
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShippingGroups(shippingGroups.filter((_, i) => i !== idx))}
+                style={{ background: 'none', border: 'none', color: '#EF4444', fontWeight: 700, cursor: 'pointer', padding: 4 }}
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+          <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Buyers can select their zone during purchase.</span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
