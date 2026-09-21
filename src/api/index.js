@@ -50,6 +50,15 @@ export const applyVendor = (data) => api.post('/api/vendor/apply', data);
 export const getApplicationStatus = () => api.get('/api/vendor/application-status');
 export const getVendorProducts = () => api.get('/api/vendor/products');
 export const uploadSingleReel = (data) => api.post('/api/vendor/reel', data);
+export const updateVendorUpiSettings = (data) => api.put('/api/vendor/upi-settings', data);
+
+// ── Orders & Payments ──────────────────────────────────
+export const createOrder = (data) => api.post('/api/orders', data);
+export const submitOrderPayment = (id, data) => api.put(`/api/orders/${id}/submit-payment`, data);
+export const getMyOrders = () => api.get('/api/orders/my-orders');
+export const getVendorOrders = () => api.get('/api/orders/vendor-orders');
+export const updateVendorOrderStatus = (id, status, vendorNotes = '') =>
+  api.put(`/api/orders/${id}/vendor-status`, { status, vendorNotes });
 
 // ── Enquiries ─────────────────────────────────────────
 export const submitEnquiry = (data) => api.post('/api/enquiries', data);

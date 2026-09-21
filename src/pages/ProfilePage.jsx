@@ -2,11 +2,15 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { Share2, Plus, LogOut, Film, Package, X, Upload, Edit2 } from 'lucide-react';
+import { Share2, Plus, LogOut, Film, Package, X, Upload, Edit2, ShoppingBag, CreditCard } from 'lucide-react';
 import ProductCard from '../components/product/ProductCard';
 import ShareModal from '../components/ui/ShareModal';
 import Modal from '../components/ui/Modal';
 import Spinner from '../components/ui/Spinner';
+import VendorUpiSettings from '../components/vendor/VendorUpiSettings';
+import VendorOrdersTab from '../components/orders/VendorOrdersTab';
+import UserOrdersTab from '../components/orders/UserOrdersTab';
+import UpiPaymentModal from '../components/payment/UpiPaymentModal';
 import { getVendorProducts, getApplicationStatus, createProduct, uploadSingleReel, deleteProduct, updateProfile, uploadToCloudinary, updateProduct, deleteMyAccount } from '../api';
 
 const getFullSrc = (url) => {
@@ -136,68 +140,99 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* Active UPI Payment Modal for Buyers */}
+      {payModalData && (
+        <UpiPaymentModal
+          order={payModalData.order}
+          product={payModalData.product}
+          vendor={payModalData.vendor}
+          onClose={() => setPayModalData(null)}
+          onSuccess={() => setPayModalData(null)}
+        />
+      )}
+
+      {/* Buyer Orders Section for non-vendors */}
+      {!isVendor && !isAdmin && (
+        <div style={{ marginTop: 24 }}>
+          <UserOrdersTab
+            onPayOrder={(ord, prod, vend) => setPayModalData({ order: ord, product: prod, vendor: vend })}
+          />
+        </div>
+      )}
+
       {/* Vendor/Admin dashboard */}
       {(isVendor || isAdmin) && (
         <>
           {/* Segmented Tabs */}
-          <div style={{ display: 'flex', gap: 6, marginBottom: 20, background: '#FFFFFF', border: '1px solid #D6E3DE', borderRadius: 16, padding: 4 }}>
-            {[{ key: 'reels', icon: Film, label: 'My Reels' }, { key: 'products', icon: Package, label: 'My Products' }].map(t => (
-              <button 
-                key={t.key} 
-                onClick={() => setTab(t.key)} 
-                style={{ 
-                  flex: 1, 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
-                  gap: 8, 
-                  padding: '10px 0', 
-                  borderRadius: 12, 
-                  border: 'none', 
-                  cursor: 'pointer', 
-                  fontSize: '0.85rem', 
-                  fontWeight: 700, 
-                  transition: 'all 0.2s ease', 
-                  background: tab === t.key ? '#0D5148' : 'transparent', 
-                  color: tab === t.key ? '#FFFFFF' : '#60736F' 
+          <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: '#FFFFFF', border: '1px solid #D6E3DE', borderRadius: 16, padding: 4, overflowX: 'auto' }}>
+            {[
+              { key: 'reels', icon: Film, label: 'Reels' },
+              { key: 'products', icon: Package, label: 'Products' },
+              { key: 'orders', icon: ShoppingBag, label: 'Orders' },
+              { key: 'upi', icon: CreditCard, label: 'UPI & Categories' },
+            ].map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  padding: '10px 8px',
+                  borderRadius: 12,
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.2s ease',
+                  background: tab === t.key ? '#0D5148' : 'transparent',
+                  color: tab === t.key ? '#FFFFFF' : '#60736F',
                 }}
               >
-                <t.icon size={17} color={tab === t.key ? '#FFFFFF' : '#60736F'} />{t.label}
+                <t.icon size={16} color={tab === t.key ? '#FFFFFF' : '#60736F'} />
+                {t.label}
               </button>
             ))}
           </div>
 
-          {loadingProducts ? <Spinner /> : (
+          {loadingProducts ? (
+            <Spinner />
+          ) : (
             <div className="stagger-children" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {tab === 'reels' ? (
-                reels.length > 0 ? reels.map(p => (
-                  <div key={p._id} style={{ position: 'relative' }}>
-                    <ProductCard
-                      product={p}
-                      activeVideoId={activeVideoId}
-                      setActiveVideoId={setActiveVideoId}
-                    />
-                    <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 6, zIndex: 15 }}>
-                      <button onClick={() => { setEditingProduct(p); setShowEditReel(true); }} style={{ background: '#0D5148', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff', display: 'flex' }}><Edit2 size={14} /></button>
-                      <button onClick={() => handleDelete(p._id)} style={{ background: '#ef4444', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff', display: 'flex' }}><X size={14} /></button>
+              {tab === 'reels' && (
+                reels.length > 0 ? (
+                  reels.map((p) => (
+                    <div key={p._id} style={{ position: 'relative' }}>
+                      <ProductCard product={p} activeVideoId={activeVideoId} setActiveVideoId={setActiveVideoId} />
+                      <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 6, zIndex: 15 }}>
+                        <button onClick={() => { setEditingProduct(p); setShowEditReel(true); }} style={{ background: '#0D5148', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff', display: 'flex' }}><Edit2 size={14} /></button>
+                        <button onClick={() => handleDelete(p._id)} style={{ background: '#ef4444', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff', display: 'flex' }}><X size={14} /></button>
+                      </div>
                     </div>
-                  </div>
-                )) : <p style={{ textAlign: 'center', color: '#60736F', padding: 40 }}>No promotional reels yet</p>
-              ) : (
-                saleProducts.length > 0 ? saleProducts.map(p => (
-                  <div key={p._id} style={{ position: 'relative' }}>
-                    <ProductCard
-                      product={p}
-                      activeVideoId={activeVideoId}
-                      setActiveVideoId={setActiveVideoId}
-                    />
-                    <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 6, zIndex: 15 }}>
-                      <button onClick={() => { setEditingProduct(p); setShowEditProduct(true); }} style={{ background: '#0D5148', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff', display: 'flex' }}><Edit2 size={14} /></button>
-                      <button onClick={() => handleDelete(p._id)} style={{ background: '#ef4444', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff', display: 'flex' }}><X size={14} /></button>
-                    </div>
-                  </div>
-                )) : <p style={{ textAlign: 'center', color: '#60736F', padding: 40 }}>No products yet</p>
+                  ))
+                ) : <p style={{ textAlign: 'center', color: '#60736F', padding: 40 }}>No promotional reels yet</p>
               )}
+
+              {tab === 'products' && (
+                saleProducts.length > 0 ? (
+                  saleProducts.map((p) => (
+                    <div key={p._id} style={{ position: 'relative' }}>
+                      <ProductCard product={p} activeVideoId={activeVideoId} setActiveVideoId={setActiveVideoId} />
+                      <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 6, zIndex: 15 }}>
+                        <button onClick={() => { setEditingProduct(p); setShowEditProduct(true); }} style={{ background: '#0D5148', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff', display: 'flex' }}><Edit2 size={14} /></button>
+                        <button onClick={() => handleDelete(p._id)} style={{ background: '#ef4444', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: '#fff', display: 'flex' }}><X size={14} /></button>
+                      </div>
+                    </div>
+                  ))
+                ) : <p style={{ textAlign: 'center', color: '#60736F', padding: 40 }}>No products yet</p>
+              )}
+
+              {tab === 'orders' && <VendorOrdersTab />}
+
+              {tab === 'upi' && <VendorUpiSettings user={user} />}
             </div>
           )}
 

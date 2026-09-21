@@ -5,7 +5,8 @@ import VideoPlayer from '../components/reel/VideoPlayer';
 import ShareModal from '../components/ui/ShareModal';
 import Modal from '../components/ui/Modal';
 import Spinner from '../components/ui/Spinner';
-import { getProduct, toggleLike, submitEnquiry, updateProfile, getAdminUser, sendMessage } from '../api';
+import UpiPaymentModal from '../components/payment/UpiPaymentModal';
+import { getProduct, toggleLike, submitEnquiry, updateProfile, getAdminUser, sendMessage, createOrder } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { getSoundPreference, setSoundPreference } from '../hooks/useSoundPreference';
@@ -36,6 +37,27 @@ export default function ProductReelPage() {
   const [shareAnimating, setShareAnimating] = useState(false);
   const [tempPhone, setTempPhone] = useState('');
   const [isMuted, setIsMuted] = useState(!getSoundPreference());
+  const [upiOrderData, setUpiOrderData] = useState(null);
+
+  const handleDirectUpiBuy = async () => {
+    if (!user) {
+      toast.info('Please log in to purchase');
+      navigate('/login');
+      return;
+    }
+    const vendorId = product.vendor?._id || (typeof product.vendor === 'string' ? product.vendor : null);
+    if (user._id === vendorId) {
+      toast.info('This is your own listing');
+      return;
+    }
+    try {
+      const res = await createOrder({ productId: product._id });
+      setUpiOrderData(res.data.order);
+      toast.success('Order initiated! Complete your payment via UPI.');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to initiate order');
+    }
+  };
 
   const containerRef = useRef(null);
   const videoRefs = useRef({});
@@ -445,7 +467,7 @@ ${canonicalUrl}`;
               {/* Buy button */}
               {product.isOnSale && (
                 <button
-                  onClick={handleBuy}
+                  onClick={handleDirectUpiBuy}
                   className="animate-zap-pulse"
                   style={{
                     display: 'flex',
@@ -496,6 +518,20 @@ ${canonicalUrl}`;
   </div>
 
       <ShareModal isOpen={showShare} onClose={() => setShowShare(false)} url={window.location.href} />
+      
+      {upiOrderData && (
+        <UpiPaymentModal
+          order={upiOrderData}
+          product={product}
+          vendor={product.vendor}
+          onClose={() => setUpiOrderData(null)}
+          onSuccess={() => {
+            setUpiOrderData(null);
+            navigate('/profile');
+          }}
+        />
+      )}
+
       <Modal isOpen={showEnquiry} onClose={() => setShowEnquiry(false)} title="Register Interest">
         <div style={{ padding: 20 }}>
           {!user?.contactNumber ? (
