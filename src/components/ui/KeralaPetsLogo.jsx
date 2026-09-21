@@ -31,7 +31,7 @@ export default function KeralaPetsLogo({ size = 180, showText = true, layout = '
             letterSpacing: '0.04em',
             textTransform: 'uppercase',
           }}>
-            KERALA<span style={{ color: '#F3C34E' }}>PETS</span>
+            KERALA<span style={{ color: '#177366' }}>PETS</span>
           </span>
         )}
       </div>
@@ -70,7 +70,7 @@ export default function KeralaPetsLogo({ size = 180, showText = true, layout = '
           textTransform: 'uppercase',
           marginTop: 10,
         }}>
-          KERALA<span style={{ color: '#F3C34E' }}>PETS</span>
+          KERALA<span style={{ color: '#177366' }}>PETS</span>
         </span>
       )}
     </div>
