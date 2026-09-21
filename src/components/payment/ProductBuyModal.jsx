@@ -19,6 +19,7 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
   const [transactionId, setTransactionId] = useState('');
   const [copied, setCopied] = useState(false);
   const [submittingTx, setSubmittingTx] = useState(false);
+  const [selectedGroupIndex, setSelectedGroupIndex] = useState(0);
 
   useEffect(() => {
     if (isOpen) {
@@ -27,6 +28,7 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
       setTransactionId('');
       setLoading(false);
       setSubmittingTx(false);
+      setSelectedGroupIndex(0);
     }
   }, [isOpen]);
 
@@ -39,7 +41,6 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
   const productPrice = Math.max(0, Number(product.price) || 0);
 
   const shippingGroups = Array.isArray(product.shippingGroups) && product.shippingGroups.length > 0 ? product.shippingGroups : [];
-  const [selectedGroupIndex, setSelectedGroupIndex] = useState(0);
 
   const rawShipping = product.shippingChargeKerala;
   const isShippingConfigured = (rawShipping !== undefined && rawShipping !== null && !isNaN(Number(rawShipping))) || shippingGroups.length > 0;
