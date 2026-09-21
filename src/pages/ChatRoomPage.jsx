@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getChatMessages, sendMessage } from '../api';
-import { ArrowLeft, Send, Phone, User, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, Send, Phone, User, ShoppingBag, ChevronRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Spinner from '../components/ui/Spinner';
 
