@@ -19,6 +19,7 @@ import {
   adminGetUsers,
   adminSuspendUser,
   adminDeleteUser,
+  adminCleanDummyData,
 } from '../../api';
 
 export default function AdminPanel() {
@@ -174,6 +175,22 @@ export default function AdminPanel() {
     }
   };
 
+  const handleWipeDummyData = async () => {
+    if (!window.confirm('⚠️ Are you sure you want to delete ALL dummy products, reels, test applications, and test orders from the database? This cannot be undone.')) {
+      return;
+    }
+    try {
+      const res = await adminCleanDummyData();
+      toast.success(res.data.message || 'All dummy data wiped successfully!');
+      loadStats();
+      setReels([]);
+      setProducts([]);
+      setApps([]);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to wipe dummy data');
+    }
+  };
+
   const tabs = [
     { key: 'dashboard', icon: BarChart3, label: 'Overview' },
     { key: 'reels', icon: Film, label: 'Reels' },
@@ -185,7 +202,7 @@ export default function AdminPanel() {
   return (
     <div style={{ padding: '16px 16px 100px', maxWidth: 740, margin: '0 auto', background: '#F3F8F5', minHeight: '100dvh' }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button
             onClick={() => navigate('/feed')}
@@ -200,6 +217,25 @@ export default function AdminPanel() {
             <p style={{ fontSize: '0.75rem', color: '#60736F', margin: 0 }}>System Management & Content Review</p>
           </div>
         </div>
+        <button
+          onClick={handleWipeDummyData}
+          style={{
+            background: '#EF4444',
+            color: '#FFFFFF',
+            border: 'none',
+            borderRadius: 12,
+            padding: '8px 14px',
+            fontSize: '0.8rem',
+            fontWeight: 700,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            boxShadow: '0 2px 8px rgba(239, 68, 68, 0.25)',
+          }}
+        >
+          <Trash2 size={15} /> Wipe Dummy Data
+        </button>
       </div>
 
       {/* ADMIN COUNTS HEADER */}

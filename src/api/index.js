@@ -104,6 +104,7 @@ export const adminGetUsers = (status = '', q = '') =>
 export const adminSuspendUser = (id, suspend = true, reason = '') =>
   api.put(`/api/admin/users/${id}/suspend`, { suspend, reason });
 export const adminDeleteUser = (id, reason = '') => api.delete(`/api/admin/users/${id}`, { data: { reason } });
+export const adminCleanDummyData = () => api.post('/api/admin/clean-dummy-data');
 
 // ── Media / Cloudinary ────────────────────────────────
 export const getCloudinarySignature = () => api.get('/api/media/cloudinary-signature');
