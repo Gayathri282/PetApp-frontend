@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef, useLayoutEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, Volume2, VolumeX, Heart, Send, MessageCircle, Play, Pause, RefreshCw, MapPin, CheckCircle, ShieldCheck } from 'lucide-react';
+import ProductBuyModal from '../payment/ProductBuyModal';
+import ProductActionButtons from '../product/ProductActionButtons';
+import { isProductItem } from '../../utils/productUtils';
 import { getPlayableVideoUrl, getPosterUrl, normalizeMediaItem, logVideoDiagnostics } from '../../utils/media';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -30,6 +33,7 @@ function SingleReelItem({
   const [liked, setLiked] = useState(item?.isLiked || false);
   const [likeCount, setLikeCount] = useState(item?.likeCount || 0);
   const [likeAnimating, setLikeAnimating] = useState(false);
+  const [showBuyModal, setShowBuyModal] = useState(false);
 
   const videoUrl = normalized.url;
   const posterUrl = normalized.thumbnail;
@@ -453,136 +457,28 @@ function SingleReelItem({
         }}
       />
 
-      {/* 7. Right Action Column (Like, Enquiry, Share - Requirement 2 & 13) */}
+      {/* 7. Right Action Column (Like, Enquiry, Buy, Share) */}
       <div
         style={{
           position: 'absolute',
           right: 14,
           bottom: 40,
           zIndex: 30,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 20,
         }}
       >
-        {/* Like Button */}
-        <button
-          onClick={handleLike}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 4,
-            background: 'none',
-            border: 'none',
-            color: '#FFFFFF',
-            cursor: 'pointer',
-            padding: 0,
-          }}
-        >
-          <div
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: '50%',
-              background: 'rgba(0, 0, 0, 0.45)',
-              backdropFilter: 'blur(6px)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              border: '1px solid rgba(255,255,255,0.15)',
-              boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
-            }}
-          >
-            <Heart
-              size={22}
-              fill={liked ? '#ef4444' : 'none'}
-              color={liked ? '#ef4444' : '#FFFFFF'}
-              style={{ transition: 'transform 0.2s ease' }}
-            />
-          </div>
-          <span style={{ fontSize: '0.72rem', fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
-            {likeCount}
-          </span>
-        </button>
-
-        {/* Contact / Enquiry Button */}
-        <button
-          onClick={handleEnquiry}
-          disabled={enquiring}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 4,
-            background: 'none',
-            border: 'none',
-            color: '#FFFFFF',
-            cursor: enquiring ? 'not-allowed' : 'pointer',
-            padding: 0,
-            opacity: enquiring ? 0.7 : 1,
-          }}
-        >
-          <div
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: '50%',
-              background: 'rgba(13, 81, 72, 0.85)',
-              backdropFilter: 'blur(6px)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              border: '1px solid rgba(255,255,255,0.2)',
-              boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
-            }}
-          >
-            <MessageCircle size={22} color="#FFFFFF" />
-          </div>
-          <span style={{ fontSize: '0.72rem', fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
-            {enquiring ? 'Enquiring...' : 'Enquire'}
-          </span>
-        </button>
-
-        {/* Share Button */}
-        <button
-          onClick={handleShare}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 4,
-            background: 'none',
-            border: 'none',
-            color: '#FFFFFF',
-            cursor: 'pointer',
-            padding: 0,
-          }}
-        >
-          <div
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: '50%',
-              background: 'rgba(0, 0, 0, 0.45)',
-              backdropFilter: 'blur(6px)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              border: '1px solid rgba(255,255,255,0.15)',
-              boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
-            }}
-          >
-            <Send size={20} color="#FFFFFF" />
-          </div>
-          <span style={{ fontSize: '0.72rem', fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
-            Share
-          </span>
-        </button>
+        <ProductActionButtons
+          item={item}
+          onEnquire={handleEnquiry}
+          onBuy={() => setShowBuyModal(true)}
+          likeCount={likeCount}
+          isLiked={liked}
+          onLikeToggle={handleLike}
+          onShare={handleShare}
+          likeAnimating={likeAnimating}
+        />
       </div>
 
-      {/* 8. Bottom-Left Information Overlay (Requirement 2 & 13) */}
+      {/* 8. Bottom-Left Information Overlay */}
       <div
         style={{
           position: 'absolute',
@@ -618,6 +514,12 @@ function SingleReelItem({
           </p>
         )}
 
+        {isProductItem(item) && (
+          <span style={{ fontSize: '0.78rem', color: '#A7F3D0', fontWeight: 700, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
+            Shipping across Kerala: {item.shippingChargeKerala > 0 ? `₹${item.shippingChargeKerala.toLocaleString('en-IN')}` : (item.shippingChargeKerala === 0 ? 'FREE' : 'Not set')}
+          </span>
+        )}
+
         {/* Description */}
         {item.description && (
           <p
@@ -643,6 +545,12 @@ function SingleReelItem({
           <span>{city}</span>
         </div>
       </div>
+
+      <ProductBuyModal
+        product={item}
+        isOpen={showBuyModal}
+        onClose={() => setShowBuyModal(false)}
+      />
     </div>
   );
 }

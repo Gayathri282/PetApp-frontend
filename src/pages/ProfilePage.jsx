@@ -318,7 +318,7 @@ export default function ProfilePage() {
 /* ── Edit Product Modal ───────────────────────── */
 function EditProductModal({ open, product, onClose, onSuccess }) {
   const toast = useToast();
-  const [form, setForm] = useState({ name: '', description: '', category: '', price: '', isOnSale: true, deliveryChargesAdditional: false });
+  const [form, setForm] = useState({ name: '', description: '', category: '', price: '', shippingChargeKerala: '', isOnSale: true, deliveryChargesAdditional: false });
   const [tags, setTags] = useState([]);
   const [newVideos, setNewVideos] = useState([]);
   const [replaceVideos, setReplaceVideos] = useState(false);
@@ -332,6 +332,7 @@ function EditProductModal({ open, product, onClose, onSuccess }) {
         description: product.description || '',
         category: product.category || '',
         price: product.price || '',
+        shippingChargeKerala: product.shippingChargeKerala !== undefined && product.shippingChargeKerala !== null ? String(product.shippingChargeKerala) : '',
         isOnSale: product.isOnSale ?? true,
         deliveryChargesAdditional: product.deliveryChargesAdditional ?? false
       });
@@ -343,6 +344,10 @@ function EditProductModal({ open, product, onClose, onSuccess }) {
 
   const handleSubmit = async () => {
     if (!form.name) { toast.error('Name is required'); return; }
+    if (form.shippingChargeKerala === '' || form.shippingChargeKerala === null || isNaN(Number(form.shippingChargeKerala)) || Number(form.shippingChargeKerala) < 0) {
+      toast.error('Shipping charge across Kerala is required (enter 0 for free shipping)');
+      return;
+    }
     setLoading(true);
     try {
       const fd = new FormData();
@@ -374,6 +379,22 @@ function EditProductModal({ open, product, onClose, onSuccess }) {
         <textarea className="input-field" placeholder="Description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
         <input className="input-field" placeholder="Category" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} />
         <input className="input-field" type="number" placeholder="Price (₹)" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} />
+        
+        <div>
+          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#10B981', marginBottom: 4, display: 'block' }}>
+            Shipping charge across Kerala (₹) *
+          </label>
+          <input
+            className="input-field"
+            type="number"
+            min="0"
+            placeholder="Shipping charge across Kerala (₹) *"
+            value={form.shippingChargeKerala}
+            onChange={e => setForm({ ...form, shippingChargeKerala: e.target.value })}
+            required
+          />
+          <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Enter 0 for free shipping across Kerala.</span>
+        </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>For Sale</span>
@@ -781,7 +802,7 @@ function UploadReelModal({ open, onClose, onSuccess, user }) {
 /* ── Upload Product Modal ──────────────────────── */
 function UploadProductModal({ open, onClose, onSuccess, user }) {
   const toast = useToast();
-  const [form, setForm] = useState({ name: '', description: '', category: '', price: '', isOnSale: true, deliveryChargesAdditional: false });
+  const [form, setForm] = useState({ name: '', description: '', category: '', price: '', shippingChargeKerala: '', isOnSale: true, deliveryChargesAdditional: false });
   const [tags, setTags] = useState([]);
   const [videos, setVideos] = useState([]);
   const [images, setImages] = useState([]);
@@ -791,6 +812,10 @@ function UploadProductModal({ open, onClose, onSuccess, user }) {
 
   const handleSubmit = async () => {
     if (!form.name || videos.length === 0) { toast.error('Name and at least one video required'); return; }
+    if (form.shippingChargeKerala === '' || form.shippingChargeKerala === null || isNaN(Number(form.shippingChargeKerala)) || Number(form.shippingChargeKerala) < 0) {
+      toast.error('Shipping charge across Kerala is required (enter 0 for free shipping)');
+      return;
+    }
     if (!user?.location?.coordinates || (user.location.coordinates[0] === 0 && user.location.coordinates[1] === 0)) {
       toast.info('Please set your location in profile to help users find you nearby');
       onClose();
@@ -825,7 +850,7 @@ function UploadProductModal({ open, onClose, onSuccess, user }) {
 
       toast.success('Product created!');
       onSuccess(data.product);
-      setForm({ name: '', description: '', category: '', price: '', isOnSale: true }); setTags([]); setVideos([]); setImages([]);
+      setForm({ name: '', description: '', category: '', price: '', shippingChargeKerala: '', isOnSale: true, deliveryChargesAdditional: false }); setTags([]); setVideos([]); setImages([]);
     } catch (e) {
       console.error('Upload error:', e);
       toast.error(e.response?.data?.message || 'Failed to create product');
@@ -845,6 +870,22 @@ function UploadProductModal({ open, onClose, onSuccess, user }) {
         <textarea className="input-field" placeholder="Description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
         <input className="input-field" placeholder="Category" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} />
         <input className="input-field" type="number" placeholder="Price (₹)" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} />
+
+        <div>
+          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#10B981', marginBottom: 4, display: 'block' }}>
+            Shipping charge across Kerala (₹) *
+          </label>
+          <input
+            className="input-field"
+            type="number"
+            min="0"
+            placeholder="Shipping charge across Kerala (₹) *"
+            value={form.shippingChargeKerala}
+            onChange={e => setForm({ ...form, shippingChargeKerala: e.target.value })}
+            required
+          />
+          <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Enter 0 for free shipping across Kerala.</span>
+        </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>For Sale</span>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, ArrowRight, CheckCircle, Copy, AlertCircle, ExternalLink, ShieldCheck, X } from 'lucide-react';
+import { ArrowRight, CheckCircle, Copy, AlertCircle, ExternalLink, ShieldCheck } from 'lucide-react';
 import Modal from '../ui/Modal';
 import Spinner from '../ui/Spinner';
 import { createOrder, submitOrderPayment } from '../../api';
@@ -34,24 +34,16 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
 
   const vendor = product.vendor || {};
   const vendorDetails = vendor.vendorDetails || {};
-  const shippingDetails = vendorDetails.shippingDetails || { shippingType: 'unconfigured', flatRate: 0 };
   const upiDetails = vendorDetails.upiDetails || {};
 
   const productPrice = Math.max(0, Number(product.price) || 0);
-  const shippingType = shippingDetails.shippingType || 'unconfigured';
 
-  let shippingCharge = 0;
-  let isShippingCalculated = false;
+  // Kerala-wide shipping charge from product
+  const rawShipping = product.shippingChargeKerala;
+  const isShippingConfigured = rawShipping !== undefined && rawShipping !== null && !isNaN(Number(rawShipping));
+  const shippingChargeKerala = isShippingConfigured ? Math.max(0, Number(rawShipping) || 0) : 0;
 
-  if (shippingType === 'free') {
-    shippingCharge = 0;
-    isShippingCalculated = true;
-  } else if (shippingType === 'flat') {
-    shippingCharge = Math.max(0, Number(shippingDetails.flatRate) || 0);
-    isShippingCalculated = true;
-  }
-
-  const totalAmount = productPrice + shippingCharge;
+  const totalAmount = productPrice + shippingChargeKerala;
 
   // Handle Order Initiation (Step 1 -> Step 2)
   const handleInitiateOrder = async () => {
@@ -61,8 +53,8 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
       return;
     }
 
-    if (!isShippingCalculated) {
-      toast.error('Shipping charge must be confirmed by vendor before completing payment');
+    if (!isShippingConfigured) {
+      toast.error('Shipping charge across Kerala is not configured by the vendor for this product.');
       return;
     }
 
@@ -131,7 +123,7 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
     <Modal isOpen={isOpen} onClose={onClose} title="Buy Product">
       <div style={{ color: '#111827', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
         
-        {/* STEP 1: ORDER SUMMARY & SHIPPING */}
+        {/* STEP 1: ORDER SUMMARY & KERALA SHIPPING */}
         {step === 1 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             {/* Product Card Info */}
@@ -151,18 +143,18 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
             </div>
 
             {/* Shipping Policy Notice */}
-            <div style={{ background: isShippingCalculated ? '#F0FDF4' : '#FFFBEB', border: `1px solid ${isShippingCalculated ? '#BBF7D0' : '#FDE68A'}`, borderRadius: 14, padding: 14 }}>
+            <div style={{ background: isShippingConfigured ? '#F0FDF4' : '#FFFBEB', border: `1px solid ${isShippingConfigured ? '#BBF7D0' : '#FDE68A'}`, borderRadius: 14, padding: 14 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                <ShieldCheck size={18} color={isShippingCalculated ? '#16A34A' : '#D97706'} />
-                <span style={{ fontSize: '0.9rem', fontWeight: 700, color: isShippingCalculated ? '#166534' : '#92400E' }}>
-                  Shipping Policy: {shippingType === 'free' ? 'Free Shipping' : shippingType === 'flat' ? 'Flat Rate Shipping' : shippingType === 'variable' ? 'Varies by Location' : 'Not Configured'}
+                <ShieldCheck size={18} color={isShippingConfigured ? '#16A34A' : '#D97706'} />
+                <span style={{ fontSize: '0.9rem', fontWeight: 700, color: isShippingConfigured ? '#166534' : '#92400E' }}>
+                  Shipping across Kerala: {isShippingConfigured ? (shippingChargeKerala === 0 ? 'FREE' : `₹${shippingChargeKerala.toLocaleString('en-IN')}`) : 'Unconfigured by Vendor'}
                 </span>
               </div>
-              <p style={{ margin: 0, fontSize: '0.825rem', color: isShippingCalculated ? '#15803D' : '#B45309', lineHeight: 1.4 }}>
-                {shippingType === 'free' && 'The seller provides free shipping for this pet product.'}
-                {shippingType === 'flat' && `Flat shipping charge of ₹${shippingCharge.toLocaleString('en-IN')} applies.`}
-                {shippingType === 'variable' && 'Shipping varies based on delivery location. Please confirm shipping charge with vendor in chat.'}
-                {shippingType === 'unconfigured' && 'Shipping charge not yet confirmed by vendor. Please ask vendor in chat before proceeding.'}
+              <p style={{ margin: 0, fontSize: '0.825rem', color: isShippingConfigured ? '#15803D' : '#B45309', lineHeight: 1.4 }}>
+                {isShippingConfigured
+                  ? (shippingChargeKerala === 0 ? 'The seller offers free shipping across Kerala.' : `Flat shipping charge of ₹${shippingChargeKerala.toLocaleString('en-IN')} applies across Kerala.`)
+                  : 'The seller has not configured a Kerala shipping charge for this product yet.'
+                }
               </p>
             </div>
 
@@ -173,21 +165,21 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
                 <span style={{ fontWeight: 600 }}>₹{productPrice.toLocaleString('en-IN')}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#4B5563' }}>
-                <span>Shipping</span>
-                <span style={{ fontWeight: 600, color: shippingCharge === 0 ? '#16A34A' : '#111827' }}>
-                  {isShippingCalculated ? (shippingCharge === 0 ? 'FREE' : `₹${shippingCharge.toLocaleString('en-IN')}`) : 'Pending Vendor Confirmation'}
+                <span>Shipping across Kerala</span>
+                <span style={{ fontWeight: 600, color: shippingChargeKerala === 0 ? '#16A34A' : '#111827' }}>
+                  {isShippingConfigured ? (shippingChargeKerala === 0 ? 'FREE' : `₹${shippingChargeKerala.toLocaleString('en-IN')}`) : 'Unconfigured'}
                 </span>
               </div>
-              {isShippingCalculated && (
+              {isShippingConfigured && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.05rem', fontWeight: 800, color: '#111827', paddingTop: 6, borderTop: '1px dashed #E5E7EB' }}>
-                  <span>Total</span>
+                  <span>Total Amount</span>
                   <span style={{ color: '#0D5148' }}>₹{totalAmount.toLocaleString('en-IN')}</span>
                 </div>
               )}
             </div>
 
             {/* Actions */}
-            {isShippingCalculated ? (
+            {isShippingConfigured ? (
               <button
                 onClick={handleInitiateOrder}
                 disabled={loading}
@@ -229,7 +221,7 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
                   gap: 8,
                 }}
               >
-                Ask Vendor for Shipping Charge in Chat
+                Ask Vendor to Configure Shipping in Chat
               </button>
             )}
           </div>

@@ -125,13 +125,20 @@ const ProductCard = memo(({ product, activeVideoId, setActiveVideoId, onVideoCli
           {product.name}
         </h3>
 
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-          <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#12332F' }}>
-            ₹{product.price?.toLocaleString('en-IN') || '0'}
-          </span>
-          <span style={{ fontSize: '0.72rem', color: '#60736F', fontWeight: 500 }}>
-            / listing
-          </span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#12332F' }}>
+              ₹{product.price?.toLocaleString('en-IN') || '0'}
+            </span>
+            <span style={{ fontSize: '0.72rem', color: '#60736F', fontWeight: 500 }}>
+              / listing
+            </span>
+          </div>
+          {product.type !== 'reel' && (
+            <span style={{ fontSize: '0.72rem', color: '#0D5148', fontWeight: 600 }}>
+              Shipping across Kerala: {product.shippingChargeKerala > 0 ? `₹${product.shippingChargeKerala.toLocaleString('en-IN')}` : (product.shippingChargeKerala === 0 ? 'FREE' : 'Not set')}
+            </span>
+          )}
         </div>
 
         {/* Seller Info */}

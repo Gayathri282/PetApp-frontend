@@ -7,6 +7,8 @@ import Modal from '../components/ui/Modal';
 import Spinner from '../components/ui/Spinner';
 import UpiPaymentModal from '../components/payment/UpiPaymentModal';
 import ProductBuyModal from '../components/payment/ProductBuyModal';
+import ProductActionButtons from '../components/product/ProductActionButtons';
+import { isProductItem, logItemTypeDebug } from '../utils/productUtils';
 import { getProduct, toggleLike, submitEnquiry, updateProfile, getAdminUser, sendMessage } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
@@ -419,19 +421,17 @@ ${canonicalUrl}`;
             <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '40%', background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', pointerEvents: 'none', zIndex: 5 }} />
 
             {/* Actions (Right Side) */}
-            <div style={{ position: 'absolute', right: 16, bottom: 120, display: 'flex', flexDirection: 'column', gap: 24, zIndex: 20, alignItems: 'center' }}>
-
-              <button onClick={() => handleLike(i)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', color: '#fff', padding: 0 }}>
-                <div style={{ display: 'flex', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} className={likeAnimating === i ? 'animate-icon-tap' : ''}>
-                  <Heart size={26} fill={reelItem.isLiked ? '#ef4444' : 'none'} color={reelItem.isLiked ? '#ef4444' : '#fff'} strokeWidth={2.2} />
-                </div>
-                <span style={{ fontSize: '0.7rem', fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{reelItem.isLiked ? product.likeCount : (product.likeCount || 0)}</span>
-              </button>
-
-              {/* Sound Toggle */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
+            <div style={{ position: 'absolute', right: 16, bottom: 120, zIndex: 20 }}>
+              <ProductActionButtons
+                item={product}
+                onEnquire={handleBuy}
+                onBuy={() => setShowBuyModal(true)}
+                likeCount={reelItem.isLiked ? (product.likeCount || 0) : (product.likeCount || 0)}
+                isLiked={reelItem.isLiked || false}
+                onLikeToggle={() => handleLike(i)}
+                isMuted={isMuted}
+                onMuteToggle={(e) => {
+                  if (e) e.stopPropagation();
                   const newMuted = !isMuted;
                   setIsMuted(newMuted);
                   setSoundPreference(!newMuted);
@@ -446,70 +446,10 @@ ${canonicalUrl}`;
                     }
                   }
                 }}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 4,
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: '#fff',
-                  padding: 0,
-                }}
-              >
-                <div style={{ display: 'flex', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>
-                  {isMuted ? <VolumeX size={24} strokeWidth={2.2} /> : <Volume2 size={24} strokeWidth={2.2} />}
-                </div>
-                <span style={{ fontSize: '0.7rem', fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
-                  {isMuted ? 'Unmute' : 'Mute'}
-                </span>
-              </button>
-
-              {/* Enquire button */}
-              <button
-                onClick={handleBuy}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 4,
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: '#fff',
-                  padding: 0,
-                }}
-              >
-                <div style={{ display: 'flex', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>
-                  <ShoppingBag size={24} strokeWidth={2.2} />
-                </div>
-                <span style={{ fontSize: '0.7rem', fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>Enquire</span>
-              </button>
-
-              {/* Buy button (Only for Products, not for Reels) */}
-              {(product.type !== 'reel' && product.category !== 'promotional' && product.category !== 'reel') && (
-                <button
-                  onClick={() => setShowBuyModal(true)}
-                  className="animate-zap-pulse"
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: 4,
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: '#A7F3D0',
-                    padding: 0
-                  }}
-                >
-                  <div style={{ display: 'flex', filter: 'drop-shadow(0 2px 8px rgba(16,185,129,0.6))' }}>
-                    <Zap size={28} fill="#10B981" strokeWidth={0} />
-                  </div>
-                  <span style={{ fontSize: '0.7rem', fontWeight: 800, textShadow: '0 2px 4px rgba(0,0,0,0.5)', color: '#A7F3D0' }}>BUY</span>
-                </button>
-              )}
+                onShare={handleShare}
+                likeAnimating={likeAnimating === i}
+                shareAnimating={shareAnimating}
+              />
             </div>
 
             {/* Vendor Info & Product Details (Bottom Left) */}
@@ -530,8 +470,14 @@ ${canonicalUrl}`;
 
               <h1 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#F5F5EC', marginBottom: 6, textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>{product.name}</h1>
               <p style={{ fontSize: '0.85rem', color: 'rgba(245,245,236,0.85)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', marginBottom: 8, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>{product.description}</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                {product.price > 0 && <span style={{ background: 'linear-gradient(135deg, #0D5148 0%, #177366 100%)', color: '#FFFFFF', padding: '5px 14px', borderRadius: 12, fontSize: '1rem', fontWeight: 800, boxShadow: '0 4px 15px rgba(13, 81, 72, 0.4)' }}>₹{product.price.toLocaleString()}</span>}
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
+                {product.price > 0 && <span style={{ background: 'linear-gradient(135deg, #0D5148 0%, #177366 100%)', color: '#FFFFFF', padding: '5px 14px', borderRadius: 12, fontSize: '1rem', fontWeight: 800, boxShadow: '0 4px 15px rgba(13, 81, 72, 0.4)' }}>₹{product.price.toLocaleString('en-IN')}</span>}
+                {isProductItem(product) && (
+                  <span style={{ fontSize: '0.8rem', color: '#A7F3D0', fontWeight: 700, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
+                    Shipping across Kerala: {product.shippingChargeKerala > 0 ? `₹${product.shippingChargeKerala.toLocaleString('en-IN')}` : (product.shippingChargeKerala === 0 ? 'FREE' : 'Not set')}
+                  </span>
+                )}
               </div>
             </div>
           </div>

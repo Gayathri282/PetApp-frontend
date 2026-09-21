@@ -4,12 +4,14 @@ import { Heart, Send, Zap, Layers, Volume2, VolumeX } from 'lucide-react';
 import VideoPlayer from './VideoPlayer';
 import ShareModal from '../ui/ShareModal';
 import Modal from '../ui/Modal';
+import ProductBuyModal from '../payment/ProductBuyModal';
+import ProductActionButtons from '../product/ProductActionButtons';
+import { isProductItem } from '../../utils/productUtils';
 import { toggleLike, submitEnquiry, updateProfile, trackInterest, sendMessage } from '../../api';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { getSoundPreference, setSoundPreference } from '../../hooks/useSoundPreference';
 import { openReel } from '../../utils/navigation';
-
 import { getPlayableVideoUrl, logVideoDiagnostics } from '../../utils/media';
 
 export default function ReelCard({ product, onLikeUpdate }) {
@@ -22,6 +24,7 @@ export default function ReelCard({ product, onLikeUpdate }) {
   const [likeAnimating, setLikeAnimating] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showEnquiry, setShowEnquiry] = useState(false);
+  const [showBuyModal, setShowBuyModal] = useState(false);
   const [sending, setSending] = useState(false);
   const [isMuted, setIsMuted] = useState(!getSoundPreference());
   const [shareAnimating, setShareAnimating] = useState(false);
@@ -201,90 +204,24 @@ ${canonicalUrl}`;
           position: 'absolute',
           right: 16,
           bottom: 120,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 24,
           zIndex: 20,
         }}
       >
-        {/* Like */}
-        <button
-          onClick={handleLike}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 4,
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: '#fff',
-            padding: 0,
-          }}
-        >
-          <div
-            style={{ display: 'flex', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}
-            className={likeAnimating ? 'animate-icon-tap' : ''}
-          >
-            <Heart
-              size={26}
-              fill={liked ? '#ef4444' : 'none'}
-              color={liked ? '#ef4444' : '#fff'}
-              strokeWidth={2.2}
-            />
-          </div>
-          <span style={{ fontSize: '0.7rem', fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
-            {likeCount}
-          </span>
-        </button>
-
-        {/* Share */}
-        <button
-          onClick={handleShare}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 4,
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: '#fff',
-            padding: 0,
-          }}
-        >
-          <div
-            style={{ display: 'flex', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}
-            className={shareAnimating ? 'animate-send-fly' : ''}
-          >
-            <Send size={24} strokeWidth={2.2} />
-          </div>
-          <span
-            style={{
-              fontSize: '0.7rem',
-              fontWeight: 700,
-              textShadow: '0 2px 4px rgba(0,0,0,0.5)',
-              opacity: shareAnimating ? 0 : 1,
-            }}
-          >
-            Share
-          </span>
-        </button>
-
-        {/* Sound Toggle */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
+        <ProductActionButtons
+          item={product}
+          onEnquire={handleEnquiry}
+          onBuy={() => setShowBuyModal(true)}
+          likeCount={likeCount}
+          isLiked={liked}
+          onLikeToggle={handleLike}
+          isMuted={isMuted}
+          onMuteToggle={(e) => {
+            if (e) e.stopPropagation();
             const newMuted = !isMuted;
             setIsMuted(newMuted);
-            setSoundPreference(!newMuted); // persist: unmuted=true means sound on
-
-            // Imperatively set video.muted — required on iOS where only a direct
-            // user gesture can unlock audio. React prop → useEffect is too async.
+            setSoundPreference(!newMuted);
             if (videoRef.current) {
               videoRef.current.muted = newMuted;
-              // If unmuting and video is paused (stalled due to mute), try resume
               if (!newMuted && videoRef.current.paused) {
                 videoRef.current.play().catch(() => {
                   videoRef.current.muted = true;
@@ -293,77 +230,10 @@ ${canonicalUrl}`;
               }
             }
           }}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 4,
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: '#fff',
-            padding: 0,
-          }}
-        >
-          <div style={{ display: 'flex', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>
-            {isMuted ? <VolumeX size={24} strokeWidth={2.2} /> : <Volume2 size={24} strokeWidth={2.2} />}
-          </div>
-          <span style={{ fontSize: '0.7rem', fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
-            {isMuted ? 'Unmute' : 'Mute'}
-          </span>
-        </button>
-
-        {/* Multiple reels indicator */}
-        {product.hasMultipleReels && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/product/${product._id}`);
-            }}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 4,
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: '#fff',
-              padding: 0,
-            }}
-          >
-            <div style={{ display: 'flex', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>
-              <Layers size={24} strokeWidth={2.2} />
-            </div>
-            <span style={{ fontSize: '0.7rem', fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>More</span>
-          </button>
-        )}
-
-        {/* Buy / Enquiry */}
-        {product.isOnSale && (
-          <button
-            onClick={handleBuy}
-            className="animate-zap-pulse"
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 4,
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: '#A7F3D0',
-              padding: 0,
-            }}
-          >
-            <div style={{ display: 'flex', filter: 'drop-shadow(0 2px 8px rgba(16,185,129,0.6))' }}>
-              <Zap size={28} fill="#10B981" strokeWidth={0} />
-            </div>
-            <span style={{ fontSize: '0.7rem', fontWeight: 800, textShadow: '0 2px 4px rgba(0,0,0,0.5)', color: '#A7F3D0' }}>
-              BUY
-            </span>
-          </button>
-        )}
+          onShare={handleShare}
+          likeAnimating={likeAnimating}
+          shareAnimating={shareAnimating}
+        />
       </div>
 
       {/* ── Vendor info & product details (bottom-left) ───────────────────────── */}
@@ -433,22 +303,29 @@ ${canonicalUrl}`;
           {product.description}
         </p>
 
-        {product.price > 0 && (
-          <span
-            style={{
-              background: 'linear-gradient(135deg, #0D5148 0%, #177366 100%)',
-              color: '#FFFFFF',
-              padding: '5px 14px',
-              borderRadius: 12,
-              fontSize: '1rem',
-              fontWeight: 800,
-              boxShadow: '0 4px 15px rgba(13, 81, 72, 0.4)',
-              display: 'inline-block',
-            }}
-          >
-            ₹{product.price.toLocaleString('en-IN')}
-          </span>
-        )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
+          {product.price > 0 && (
+            <span
+              style={{
+                background: 'linear-gradient(135deg, #0D5148 0%, #177366 100%)',
+                color: '#FFFFFF',
+                padding: '5px 14px',
+                borderRadius: 12,
+                fontSize: '1rem',
+                fontWeight: 800,
+                boxShadow: '0 4px 15px rgba(13, 81, 72, 0.4)',
+                display: 'inline-block',
+              }}
+            >
+              ₹{product.price.toLocaleString('en-IN')}
+            </span>
+          )}
+          {isProductItem(product) && (
+            <span style={{ fontSize: '0.8rem', color: '#A7F3D0', fontWeight: 700, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
+              Shipping across Kerala: {product.shippingChargeKerala > 0 ? `₹${product.shippingChargeKerala.toLocaleString('en-IN')}` : (product.shippingChargeKerala === 0 ? 'FREE' : 'Not set')}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* ── Modals ────────────────────────────────────────────────────────────── */}
@@ -457,6 +334,12 @@ ${canonicalUrl}`;
         onClose={() => setShowShare(false)}
         url={`${window.location.origin}/product/${product._id}`}
         title="Share Reel"
+      />
+
+      <ProductBuyModal
+        product={product}
+        isOpen={showBuyModal}
+        onClose={() => setShowBuyModal(false)}
       />
 
       <Modal isOpen={showEnquiry} onClose={() => setShowEnquiry(false)} title="Register Interest">
