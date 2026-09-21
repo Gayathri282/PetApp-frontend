@@ -1,8 +1,12 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
 import { Pause, Play, VolumeX } from 'lucide-react';
 
 export default function VideoPlayer({ src, poster = '', muted = false, style = {}, externalRef = null }) {
+  const params = useParams();
+  const routeId = params?.id || '';
+
   const getFullSrc = (url) => {
     if (!url || typeof url !== 'string') return '';
     const cleanUrl = url.replace(/\\/g, '/');
@@ -12,28 +16,46 @@ export default function VideoPlayer({ src, poster = '', muted = false, style = {
   };
 
   const internalRef = useRef(null);
-  // Use the external ref if provided (e.g. from ReelCard for imperative iOS audio unlock)
   const videoRef = externalRef || internalRef;
-  // Tracks whether the USER manually paused while in viewport
+
   const manuallyPaused = useRef(false);
-  // Tracks whether this player is currently visible (default true for instant playback on mount)
   const isInView = useRef(true);
 
   const [isPaused, setIsPaused] = useState(false);
   const [showControl, setShowControl] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [showNoAudioNotice, setShowNoAudioNotice] = useState(false);
+  const [autoplayBlocked, setAutoplayBlocked] = useState(false);
 
-  const playVideo = useCallback(async () => {
+  const startPlayback = useCallback(async () => {
     const video = videoRef.current;
     if (!video || !src) return;
+
     try {
       video.muted = muted;
-      video.volume = 1.0;
-      await video.play();
-    } catch {
-      video.muted = true;
-      try { await video.play(); } catch { /* autoplay fully blocked */ }
+      video.playsInline = true;
+
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        await playPromise;
+        console.log('[VIDEO PLAYBACK] Started successfully');
+        setAutoplayBlocked(false);
+        setIsPaused(false);
+      }
+    } catch (error) {
+      console.warn('[VIDEO PLAYBACK] Autoplay failed with requested mute settings, attempting muted autoplay:', error);
+      try {
+        video.muted = true;
+        video.playsInline = true;
+        await video.play();
+        console.log('[VIDEO PLAYBACK] Started successfully (muted fallback)');
+        setAutoplayBlocked(false);
+        setIsPaused(false);
+      } catch (err) {
+        console.log('[VIDEO PLAYBACK] Autoplay blocked:', err);
+        setAutoplayBlocked(true);
+        setIsPaused(true);
+      }
     }
   }, [src, muted]);
 
@@ -41,74 +63,82 @@ export default function VideoPlayer({ src, poster = '', muted = false, style = {
     const video = videoRef.current;
     if (!video || !src) return;
 
-    let retryCount = 0;
-    const maxRetries = 3;
+    const fullSrcUrl = getFullSrc(src);
+    video.src = fullSrcUrl;
+    video.muted = muted;
+    video.playsInline = true;
 
-    setHasError(false);
-    setShowNoAudioNotice(false);
     manuallyPaused.current = false;
+    isInView.current = true;
+    setHasError(false);
+    setAutoplayBlocked(false);
+    setShowNoAudioNotice(false);
 
-    const onError = (e) => {
-      console.error('[VideoPlayer] Media load error:', {
-        src,
-        fullSrc: getFullSrc(src),
-        error: e?.currentTarget?.error || e,
+    const logDiagnostics = (evtName) => {
+      console.log(`[VIDEO] ${evtName}`, {
+        src: video.currentSrc || video.src,
+        readyState: video.readyState,
+        paused: video.paused,
+        muted: video.muted,
+        autoplay: video.autoplay,
+        networkState: video.networkState,
+        error: video.error
       });
-
-      if (retryCount < maxRetries) {
-        retryCount++;
-        const delay = retryCount * 1000;
-        console.warn(`[VideoPlayer] Load failed, retrying in ${delay}ms...`, src);
-        setTimeout(() => {
-          if (video) {
-            setHasError(false);
-            video.load();
-          }
-        }, delay);
-      } else {
-        console.error('[VideoPlayer] Permanent load failure after retries:', src);
-        setHasError(true);
-      }
     };
 
-    const onCanPlay = () => {
-      setHasError(false);
+    const onLoadedMetadata = () => logDiagnostics('loadedmetadata');
+    const onLoadedData = () => {
+      logDiagnostics('loadeddata');
       if (isInView.current && !manuallyPaused.current) {
-        playVideo();
+        startPlayback();
       }
     };
-
-    const onDataLoaded = () => {
-      setTimeout(() => {
-        if (video && video.readyState >= 1) {
-          const noAudio =
-            (video.audioTracks && video.audioTracks.length === 0) ||
-            video.mozHasAudio === false ||
-            video.webkitAudioDecodedByteCount === 0;
-          if (noAudio) {
-            setShowNoAudioNotice(true);
-            setTimeout(() => setShowNoAudioNotice(false), 2000);
-          }
-        }
-      }, 1000);
+    const onCanPlay = () => logDiagnostics('canplay');
+    const onPlaying = () => {
+      logDiagnostics('playing');
+      setIsPaused(false);
+      setAutoplayBlocked(false);
+    };
+    const onPause = () => {
+      logDiagnostics('pause');
+      setIsPaused(true);
+    };
+    const onError = (e) => {
+      console.error('[VIDEO] playback error', video.error || e);
+      setHasError(true);
     };
 
+    video.addEventListener('loadedmetadata', onLoadedMetadata);
+    video.addEventListener('loadeddata', onLoadedData);
+    video.addEventListener('canplay', onCanPlay);
+    video.addEventListener('playing', onPlaying);
+    video.addEventListener('pause', onPause);
     video.addEventListener('error', onError);
-    video.addEventListener('canplaythrough', onCanPlay, { once: true });
-    video.addEventListener('loadeddata', onDataLoaded);
 
-    // Try playing if already ready
-    if (!manuallyPaused.current && video.readyState >= 2) {
-      playVideo();
+    video.load();
+    if (video.readyState >= 2) {
+      if (isInView.current && !manuallyPaused.current) {
+        startPlayback();
+      }
     }
 
     return () => {
+      video.removeEventListener('loadedmetadata', onLoadedMetadata);
+      video.removeEventListener('loadeddata', onLoadedData);
+      video.removeEventListener('canplay', onCanPlay);
+      video.removeEventListener('playing', onPlaying);
+      video.removeEventListener('pause', onPause);
       video.removeEventListener('error', onError);
-      video.removeEventListener('canplaythrough', onCanPlay);
-      video.removeEventListener('loadeddata', onDataLoaded);
-      video.pause();
+
+      try {
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+      } catch {
+        // ignore cleanup error
+      }
     };
-  }, [src, playVideo]);
+  }, [src, routeId, startPlayback, muted]);
 
   const handleIntersect = useCallback(
     (entry) => {
@@ -117,16 +147,15 @@ export default function VideoPlayer({ src, poster = '', muted = false, style = {
 
       if (entry.isIntersecting && entry.intersectionRatio >= 0.15) {
         isInView.current = true;
-        if (!manuallyPaused.current && src) {
-          playVideo();
+        if (!manuallyPaused.current && src && video.paused) {
+          startPlayback();
         }
-      } else if (entry.intersectionRatio < 0.05) {
+      } else if (entry.intersectionRatio < 0.05 && !entry.isIntersecting) {
         isInView.current = false;
         video.pause();
-        manuallyPaused.current = false;
       }
     },
-    [src, playVideo]
+    [src, startPlayback]
   );
 
   const containerRef = useIntersectionObserver(handleIntersect, {
@@ -140,8 +169,7 @@ export default function VideoPlayer({ src, poster = '', muted = false, style = {
 
     if (video.paused) {
       manuallyPaused.current = false;
-      video.play().catch(() => { });
-      setIsPaused(false);
+      startPlayback();
     } else {
       manuallyPaused.current = true;
       video.pause();
@@ -167,23 +195,14 @@ export default function VideoPlayer({ src, poster = '', muted = false, style = {
       }}
     >
       <video
-        key={src}
         ref={videoRef}
-        src={src ? getFullSrc(src) : ''}
         poster={poster ? getFullSrc(poster) : undefined}
-        muted={muted}
         loop
         playsInline
         webkit-playsinline="true"
         x5-playsinline="true"
         preload="auto"
         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-        onPlay={() => setIsPaused(false)}
-        onPause={() => setIsPaused(true)}
-        onError={(e) => {
-          console.error('[VideoPlayer] Direct video element error:', e.currentTarget.error);
-          setHasError(true);
-        }}
       />
 
       {/* No audio notice */}
@@ -235,7 +254,7 @@ export default function VideoPlayer({ src, poster = '', muted = false, style = {
       )}
 
       {/* Play / Pause overlay */}
-      {(showControl || isPaused) && !hasError && (
+      {(showControl || isPaused || autoplayBlocked) && !hasError && (
         <div style={{
           position: 'absolute', top: '50%', left: '50%',
           transform: 'translate(-50%, -50%)',
@@ -244,7 +263,7 @@ export default function VideoPlayer({ src, poster = '', muted = false, style = {
           pointerEvents: 'none', display: 'flex',
           animation: 'fadeInOut 0.5s ease-in-out',
         }}>
-          {isPaused
+          {isPaused || autoplayBlocked
             ? <Play size={40} fill="#fff" color="#fff" />
             : <Pause size={40} fill="#fff" color="#fff" />
           }
