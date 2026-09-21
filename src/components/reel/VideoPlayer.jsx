@@ -2,7 +2,7 @@ import { useRef, useState, useCallback, useEffect } from 'react';
 import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
 import { Pause, Play, VolumeX } from 'lucide-react';
 
-export default function VideoPlayer({ src, muted = false, style = {}, externalRef = null }) {
+export default function VideoPlayer({ src, poster = '', muted = false, style = {}, externalRef = null }) {
   const getFullSrc = (url) => {
     if (!url || typeof url !== 'string') return '';
     const cleanUrl = url.replace(/\\/g, '/');
@@ -16,8 +16,8 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
   const videoRef = externalRef || internalRef;
   // Tracks whether the USER manually paused while in viewport
   const manuallyPaused = useRef(false);
-  // Tracks whether this player is currently visible
-  const isInView = useRef(false);
+  // Tracks whether this player is currently visible (default true for instant playback on mount)
+  const isInView = useRef(true);
 
   const [isPaused, setIsPaused] = useState(false);
   const [showControl, setShowControl] = useState(false);
@@ -170,6 +170,7 @@ export default function VideoPlayer({ src, muted = false, style = {}, externalRe
         key={src}
         ref={videoRef}
         src={src ? getFullSrc(src) : ''}
+        poster={poster ? getFullSrc(poster) : undefined}
         muted={muted}
         loop
         playsInline

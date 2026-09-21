@@ -393,6 +393,7 @@ ${canonicalUrl}`;
                   <VideoPlayer 
                     key={`${product._id}-reel-${i}`} 
                     src={videoUrl} 
+                    poster={posterUrl}
                     muted={isMuted}
                     externalRef={(el) => (videoRefs.current[i] = el)}
                   />

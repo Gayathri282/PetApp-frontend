@@ -179,7 +179,7 @@ ${canonicalUrl}`;
         overflow: 'hidden',
       }}
     >
-      <VideoPlayer src={videoUrl} muted={isMuted} externalRef={videoRef} />
+      <VideoPlayer src={videoUrl} poster={getPosterUrl(product)} muted={isMuted} externalRef={videoRef} />
 
       {/* Bottom gradient overlay */}
       <div
