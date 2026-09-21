@@ -37,11 +37,11 @@ export default function NotificationsPage() {
 
   return (
     <div style={{ padding: '20px 16px 40px', maxWidth: 680, margin: '0 auto', paddingBottom: 100 }}>
-      <h1 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#F5F5EC', fontFamily: 'Cinzel, serif', marginBottom: 24, letterSpacing: '0.04em' }}>Activity</h1>
+      <h1 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#12332F', marginBottom: 24, letterSpacing: '0.04em' }}>Activity</h1>
 
       {notifications.length === 0 ? (
-        <div style={{ textAlign:'center', padding:'60px 20px', opacity:0.6, color: '#A3B8A8' }}>
-          <Heart size={48} color="#D4AF37" style={{ marginBottom:16, opacity:0.4 }} />
+        <div style={{ textAlign:'center', padding:'60px 20px', opacity:0.6, color: '#60736F' }}>
+          <Heart size={48} color="#0D5148" style={{ marginBottom:16, opacity:0.4 }} />
           <p>No activity yet. When people like your reels, you'll see them here!</p>
         </div>
       ) : (

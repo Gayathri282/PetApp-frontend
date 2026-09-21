@@ -352,14 +352,14 @@ ${canonicalUrl}`;
               background: 'none',
               border: 'none',
               cursor: 'pointer',
-              color: '#FFE58F',
+              color: '#A7F3D0',
               padding: 0,
             }}
           >
-            <div style={{ display: 'flex', filter: 'drop-shadow(0 2px 8px rgba(212,175,55,0.6))' }}>
-              <Zap size={28} fill="#D4AF37" strokeWidth={0} />
+            <div style={{ display: 'flex', filter: 'drop-shadow(0 2px 8px rgba(16,185,129,0.6))' }}>
+              <Zap size={28} fill="#10B981" strokeWidth={0} />
             </div>
-            <span style={{ fontSize: '0.7rem', fontWeight: 800, textShadow: '0 2px 4px rgba(0,0,0,0.5)', color: '#FFE58F' }}>
+            <span style={{ fontSize: '0.7rem', fontWeight: 800, textShadow: '0 2px 4px rgba(0,0,0,0.5)', color: '#A7F3D0' }}>
               BUY
             </span>
           </button>
@@ -374,17 +374,17 @@ ${canonicalUrl}`;
               width: 44,
               height: 44,
               borderRadius: '50%',
-              border: '2px solid #D4AF37',
+              border: '2px solid #10B981',
               padding: 2,
               background: 'rgba(0,0,0,0.4)',
-              boxShadow: '0 0 12px rgba(212, 175, 55, 0.3)',
+              boxShadow: '0 0 12px rgba(16, 185, 129, 0.3)',
             }}
           >
             <img
               src={
                 product.vendor?.avatar
                   ? getFullSrc(product.vendor.avatar)
-                  : `https://ui-avatars.com/api/?name=${encodeURIComponent(product.vendor?.name ?? 'V')}&background=D4AF37&color=0f0c08`
+                  : `https://ui-avatars.com/api/?name=${encodeURIComponent(product.vendor?.name ?? 'V')}&background=0D5148&color=ffffff`
               }
               alt={product.vendor?.name ?? 'Vendor'}
               style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
@@ -401,7 +401,7 @@ ${canonicalUrl}`;
             >
               @{product.vendor?.name?.replace(/\s+/g, '').toLowerCase() ?? 'vendor'}
             </h3>
-            <p style={{ fontSize: '0.75rem', color: '#FFE58F', fontWeight: 600, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
+            <p style={{ fontSize: '0.75rem', color: '#A7F3D0', fontWeight: 600, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
               ✨ Verified Vendor
             </p>
           </div>
@@ -436,13 +436,13 @@ ${canonicalUrl}`;
         {product.price > 0 && (
           <span
             style={{
-              background: 'linear-gradient(135deg, #FFE58F 0%, #D4AF37 50%, #AA7C11 100%)',
-              color: '#0f0c08',
+              background: 'linear-gradient(135deg, #0D5148 0%, #177366 100%)',
+              color: '#FFFFFF',
               padding: '5px 14px',
               borderRadius: 12,
               fontSize: '1rem',
               fontWeight: 800,
-              boxShadow: '0 4px 15px rgba(212, 175, 55, 0.4)',
+              boxShadow: '0 4px 15px rgba(13, 81, 72, 0.4)',
               display: 'inline-block',
             }}
           >

@@ -477,14 +477,14 @@ ${canonicalUrl}`;
                     background: 'none',
                     border: 'none',
                     cursor: 'pointer',
-                    color: '#FFE58F',
+                    color: '#A7F3D0',
                     padding: 0
                   }}
                 >
-                  <div style={{ display: 'flex', filter: 'drop-shadow(0 2px 8px rgba(212,175,55,0.6))' }}>
-                    <Zap size={28} fill="#D4AF37" strokeWidth={0} />
+                  <div style={{ display: 'flex', filter: 'drop-shadow(0 2px 8px rgba(16,185,129,0.6))' }}>
+                    <Zap size={28} fill="#10B981" strokeWidth={0} />
                   </div>
-                  <span style={{ fontSize: '0.7rem', fontWeight: 800, textShadow: '0 2px 4px rgba(0,0,0,0.5)', color: '#FFE58F' }}>BUY</span>
+                  <span style={{ fontSize: '0.7rem', fontWeight: 800, textShadow: '0 2px 4px rgba(0,0,0,0.5)', color: '#A7F3D0' }}>BUY</span>
                 </button>
               )}
             </div>
@@ -492,23 +492,23 @@ ${canonicalUrl}`;
             {/* Vendor Info & Product Details (Bottom Left) */}
             <div style={{ position: 'absolute', bottom: 100, left: 16, right: 100, zIndex: 15 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                <div style={{ width: 44, height: 44, borderRadius: '50%', border: '2px solid #D4AF37', padding: 2, background: 'rgba(0,0,0,0.4)', boxShadow: '0 0 12px rgba(212, 175, 55, 0.3)' }}>
+                <div style={{ width: 44, height: 44, borderRadius: '50%', border: '2px solid #10B981', padding: 2, background: 'rgba(0,0,0,0.4)', boxShadow: '0 0 12px rgba(16, 185, 129, 0.3)' }}>
                   <img
-                    src={product.vendor?.avatar ? getFullSrc(product.vendor.avatar) : `https://ui-avatars.com/api/?name=${encodeURIComponent(product.vendor?.name)}&background=D4AF37&color=0f0c08`}
+                    src={product.vendor?.avatar ? getFullSrc(product.vendor.avatar) : `https://ui-avatars.com/api/?name=${encodeURIComponent(product.vendor?.name)}&background=0D5148&color=ffffff`}
                     alt=""
                     style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
                   />
                 </div>
                 <div>
                   <h3 style={{ fontSize: '0.98rem', fontWeight: 800, color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>@{product.vendor?.name?.replace(/\s+/g, '').toLowerCase()}</h3>
-                  <p style={{ fontSize: '0.75rem', color: '#FFE58F', fontWeight: 600, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>✨ Verified Vendor</p>
+                  <p style={{ fontSize: '0.75rem', color: '#A7F3D0', fontWeight: 600, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>✨ Verified Vendor</p>
                 </div>
               </div>
 
               <h1 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#F5F5EC', marginBottom: 6, textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>{product.name}</h1>
               <p style={{ fontSize: '0.85rem', color: 'rgba(245,245,236,0.85)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', marginBottom: 8, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>{product.description}</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                {product.price > 0 && <span style={{ background: 'linear-gradient(135deg, #FFE58F 0%, #D4AF37 50%, #AA7C11 100%)', color: '#0f0c08', padding: '5px 14px', borderRadius: 12, fontSize: '1rem', fontWeight: 800, boxShadow: '0 4px 15px rgba(212, 175, 55, 0.4)' }}>₹{product.price.toLocaleString()}</span>}
+                {product.price > 0 && <span style={{ background: 'linear-gradient(135deg, #0D5148 0%, #177366 100%)', color: '#FFFFFF', padding: '5px 14px', borderRadius: 12, fontSize: '1rem', fontWeight: 800, boxShadow: '0 4px 15px rgba(13, 81, 72, 0.4)' }}>₹{product.price.toLocaleString()}</span>}
               </div>
             </div>
           </div>

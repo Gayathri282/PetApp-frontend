@@ -41,21 +41,21 @@ export default function ComingSoonModal({ isOpen, onClose, feature = 'default' }
           gap: 16,
         }}
       >
-        {/* Gold Icon Badge */}
+        {/* Emerald Icon Badge */}
         <div
           style={{
             width: 72,
             height: 72,
             borderRadius: '50%',
-            background: 'rgba(212, 175, 55, 0.15)',
-            border: '2px solid rgba(212, 175, 55, 0.4)',
+            background: 'rgba(13, 81, 72, 0.15)',
+            border: '2px solid rgba(13, 81, 72, 0.4)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 0 20px rgba(212, 175, 55, 0.25)',
+            boxShadow: '0 0 20px rgba(13, 81, 72, 0.25)',
           }}
         >
-          <IconComponent size={32} color="#FFE58F" />
+          <IconComponent size={32} color="#0D5148" />
         </div>
 
         {/* Feature Title */}
@@ -64,8 +64,8 @@ export default function ComingSoonModal({ isOpen, onClose, feature = 'default' }
             style={{
               fontSize: '1.4rem',
               fontWeight: 800,
-              color: '#F5F5EC',
-              fontFamily: 'Cinzel, serif',
+              color: '#12332F',
+              fontFamily: 'serif',
               marginBottom: 4,
               letterSpacing: '0.03em',
             }}
@@ -77,9 +77,9 @@ export default function ComingSoonModal({ isOpen, onClose, feature = 'default' }
               display: 'inline-block',
               padding: '4px 12px',
               borderRadius: 20,
-              background: 'rgba(212, 175, 55, 0.2)',
-              border: '1px solid rgba(212, 175, 55, 0.4)',
-              color: '#FFE58F',
+              background: 'rgba(13, 81, 72, 0.12)',
+              border: '1px solid rgba(13, 81, 72, 0.3)',
+              color: '#0D5148',
               fontSize: '0.72rem',
               fontWeight: 700,
               letterSpacing: '0.08em',
