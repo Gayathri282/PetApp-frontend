@@ -18,8 +18,53 @@ export default function Navbar() {
   const { user, notificationCount, unreadCount, isVendor, isAdmin } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  if (!user) return null;
   if (location.pathname.startsWith('/login')) return null;
+
+  if (!user) {
+    return (
+      <nav
+        className="main-navbar-container"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 100,
+          height: 64,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 24px',
+          background: '#FFFFFF',
+          borderBottom: '1px solid #D6E3DE',
+          boxShadow: '0 2px 12px rgba(13, 81, 72, 0.04)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => navigate('/feed')}>
+          <KeralaPetsLogo style={{ width: 36, height: 36 }} />
+          <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0D5148', letterSpacing: '-0.02em' }}>KeralaPets</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button
+            onClick={() => navigate('/login')}
+            style={{
+              padding: '8px 20px',
+              backgroundColor: '#0D5148',
+              color: '#FFFFFF',
+              borderRadius: '20px',
+              border: 'none',
+              fontWeight: 600,
+              fontSize: '0.9rem',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(13, 81, 72, 0.2)',
+            }}
+          >
+            Sign In
+          </button>
+        </div>
+      </nav>
+    );
+  }
 
   const desktopMenuItems = [
     { label: 'Buy / Sell', path: '/search' },

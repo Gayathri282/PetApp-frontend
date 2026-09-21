@@ -14,6 +14,7 @@ import ChatListPage from './pages/ChatListPage';
 import ChatRoomPage from './pages/ChatRoomPage';
 import NotificationsPage from './pages/NotificationsPage';
 import ErrorBoundary from './components/ui/ErrorBoundary';
+import PWAInstallPrompt from './components/pwa/PWAInstallPrompt';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -75,14 +76,15 @@ export default function App() {
 
   return (
     <Layout>
+      <PWAInstallPrompt />
       <ErrorBoundary>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/feed" element={<ProtectedRoute><FeedPage /></ProtectedRoute>} />
-          <Route path="/search" element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
-          <Route path="/product/:id" element={<ProtectedRoute><ProductReelPage /></ProtectedRoute>} />
-          <Route path="/reel/:id" element={<ProtectedRoute><ProductReelPage /></ProtectedRoute>} />
-          <Route path="/reels/:id" element={<ProtectedRoute><ProductReelPage /></ProtectedRoute>} />
+          <Route path="/feed" element={<FeedPage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/product/:id" element={<ProductReelPage />} />
+          <Route path="/reel/:id" element={<ProductReelPage />} />
+          <Route path="/reels/:id" element={<ProductReelPage />} />
           <Route path="/reels" element={<Navigate to="/feed" replace />} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/vendor/apply" element={<ProtectedRoute><VendorApplyPage /></ProtectedRoute>} />

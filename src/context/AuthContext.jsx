@@ -21,6 +21,7 @@ export function AuthProvider({ children }) {
       setUser(data.user);
       return data.user;
     } catch {
+      localStorage.removeItem('jwt');
       setUser(null);
       return null;
     } finally {
@@ -69,50 +70,6 @@ export function AuthProvider({ children }) {
     fetchUser();
   }, [fetchUser]);
 
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [canInstall, setCanInstall] = useState(false);
-
-  useEffect(() => {
-    // If already in standalone mode, we cannot install
-    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
-      setCanInstall(false);
-      return;
-    }
-
-    const handleBeforeInstall = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-      setCanInstall(true);
-    };
-    const handleAppInstalled = () => {
-      setDeferredPrompt(null);
-      setCanInstall(false);
-      localStorage.setItem('pwa_installed', 'true');
-      // Reopen in standalone mode after install completes
-      setTimeout(() => window.location.reload(), 500);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
-    window.addEventListener('appinstalled', handleAppInstalled);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
-      window.removeEventListener('appinstalled', handleAppInstalled);
-    };
-  }, []);
-
-  const installApp = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      setDeferredPrompt(null);
-      setCanInstall(false);
-      // Reload so the browser relaunches in standalone (PWA) mode immediately
-      setTimeout(() => window.location.reload(), 800);
-    }
-  };
-
   const logout = async () => {
     try {
       await logoutApi();
@@ -127,8 +84,6 @@ export function AuthProvider({ children }) {
 
   const isVendor = user?.role === 'vendor';
   const isAdmin = user?.role === 'admin';
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-  const wasInstalled = localStorage.getItem('pwa_installed') === 'true';
 
   return (
     <AuthContext.Provider
@@ -136,9 +91,7 @@ export function AuthProvider({ children }) {
         user, loading, isVendor, isAdmin, 
         unreadCount, updateUnread, 
         notificationCount, updateNotifications, 
-        logout, refreshUser,
-        canInstall, installApp,
-        isStandalone, wasInstalled
+        logout, refreshUser
       }}
     >
       {children}

@@ -58,7 +58,7 @@ export default function Layout({ children }) {
   const isChatRoom = location.pathname.startsWith('/chat/');
   const isProductReel = location.pathname.startsWith('/product/');
   const isLogin = location.pathname === '/login';
-  const hideChrome = !user || isLogin || isProductReel || isChatRoom;
+  const hideChrome = isLogin || isProductReel || isChatRoom;
 
   return (
     <>

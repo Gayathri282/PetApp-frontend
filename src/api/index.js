@@ -15,6 +15,18 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Interceptor to handle 401 unauthenticated status cleanly
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('jwt');
+    }
+    return Promise.reject(error);
+  }
+);
+
+
 // ── Auth ──────────────────────────────────────────────
 export const getMe = () => api.get('/auth/me');
 export const logout = () => api.post('/auth/logout');
