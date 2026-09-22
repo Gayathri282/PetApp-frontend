@@ -93,28 +93,43 @@ export default function ProfilePage() {
   return (
     <div style={{ padding: '16px 16px 100px', maxWidth: 680, margin: '0 auto', background: '#F3F8F5', minHeight: '100dvh' }}>
       {/* Profile Header Card */}
-      <div className="card animate-fade-in" style={{ padding: 18, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 14 }}>
-        <div style={{ width: 70, height: 70, borderRadius: '50%', overflow: 'hidden', border: '2px solid #0D5148', flexShrink: 0, background: '#E8F1ED', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {user.avatar ? <img src={getFullSrc(user.avatar)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 26, fontWeight: 800, color: '#0D5148' }}>{user.name?.[0]}</span>}
+      <div className="card animate-fade-in vendor-profile-card">
+        <div className="vendor-profile-identity">
+          <div className="vendor-avatar">
+            {user.avatar ? (
+              <img src={getFullSrc(user.avatar)} alt="" />
+            ) : (
+              <span>{user.name?.[0]}</span>
+            )}
+          </div>
+          <div className="vendor-info">
+            <h1 className="vendor-name">{user.name}</h1>
+            <p className="vendor-badge">
+              {user.role === 'vendor' ? 'Verified Vendor' : user.role === 'admin' ? 'Admin' : 'Pet Lover'}
+            </p>
+          </div>
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#12332F', marginBottom: 2 }}>{user.name}</h1>
-          <p style={{ fontSize: '0.8rem', color: '#0D5148', fontWeight: 700 }}>{user.role === 'vendor' ? 'Verified Vendor' : user.role === 'admin' ? 'Admin' : 'Pet Lover'}</p>
-        </div>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+
+        <div className="vendor-profile-actions">
           {(user.role === 'admin' || isAdmin) && (
-            <button onClick={() => navigate('/admin')} className="btn-primary" style={{ padding: '8px 12px', borderRadius: 12, fontSize: '0.78rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4, background: '#0D5148' }}>
+            <button onClick={() => navigate('/admin')} className="vendor-action-btn vendor-action-admin">
               Admin Panel
             </button>
           )}
           {(isVendor || isAdmin) && (
-            <button onClick={() => setShowAddMenu(true)} className="btn-primary" style={{ padding: '8px 12px', borderRadius: 12, fontSize: '0.78rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
-              <Plus size={15} /> Post
+            <button onClick={() => setShowAddMenu(true)} className="vendor-action-btn vendor-action-post">
+              <Plus size={16} /> Post
             </button>
           )}
-          <button onClick={() => setShowEditProfile(true)} className="btn-ghost" style={{ padding: '8px 12px', borderRadius: 12, fontSize: '0.78rem', fontWeight: 600 }}>Edit</button>
-          <button onClick={() => setShowShare(true)} className="btn-ghost" style={{ padding: 9, borderRadius: 12 }}><Share2 size={16} color="#0D5148" /></button>
-          <button onClick={handleLogout} className="btn-ghost" style={{ padding: 9, borderRadius: 12, border: '1px solid #fee2e2', color: '#ef4444' }}><LogOut size={16} /></button>
+          <button onClick={() => setShowEditProfile(true)} className="vendor-action-btn vendor-action-ghost">
+            Edit
+          </button>
+          <button onClick={() => setShowShare(true)} className="vendor-action-icon vendor-action-ghost" title="Share Profile">
+            <Share2 size={18} color="#0D5148" />
+          </button>
+          <button onClick={handleLogout} className="vendor-action-icon vendor-action-danger" title="Logout">
+            <LogOut size={18} color="#EF4444" />
+          </button>
         </div>
       </div>
 
@@ -166,7 +181,7 @@ export default function ProfilePage() {
       {(isVendor || isAdmin) && (
         <>
           {/* Segmented Tabs */}
-          <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: '#FFFFFF', border: '1px solid #D6E3DE', borderRadius: 16, padding: 4, overflowX: 'auto' }}>
+          <div className="vendor-tabs-bar">
             {[
               { key: 'reels', icon: Film, label: 'Reels' },
               { key: 'products', icon: Package, label: 'Products' },
@@ -176,20 +191,8 @@ export default function ProfilePage() {
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
+                className="vendor-tab-item"
                 style={{
-                  flex: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 6,
-                  padding: '10px 8px',
-                  borderRadius: 12,
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '0.8rem',
-                  fontWeight: 700,
-                  whiteSpace: 'nowrap',
-                  transition: 'all 0.2s ease',
                   background: tab === t.key ? '#0D5148' : 'transparent',
                   color: tab === t.key ? '#FFFFFF' : '#60736F',
                 }}

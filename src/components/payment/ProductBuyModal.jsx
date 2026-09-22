@@ -6,6 +6,7 @@ import Spinner from '../ui/Spinner';
 import { createOrder, submitOrderPayment } from '../../api';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
+import { getVendorUpiId, getVendorUpiName } from '../../utils/vendorPayment';
 
 export default function ProductBuyModal({ product, isOpen, onClose }) {
   const navigate = useNavigate();
@@ -35,13 +36,22 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
   if (!isOpen || !product) return null;
 
   const vendor = product.vendor || {};
-  const vendorDetails = vendor.vendorDetails || {};
-  const upiDetails = vendorDetails.upiDetails || {};
+  const canonicalUpiId = getVendorUpiId(vendor);
+  const canonicalUpiName = getVendorUpiName(vendor);
 
-  const effectiveUpiId = vendorUpi.upiId || upiDetails.upiId || '';
-  const effectiveUpiName = vendorUpi.upiName || upiDetails.upiName || vendor.name || 'Vendor';
+  const effectiveUpiId = vendorUpi.upiId || canonicalUpiId;
+  const effectiveUpiName = vendorUpi.upiName || canonicalUpiName;
 
   const hasVendorUpi = Boolean(effectiveUpiId && effectiveUpiId.trim().length > 0);
+
+  console.log(`[UPI DEBUG - PRODUCT PAGE]
+----------------------
+Product ID: ${product._id}
+Vendor ID: ${vendor._id || vendor}
+Vendor Name: ${vendor.name || 'Unknown'}
+Canonical UPI ID: ${canonicalUpiId || 'MISSING IN POPULATED VENDOR'}
+Effective UPI ID: ${effectiveUpiId || 'NONE'}
+----------------------`);
 
   const productPrice = Math.max(0, Number(product.price) || 0);
 
