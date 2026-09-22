@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, CheckCircle, Copy, AlertCircle, ExternalLink, ShieldCheck, MessageSquare } from 'lucide-react';
+import { ArrowRight, CheckCircle, Copy, AlertCircle, ExternalLink, ShieldCheck, MessageSquare, CreditCard } from 'lucide-react';
 import Modal from '../ui/Modal';
 import Spinner from '../ui/Spinner';
-import { createOrder, submitOrderPayment } from '../../api';
+import { createOrder, submitOrderPayment, initiateRazorpayOrder, verifyRazorpayPayment } from '../../api';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { getVendorUpiId, getVendorUpiName } from '../../utils/vendorPayment';
+import { loadRazorpayScript } from '../../utils/loadRazorpay';
 
 export default function ProductBuyModal({ product, isOpen, onClose }) {
   const navigate = useNavigate();
@@ -44,15 +45,6 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
 
   const hasVendorUpi = Boolean(effectiveUpiId && effectiveUpiId.trim().length > 0);
 
-  console.log(`[UPI DEBUG - PRODUCT PAGE]
-----------------------
-Product ID: ${product._id}
-Vendor ID: ${vendor._id || vendor}
-Vendor Name: ${vendor.name || 'Unknown'}
-Canonical UPI ID: ${canonicalUpiId || 'MISSING IN POPULATED VENDOR'}
-Effective UPI ID: ${effectiveUpiId || 'NONE'}
-----------------------`);
-
   const productPrice = Math.max(0, Number(product.price) || 0);
 
   const shippingGroups = Array.isArray(product.shippingGroups) && product.shippingGroups.length > 0 ? product.shippingGroups : [];
@@ -75,7 +67,7 @@ Effective UPI ID: ${effectiveUpiId || 'NONE'}
     return `upi://pay?pa=${encodeURIComponent(effectiveUpiId)}&pn=${encodeURIComponent(effectiveUpiName)}&am=${totalAmount}&cu=INR&tn=${encodeURIComponent(order ? `Order ${order._id}` : `Pet ${product.name}`)}`;
   })();
 
-  // Handle Order Initiation (Step 1 -> Step 2)
+  // Handle Order Initiation (Step 1 -> 1-Touch Razorpay / Fallback Step 2)
   const handleInitiateOrder = async () => {
     if (loading) return; // Prevent double request
 
@@ -103,43 +95,77 @@ Effective UPI ID: ${effectiveUpiId || 'NONE'}
       selectedShippingName: currentShippingName,
     };
 
-    console.log(`[ORDER CREATE REQUEST]
-----------------------
-productId: ${product._id}
-vendorId: ${vendor._id || vendor}
-buyerId: ${user._id}
-productPrice: ${productPrice}
-shippingChargeKerala: ${currentShippingCharge}
-totalAmount: ${totalAmount}
-paymentMethod: UPI
-vendorUpiId: ${effectiveUpiId}
-request payload:`, payload);
-
     try {
+      // 1. Create order on backend
       const res = await createOrder(payload);
       const createdOrder = res.data.order;
-      const returnedVendorUpi = res.data.vendorUpi || { upiId: upiDetails.upiId || '', upiName: upiDetails.upiName || vendor.name };
+      const returnedVendorUpi = res.data.vendorUpi || { upiId: canonicalUpiId, upiName: canonicalUpiName };
 
       setOrder(createdOrder);
       setVendorUpi(returnedVendorUpi);
 
-      const finalUpiId = returnedVendorUpi.upiId || effectiveUpiId;
-      const finalUpiName = returnedVendorUpi.upiName || effectiveUpiName;
-      const generatedLink = `upi://pay?pa=${encodeURIComponent(finalUpiId)}&pn=${encodeURIComponent(finalUpiName)}&am=${totalAmount}&cu=INR&tn=${encodeURIComponent(`Order ${createdOrder._id}`)}`;
+      // 2. Load Razorpay SDK and launch 1-Touch Checkout Modal
+      const isScriptLoaded = await loadRazorpayScript();
 
-      console.log(`[ORDER CREATE SUCCESS]
-----------------------
-Order ID: ${createdOrder._id}
-Product: ${product.name} (${product._id})
-Vendor: ${vendor.name} (${vendor._id || vendor})
-Product Price: ₹${productPrice}
-Kerala Shipping: ₹${currentShippingCharge}
-Total: ₹${totalAmount}
-Payment Method: UPI
-Payment Status: ${createdOrder.paymentStatus}
-UPI Intent: ${generatedLink}
-----------------------`);
+      if (isScriptLoaded) {
+        try {
+          const rzpInit = await initiateRazorpayOrder(createdOrder._id);
+          const { razorpayOrder, keyId } = rzpInit.data;
 
+          if (window.Razorpay && keyId) {
+            const options = {
+              key: keyId,
+              amount: razorpayOrder.amount,
+              currency: razorpayOrder.currency || 'INR',
+              name: 'Kerala Pets',
+              description: `Order #${createdOrder._id.slice(-8)} - ${product.name}`,
+              order_id: razorpayOrder.id?.startsWith('rzp_order_sim_') ? undefined : razorpayOrder.id,
+              prefill: {
+                name: user.name || '',
+                email: user.email || '',
+                contact: user.contactNumber || '',
+              },
+              theme: {
+                color: '#0D5148',
+              },
+              handler: async function (response) {
+                setLoading(true);
+                try {
+                  const verifyRes = await verifyRazorpayPayment(createdOrder._id, {
+                    razorpay_order_id: response.razorpay_order_id || razorpayOrder.id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_signature: response.razorpay_signature,
+                  });
+                  setOrder(verifyRes.data.order);
+                  toast.success('🎉 Payment verified & completed!');
+                  setStep(3);
+                } catch (err) {
+                  console.error('[RAZORPAY VERIFY FAILED]:', err);
+                  toast.error(err.response?.data?.message || 'Payment verification failed');
+                  setStep(2);
+                } finally {
+                  setLoading(false);
+                }
+              },
+              modal: {
+                ondismiss: function () {
+                  toast.info('Razorpay popup closed. You can complete payment via UPI app or manual UTR.');
+                  setStep(2);
+                },
+              },
+            };
+
+            const rzp = new window.Razorpay(options);
+            rzp.open();
+            setLoading(false);
+            return;
+          }
+        } catch (rzpErr) {
+          console.warn('[RAZORPAY POPUP INITIATE NOTICE]: Falling back to UPI intent / manual UTR mode', rzpErr);
+        }
+      }
+
+      // Fallback to Step 2 if Razorpay popup is not opened
       setStep(2);
     } catch (err) {
       const status = err.response?.status;
@@ -149,8 +175,7 @@ UPI Intent: ${generatedLink}
       console.error(`[ORDER CREATE ERROR]
 status: ${status || 'N/A'}
 response:`, responseData, `
-message: ${errorMessage}
-request payload:`, payload);
+message: ${errorMessage}`);
 
       toast.error(errorMessage);
     } finally {

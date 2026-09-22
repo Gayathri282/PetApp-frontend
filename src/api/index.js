@@ -69,6 +69,8 @@ export const updateVendorShippingSettings = (data) => api.put('/api/vendor/shipp
 export const createOrder = (data) => api.post('/api/orders', data);
 export const submitOrderPayment = (id, data) => api.put(`/api/orders/${id}/submit-payment`, data);
 export const verifyOrderPayment = (id, data) => api.put(`/api/orders/${id}/verify-payment`, data);
+export const initiateRazorpayOrder = (id) => api.post(`/api/orders/${id}/razorpay-initiate`);
+export const verifyRazorpayPayment = (id, data) => api.post(`/api/orders/${id}/razorpay-verify`, data);
 export const getMyOrders = () => api.get('/api/orders/my-orders');
 export const getVendorOrders = () => api.get('/api/orders/vendor-orders');
 export const updateVendorOrderStatus = (id, status, vendorNotes = '') =>
