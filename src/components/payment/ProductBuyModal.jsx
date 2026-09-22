@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, CheckCircle, Copy, AlertCircle, ExternalLink, ShieldCheck } from 'lucide-react';
+import { ArrowRight, CheckCircle, Copy, AlertCircle, ExternalLink, ShieldCheck, MessageSquare } from 'lucide-react';
 import Modal from '../ui/Modal';
 import Spinner from '../ui/Spinner';
 import { createOrder, submitOrderPayment } from '../../api';
@@ -38,16 +38,21 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
   const vendorDetails = vendor.vendorDetails || {};
   const upiDetails = vendorDetails.upiDetails || {};
 
+  const effectiveUpiId = vendorUpi.upiId || upiDetails.upiId || '';
+  const effectiveUpiName = vendorUpi.upiName || upiDetails.upiName || vendor.name || 'Vendor';
+
+  const hasVendorUpi = Boolean(effectiveUpiId && effectiveUpiId.trim().length > 0);
+
   const productPrice = Math.max(0, Number(product.price) || 0);
 
   const shippingGroups = Array.isArray(product.shippingGroups) && product.shippingGroups.length > 0 ? product.shippingGroups : [];
 
   const rawShipping = product.shippingChargeKerala;
-  const isShippingConfigured = (rawShipping !== undefined && rawShipping !== null && !isNaN(Number(rawShipping))) || shippingGroups.length > 0;
+  const isShippingConfigured = (rawShipping !== undefined && rawShipping !== null && rawShipping !== '' && !isNaN(Number(rawShipping))) || shippingGroups.length > 0;
 
   const currentShippingCharge = shippingGroups.length > 0
     ? (Number(shippingGroups[selectedGroupIndex]?.charge) || 0)
-    : (rawShipping !== undefined && rawShipping !== null && !isNaN(Number(rawShipping)) ? Math.max(0, Number(rawShipping)) : 0);
+    : (rawShipping !== undefined && rawShipping !== null && rawShipping !== '' && !isNaN(Number(rawShipping)) ? Math.max(0, Number(rawShipping)) : 0);
 
   const currentShippingName = shippingGroups.length > 0
     ? shippingGroups[selectedGroupIndex]?.name
@@ -55,26 +60,89 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
 
   const totalAmount = productPrice + currentShippingCharge;
 
+  const upiDeepLink = (() => {
+    if (!effectiveUpiId) return '';
+    return `upi://pay?pa=${encodeURIComponent(effectiveUpiId)}&pn=${encodeURIComponent(effectiveUpiName)}&am=${totalAmount}&cu=INR&tn=${encodeURIComponent(order ? `Order ${order._id}` : `Pet ${product.name}`)}`;
+  })();
+
   // Handle Order Initiation (Step 1 -> Step 2)
   const handleInitiateOrder = async () => {
+    if (loading) return; // Prevent double request
+
     if (!user) {
       toast.info('Please log in to purchase');
       navigate('/login');
       return;
     }
 
+    if (!hasVendorUpi) {
+      toast.error('The seller has not configured a UPI ID yet. Please contact the seller.');
+      return;
+    }
+
+    if (!isShippingConfigured) {
+      toast.error('Shipping charge is not configured for this product. Please contact the seller.');
+      return;
+    }
+
     setLoading(true);
+
+    const payload = {
+      productId: product._id,
+      selectedShippingCharge: currentShippingCharge,
+      selectedShippingName: currentShippingName,
+    };
+
+    console.log(`[ORDER CREATE REQUEST]
+----------------------
+productId: ${product._id}
+vendorId: ${vendor._id || vendor}
+buyerId: ${user._id}
+productPrice: ${productPrice}
+shippingChargeKerala: ${currentShippingCharge}
+totalAmount: ${totalAmount}
+paymentMethod: UPI
+vendorUpiId: ${effectiveUpiId}
+request payload:`, payload);
+
     try {
-      const res = await createOrder({
-        productId: product._id,
-        selectedShippingCharge: currentShippingCharge,
-        selectedShippingName: currentShippingName,
-      });
-      setOrder(res.data.order);
-      setVendorUpi(res.data.vendorUpi || { upiId: upiDetails.upiId || '', upiName: upiDetails.upiName || vendor.name });
+      const res = await createOrder(payload);
+      const createdOrder = res.data.order;
+      const returnedVendorUpi = res.data.vendorUpi || { upiId: upiDetails.upiId || '', upiName: upiDetails.upiName || vendor.name };
+
+      setOrder(createdOrder);
+      setVendorUpi(returnedVendorUpi);
+
+      const finalUpiId = returnedVendorUpi.upiId || effectiveUpiId;
+      const finalUpiName = returnedVendorUpi.upiName || effectiveUpiName;
+      const generatedLink = `upi://pay?pa=${encodeURIComponent(finalUpiId)}&pn=${encodeURIComponent(finalUpiName)}&am=${totalAmount}&cu=INR&tn=${encodeURIComponent(`Order ${createdOrder._id}`)}`;
+
+      console.log(`[ORDER CREATE SUCCESS]
+----------------------
+Order ID: ${createdOrder._id}
+Product: ${product.name} (${product._id})
+Vendor: ${vendor.name} (${vendor._id || vendor})
+Product Price: ₹${productPrice}
+Kerala Shipping: ₹${currentShippingCharge}
+Total: ₹${totalAmount}
+Payment Method: UPI
+Payment Status: ${createdOrder.paymentStatus}
+UPI Intent: ${generatedLink}
+----------------------`);
+
       setStep(2);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to initiate order');
+      const status = err.response?.status;
+      const responseData = err.response?.data;
+      const errorMessage = responseData?.message || responseData?.error || err.message || 'Failed to initiate order';
+
+      console.error(`[ORDER CREATE ERROR]
+status: ${status || 'N/A'}
+response:`, responseData, `
+message: ${errorMessage}
+request payload:`, payload);
+
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -98,6 +166,11 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
       toast.success('Payment submitted for verification!');
       setStep(3);
     } catch (err) {
+      console.error(`[PAYMENT ERROR] Submit Tx ID Failed
+code: ${err.code || err.response?.status || 'UNKNOWN'}
+message: ${err.message || 'Failed to submit transaction ID'}
+backendResponse:`, err.response?.data);
+
       toast.error(err.response?.data?.message || 'Failed to submit transaction ID');
     } finally {
       setSubmittingTx(false);
@@ -105,20 +178,12 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
   };
 
   const copyUpiId = () => {
-    const idToCopy = vendorUpi.upiId || upiDetails.upiId;
-    if (!idToCopy) return;
-    navigator.clipboard.writeText(idToCopy);
+    if (!effectiveUpiId) return;
+    navigator.clipboard.writeText(effectiveUpiId);
     setCopied(true);
     toast.success('UPI ID copied to clipboard!');
     setTimeout(() => setCopied(false), 2000);
   };
-
-  const upiDeepLink = (() => {
-    const upiId = vendorUpi.upiId || upiDetails.upiId || '';
-    const upiName = vendorUpi.upiName || vendor.name || 'Vendor';
-    if (!upiId) return '';
-    return `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName)}&am=${totalAmount}&cu=INR&tn=${encodeURIComponent(order ? `Order ${order._id}` : `Pet ${product.name}`)}`;
-  })();
 
   const handleOpenChatWithVendor = () => {
     onClose();
@@ -130,8 +195,16 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Buy Product">
-      <div style={{ color: '#111827', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-        
+      <div
+        style={{
+          color: '#111827',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+          maxHeight: '85vh',
+          overflowY: 'auto',
+          paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
+          WebkitOverflowScrolling: 'touch',
+        }}
+      >
         {/* STEP 1: ORDER SUMMARY & KERALA SHIPPING */}
         {step === 1 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -151,59 +224,85 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
               </div>
             </div>
 
+            {/* VENDOR MISSING UPI WARNING */}
+            {!hasVendorUpi && (
+              <div style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', padding: 14, borderRadius: 14, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <AlertCircle size={20} color="#DC2626" style={{ flexShrink: 0, marginTop: 2 }} />
+                <div>
+                  <h4 style={{ margin: '0 0 4px 0', fontSize: '0.9rem', fontWeight: 700, color: '#991B1B' }}>Payment Unavailable</h4>
+                  <p style={{ margin: 0, fontSize: '0.825rem', color: '#B91C1C', lineHeight: 1.4 }}>
+                    The seller has not configured a UPI ID yet. Please contact the seller to make payment arrangements.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* UNCONFIGURED SHIPPING WARNING */}
+            {hasVendorUpi && !isShippingConfigured && (
+              <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', padding: 14, borderRadius: 14, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <AlertCircle size={20} color="#D97706" style={{ flexShrink: 0, marginTop: 2 }} />
+                <div>
+                  <h4 style={{ margin: '0 0 4px 0', fontSize: '0.9rem', fontWeight: 700, color: '#92400E' }}>Payment Unavailable</h4>
+                  <p style={{ margin: 0, fontSize: '0.825rem', color: '#B45309', lineHeight: 1.4 }}>
+                    Shipping charge has not been set by the seller. The seller must edit this listing before purchase.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Shipping Selection / Policy Notice */}
-            {shippingGroups.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 14, padding: 14 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <ShieldCheck size={18} color="#16A34A" />
-                  <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#166534' }}>Select Delivery Zone / Group:</span>
+            {hasVendorUpi && isShippingConfigured && (
+              shippingGroups.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 14, padding: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <ShieldCheck size={18} color="#16A34A" />
+                    <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#166534' }}>Select Delivery Zone / Group:</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {shippingGroups.map((group, idx) => (
+                      <label
+                        key={idx}
+                        onClick={() => setSelectedGroupIndex(idx)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '10px 14px',
+                          borderRadius: 12,
+                          border: selectedGroupIndex === idx ? '2px solid #0D5148' : '1px solid #D1D5DB',
+                          background: selectedGroupIndex === idx ? '#FFFFFF' : 'rgba(255,255,255,0.7)',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <input
+                            type="radio"
+                            name="shippingGroup"
+                            checked={selectedGroupIndex === idx}
+                            onChange={() => setSelectedGroupIndex(idx)}
+                          />
+                          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111827' }}>{group.name}</span>
+                        </div>
+                        <span style={{ fontSize: '0.875rem', fontWeight: 700, color: Number(group.charge) === 0 ? '#16A34A' : '#0D5148' }}>
+                          {Number(group.charge) === 0 ? 'FREE' : `₹${Number(group.charge).toLocaleString('en-IN')}`}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {shippingGroups.map((group, idx) => (
-                    <label
-                      key={idx}
-                      onClick={() => setSelectedGroupIndex(idx)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '10px 14px',
-                        borderRadius: 12,
-                        border: selectedGroupIndex === idx ? '2px solid #0D5148' : '1px solid #D1D5DB',
-                        background: selectedGroupIndex === idx ? '#FFFFFF' : 'rgba(255,255,255,0.7)',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <input
-                          type="radio"
-                          name="shippingGroup"
-                          checked={selectedGroupIndex === idx}
-                          onChange={() => setSelectedGroupIndex(idx)}
-                        />
-                        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111827' }}>{group.name}</span>
-                      </div>
-                      <span style={{ fontSize: '0.875rem', fontWeight: 700, color: Number(group.charge) === 0 ? '#16A34A' : '#0D5148' }}>
-                        {Number(group.charge) === 0 ? 'FREE' : `₹${Number(group.charge).toLocaleString('en-IN')}`}
-                      </span>
-                    </label>
-                  ))}
+              ) : (
+                <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 14, padding: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <ShieldCheck size={18} color="#16A34A" />
+                    <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#166534' }}>
+                      Shipping across Kerala: {currentShippingCharge === 0 ? 'FREE' : `₹${currentShippingCharge.toLocaleString('en-IN')}`}
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: '0.825rem', color: '#15803D', lineHeight: 1.4 }}>
+                    {currentShippingCharge === 0 ? 'The seller offers free shipping across Kerala.' : `Flat shipping charge of ₹${currentShippingCharge.toLocaleString('en-IN')} applies across Kerala.`}
+                  </p>
                 </div>
-              </div>
-            ) : (
-              <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 14, padding: 14 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <ShieldCheck size={18} color="#16A34A" />
-                  <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#166534' }}>
-                    Shipping: {currentShippingCharge === 0 ? 'FREE' : `₹${currentShippingCharge.toLocaleString('en-IN')}`}
-                  </span>
-                </div>
-                <p style={{ margin: 0, fontSize: '0.825rem', color: '#15803D', lineHeight: 1.4 }}>
-                  {isShippingConfigured
-                    ? (currentShippingCharge === 0 ? 'The seller offers free shipping across Kerala.' : `Flat shipping charge of ₹${currentShippingCharge.toLocaleString('en-IN')} applies across Kerala.`)
-                    : 'Vendor did not specify a shipping charge. As per policy, shipping is FREE (₹0) and no extra fees apply.'}
-                </p>
-              </div>
+              )
             )}
 
             {/* Pricing Breakdown Table */}
@@ -215,7 +314,7 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#4B5563' }}>
                 <span>Shipping ({currentShippingName})</span>
                 <span style={{ fontWeight: 600, color: currentShippingCharge === 0 ? '#16A34A' : '#111827' }}>
-                  {currentShippingCharge === 0 ? 'FREE' : `₹${currentShippingCharge.toLocaleString('en-IN')}`}
+                  {!isShippingConfigured ? 'Not configured' : (currentShippingCharge === 0 ? 'FREE' : `₹${currentShippingCharge.toLocaleString('en-IN')}`)}
                 </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.05rem', fontWeight: 800, color: '#111827', paddingTop: 6, borderTop: '1px dashed #E5E7EB' }}>
@@ -225,28 +324,64 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
             </div>
 
             {/* Actions */}
-            <button
-              onClick={handleInitiateOrder}
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: '14px',
-                backgroundColor: '#0D5148',
-                color: '#FFFFFF',
-                border: 'none',
-                borderRadius: 14,
-                fontSize: '1rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                boxShadow: '0 4px 14px rgba(13, 81, 72, 0.25)',
-              }}
-            >
-              {loading ? <Spinner size={20} /> : <>Proceed to Payment <ArrowRight size={18} /></>}
-            </button>
+            {!hasVendorUpi || !isShippingConfigured ? (
+              <button
+                onClick={handleOpenChatWithVendor}
+                style={{
+                  width: '100%',
+                  minHeight: '52px',
+                  padding: '14px 20px',
+                  backgroundColor: '#374151',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: 14,
+                  fontSize: '1rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                }}
+              >
+                <MessageSquare size={18} color="#FFFFFF" />
+                Contact Seller
+              </button>
+            ) : (
+              <button
+                onClick={handleInitiateOrder}
+                disabled={loading}
+                style={{
+                  width: '100%',
+                  minHeight: '52px',
+                  padding: '14px 20px',
+                  backgroundColor: '#0D5148',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: 14,
+                  fontSize: '1rem',
+                  fontWeight: 800,
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 10,
+                  boxShadow: '0 4px 14px rgba(13, 81, 72, 0.3)',
+                  WebkitAppearance: 'none',
+                  visibility: 'visible',
+                  opacity: loading ? 0.7 : 1,
+                  zIndex: 10,
+                }}
+              >
+                {loading ? (
+                  <Spinner size={22} color="#FFFFFF" />
+                ) : (
+                  <span style={{ color: '#FFFFFF', fontSize: '1rem', fontWeight: 800, letterSpacing: '0.01em' }}>
+                    Pay ₹{totalAmount.toLocaleString('en-IN')} via UPI
+                  </span>
+                )}
+              </button>
+            )}
           </div>
         )}
 
@@ -263,15 +398,15 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
             <div style={{ background: '#F9FAFB', border: '1px solid #E5E7EB', padding: 16, borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: '0.85rem', color: '#6B7280' }}>Vendor Name</span>
-                <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827' }}>{vendorUpi.upiName || vendor.name}</span>
+                <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827' }}>{effectiveUpiName}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: '0.85rem', color: '#6B7280' }}>UPI ID</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <code style={{ background: '#E5E7EB', padding: '4px 8px', borderRadius: 6, fontSize: '0.875rem', fontWeight: 700, color: '#111827' }}>
-                    {vendorUpi.upiId || 'Not provided'}
+                    {effectiveUpiId || 'Not provided'}
                   </code>
-                  {vendorUpi.upiId && (
+                  {effectiveUpiId && (
                     <button
                       onClick={copyUpiId}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#0D5148', display: 'flex', alignItems: 'center', gap: 4 }}
@@ -286,37 +421,70 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
             </div>
 
             {/* Open UPI App Button */}
-            {upiDeepLink && (
-              <a
-                href={upiDeepLink}
-                target="_blank"
-                rel="noopener noreferrer"
+            {upiDeepLink ? (
+              <button
+                type="button"
+                onClick={() => {
+                  console.log(`[PAYMENT DEBUG] Triggering UPI Intent link: ${upiDeepLink}`);
+                  window.location.href = upiDeepLink;
+                }}
                 style={{
                   width: '100%',
-                  padding: '14px',
+                  minHeight: '52px',
+                  padding: '14px 20px',
                   backgroundColor: '#0D5148',
                   color: '#FFFFFF',
                   borderRadius: 14,
-                  fontSize: '0.95rem',
-                  fontWeight: 700,
-                  textDecoration: 'none',
+                  fontSize: '1rem',
+                  fontWeight: 800,
+                  border: 'none',
+                  cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: 8,
-                  boxShadow: '0 4px 14px rgba(13, 81, 72, 0.2)',
+                  gap: 10,
+                  boxShadow: '0 4px 14px rgba(13, 81, 72, 0.25)',
                 }}
               >
-                <ExternalLink size={18} />
-                Pay via UPI App
-              </a>
-            )}
+                <ExternalLink size={20} color="#FFFFFF" />
+                <span style={{ color: '#FFFFFF', fontSize: '1rem', fontWeight: 800 }}>
+                  Pay ₹{totalAmount.toLocaleString('en-IN')} via UPI App
+                </span>
+              </button>
+            ) : null}
+
+            {/* Useful Fallback Box */}
+            <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', padding: 14, borderRadius: 14 }}>
+              <p style={{ margin: '0 0 8px 0', fontSize: '0.825rem', fontWeight: 600, color: '#64748B' }}>
+                Unable to open a UPI app? Pay manually using details below:
+              </p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <span style={{ fontSize: '0.85rem', color: '#475569' }}>Vendor UPI ID:</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <code style={{ background: '#E2E8F0', padding: '4px 8px', borderRadius: 6, fontSize: '0.875rem', fontWeight: 700, color: '#0F172A' }}>
+                    {effectiveUpiId}
+                  </code>
+                  <button
+                    type="button"
+                    onClick={copyUpiId}
+                    style={{ background: '#0D5148', color: '#FFFFFF', border: 'none', borderRadius: 6, padding: '4px 8px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                  >
+                    <Copy size={14} />
+                    {copied ? 'Copied' : 'Copy'}
+                  </button>
+                </div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.85rem', color: '#475569' }}>Amount:</span>
+                <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0D5148' }}>₹{totalAmount.toLocaleString('en-IN')}</span>
+              </div>
+            </div>
 
             {/* Mandatory UTR / Transaction ID Form */}
             <form onSubmit={handleSubmitTx} style={{ display: 'flex', flexDirection: 'column', gap: 14, borderTop: '1px solid #E5E7EB', paddingTop: 16 }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, color: '#374151', marginBottom: 6 }}>
-                  Enter UPI Transaction / UTR ID <span style={{ color: '#EF4444' }}>*</span>
+                  Payment completed? Enter UPI Transaction / UTR ID <span style={{ color: '#EF4444' }}>*</span>
                 </label>
                 <input
                   type="text"
@@ -349,6 +517,7 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
                 disabled={submittingTx}
                 style={{
                   width: '100%',
+                  minHeight: '50px',
                   padding: '14px',
                   backgroundColor: '#111827',
                   color: '#FFFFFF',
@@ -356,14 +525,14 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
                   borderRadius: 14,
                   fontSize: '0.95rem',
                   fontWeight: 700,
-                  cursor: 'pointer',
+                  cursor: submittingTx ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 8,
                 }}
               >
-                {submittingTx ? <Spinner size={18} /> : 'Submit Payment for Verification'}
+                {submittingTx ? <Spinner size={18} color="#FFFFFF" /> : 'Submit for Verification'}
               </button>
             </form>
           </div>
@@ -379,7 +548,7 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
             <p style={{ margin: 0, fontSize: '0.9rem', color: '#4B5563', lineHeight: 1.5 }}>
               Your purchase request and transaction ID (<code>{order?.transactionId}</code>) have been sent to the vendor in your chat.
             </p>
-            <div style={{ background: '#F3F4F6', padding: 14, borderRadius: 14, width: '100%', textStyle: 'left', fontSize: '0.85rem' }}>
+            <div style={{ background: '#F3F4F6', padding: 14, borderRadius: 14, width: '100%', textAlign: 'left', fontSize: '0.85rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                 <span style={{ color: '#6B7280' }}>Payment Status:</span>
                 <span style={{ fontWeight: 700, color: '#D97706' }}>Pending Verification</span>
@@ -393,6 +562,7 @@ export default function ProductBuyModal({ product, isOpen, onClose }) {
               onClick={handleOpenChatWithVendor}
               style={{
                 width: '100%',
+                minHeight: '50px',
                 padding: '14px',
                 backgroundColor: '#0D5148',
                 color: '#FFFFFF',

@@ -318,7 +318,7 @@ export default function ProfilePage() {
 /* ── Edit Product Modal ───────────────────────── */
 function EditProductModal({ open, product, onClose, onSuccess }) {
   const toast = useToast();
-  const [form, setForm] = useState({ name: '', description: '', category: '', price: '', shippingChargeKerala: '0', isOnSale: true, deliveryChargesAdditional: false });
+  const [form, setForm] = useState({ name: '', description: '', category: '', price: '', shippingChargeKerala: '', isOnSale: true });
   const [shippingGroups, setShippingGroups] = useState([]);
   const [tags, setTags] = useState([]);
   const [newVideos, setNewVideos] = useState([]);
@@ -333,9 +333,8 @@ function EditProductModal({ open, product, onClose, onSuccess }) {
         description: product.description || '',
         category: product.category || '',
         price: product.price || '',
-        shippingChargeKerala: product.shippingChargeKerala !== undefined && product.shippingChargeKerala !== null ? String(product.shippingChargeKerala) : '0',
+        shippingChargeKerala: product.shippingChargeKerala !== undefined && product.shippingChargeKerala !== null ? String(product.shippingChargeKerala) : '',
         isOnSale: product.isOnSale ?? true,
-        deliveryChargesAdditional: product.deliveryChargesAdditional ?? false
       });
       setShippingGroups(Array.isArray(product.shippingGroups) ? product.shippingGroups.map(g => ({ name: g.name || '', charge: String(g.charge || 0) })) : []);
       setTags(product.tags || []);
@@ -346,6 +345,10 @@ function EditProductModal({ open, product, onClose, onSuccess }) {
 
   const handleSubmit = async () => {
     if (!form.name) { toast.error('Name is required'); return; }
+    if (form.shippingChargeKerala === '' || form.shippingChargeKerala === null || isNaN(Number(form.shippingChargeKerala)) || Number(form.shippingChargeKerala) < 0) {
+      toast.error('Shipping Across Kerala (₹) is required. Enter 0 for free shipping.');
+      return;
+    }
     setLoading(true);
     try {
       const fd = new FormData();
@@ -378,31 +381,28 @@ function EditProductModal({ open, product, onClose, onSuccess }) {
   return (
     <Modal isOpen={open} onClose={onClose} title="Edit Product">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '65vh', overflowY: 'auto' }}>
-        {/* Vendor Shipping Rule Notice */}
-        <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', padding: 12, borderRadius: 12 }}>
-          <p style={{ margin: 0, fontSize: '0.8rem', color: '#1E40AF', lineHeight: 1.4, fontWeight: 500 }}>
-            📢 <strong>Shipping Notice:</strong> If no shipping charge is specified, shipping will be <strong>FREE (₹0)</strong> for the buyer. No further shipping charges can be requested from the buyer after purchase.
-          </p>
-        </div>
-
         <input className="input-field" placeholder="Product name *" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
         <textarea className="input-field" placeholder="Description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
         <input className="input-field" placeholder="Category" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} />
         <input className="input-field" type="number" placeholder="Price (₹)" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} />
         
         <div>
-          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#10B981', marginBottom: 4, display: 'block' }}>
-            Flat Shipping Charge across Kerala (₹)
+          <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0D5148', marginBottom: 4, display: 'block' }}>
+            Shipping Across Kerala (₹) <span style={{ color: '#EF4444' }}>*</span>
           </label>
           <input
             className="input-field"
             type="number"
             min="0"
-            placeholder="Flat Shipping Charge across Kerala (₹)"
+            step="any"
+            placeholder="Shipping Across Kerala (₹) *"
             value={form.shippingChargeKerala}
             onChange={e => setForm({ ...form, shippingChargeKerala: e.target.value })}
+            required
           />
-          <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Leave as 0 for free shipping across Kerala.</span>
+          <span style={{ fontSize: '0.72rem', color: '#60736F', marginTop: 2, display: 'block' }}>
+            Enter the shipping charge applicable across Kerala. Enter ₹0 for free shipping.
+          </span>
         </div>
 
         {/* Place Groups / Delivery Zones */}
@@ -863,7 +863,7 @@ function UploadReelModal({ open, onClose, onSuccess, user }) {
 /* ── Upload Product Modal ──────────────────────── */
 function UploadProductModal({ open, onClose, onSuccess, user }) {
   const toast = useToast();
-  const [form, setForm] = useState({ name: '', description: '', category: '', price: '', shippingChargeKerala: '0', isOnSale: true, deliveryChargesAdditional: false });
+  const [form, setForm] = useState({ name: '', description: '', category: '', price: '', shippingChargeKerala: '', isOnSale: true });
   const [shippingGroups, setShippingGroups] = useState([]);
   const [tags, setTags] = useState([]);
   const [videos, setVideos] = useState([]);
@@ -874,6 +874,10 @@ function UploadProductModal({ open, onClose, onSuccess, user }) {
 
   const handleSubmit = async () => {
     if (!form.name || videos.length === 0) { toast.error('Name and at least one video required'); return; }
+    if (form.shippingChargeKerala === '' || form.shippingChargeKerala === null || form.shippingChargeKerala === undefined || isNaN(Number(form.shippingChargeKerala)) || Number(form.shippingChargeKerala) < 0) {
+      toast.error('Shipping Across Kerala (₹) is required. Enter 0 for free shipping.');
+      return;
+    }
     if (!user?.location?.coordinates || (user.location.coordinates[0] === 0 && user.location.coordinates[1] === 0)) {
       toast.info('Please set your location in profile to help users find you nearby');
       onClose();
@@ -913,7 +917,7 @@ function UploadProductModal({ open, onClose, onSuccess, user }) {
 
       toast.success('Product created!');
       onSuccess(data.product);
-      setForm({ name: '', description: '', category: '', price: '', shippingChargeKerala: '0', isOnSale: true, deliveryChargesAdditional: false }); setShippingGroups([]); setTags([]); setVideos([]); setImages([]);
+      setForm({ name: '', description: '', category: '', price: '', shippingChargeKerala: '', isOnSale: true }); setShippingGroups([]); setTags([]); setVideos([]); setImages([]);
     } catch (e) {
       console.error('Upload error:', e);
       toast.error(e.response?.data?.message || 'Failed to create product');
@@ -929,31 +933,28 @@ function UploadProductModal({ open, onClose, onSuccess, user }) {
   return (
     <Modal isOpen={open} onClose={onClose} title="Upload Product">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '60vh', overflowY: 'auto' }}>
-        {/* Vendor Shipping Rule Notice */}
-        <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', padding: 12, borderRadius: 12 }}>
-          <p style={{ margin: 0, fontSize: '0.8rem', color: '#1E40AF', lineHeight: 1.4, fontWeight: 500 }}>
-            📢 <strong>Shipping Notice:</strong> If no shipping charge is specified, shipping will be <strong>FREE (₹0)</strong> for the buyer. No further shipping charges can be requested from the buyer after purchase.
-          </p>
-        </div>
-
         <input className="input-field" placeholder="Product name *" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
         <textarea className="input-field" placeholder="Description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
         <input className="input-field" placeholder="Category" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} />
         <input className="input-field" type="number" placeholder="Price (₹)" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} />
 
         <div>
-          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#10B981', marginBottom: 4, display: 'block' }}>
-            Flat Shipping Charge across Kerala (₹)
+          <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0D5148', marginBottom: 4, display: 'block' }}>
+            Shipping Across Kerala (₹) <span style={{ color: '#EF4444' }}>*</span>
           </label>
           <input
             className="input-field"
             type="number"
             min="0"
-            placeholder="Flat Shipping Charge across Kerala (₹)"
+            step="any"
+            placeholder="Shipping Across Kerala (₹) *"
             value={form.shippingChargeKerala}
             onChange={e => setForm({ ...form, shippingChargeKerala: e.target.value })}
+            required
           />
-          <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Leave as 0 for free shipping across Kerala.</span>
+          <span style={{ fontSize: '0.72rem', color: '#60736F', marginTop: 2, display: 'block' }}>
+            Enter the shipping charge applicable across Kerala. Enter ₹0 for free shipping.
+          </span>
         </div>
 
         {/* Place Groups / Delivery Zones */}
