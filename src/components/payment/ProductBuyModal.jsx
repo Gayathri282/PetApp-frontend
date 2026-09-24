@@ -457,41 +457,60 @@ backendResponse:`, err.response?.data);
 
             {/* Open UPI App Button */}
             {upiDeepLink ? (
-              <button
-                type="button"
-                onClick={() => {
-                  console.log(`[PAYMENT DEBUG] Triggering UPI Intent link: ${upiDeepLink}`);
-                  window.location.href = upiDeepLink;
-                }}
-                style={{
-                  width: '100%',
-                  minHeight: '52px',
-                  padding: '14px 20px',
-                  backgroundColor: '#0D5148',
-                  color: '#FFFFFF',
-                  borderRadius: 14,
-                  fontSize: '1rem',
-                  fontWeight: 800,
-                  border: 'none',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 10,
-                  boxShadow: '0 4px 14px rgba(13, 81, 72, 0.25)',
-                }}
-              >
-                <ExternalLink size={20} color="#FFFFFF" />
-                <span style={{ color: '#FFFFFF', fontSize: '1rem', fontWeight: 800 }}>
-                  Pay ₹{totalAmount.toLocaleString('en-IN')} via UPI App
-                </span>
-              </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14, alignItems: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    console.log(`[PAYMENT DEBUG] Triggering UPI Intent link: ${upiDeepLink}`);
+                    window.location.href = upiDeepLink;
+                  }}
+                  style={{
+                    width: '100%',
+                    minHeight: '52px',
+                    padding: '14px 20px',
+                    backgroundColor: '#0D5148',
+                    color: '#FFFFFF',
+                    borderRadius: 14,
+                    fontSize: '1rem',
+                    fontWeight: 800,
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 10,
+                    boxShadow: '0 4px 14px rgba(13, 81, 72, 0.25)',
+                  }}
+                >
+                  <ExternalLink size={20} color="#FFFFFF" />
+                  <span style={{ color: '#FFFFFF', fontSize: '1rem', fontWeight: 800 }}>
+                    Pay ₹{totalAmount.toLocaleString('en-IN')} via GPay / PhonePe
+                  </span>
+                </button>
+
+                {/* Dynamic Vendor UPI QR Code Box */}
+                <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', padding: 18, borderRadius: 16, textAlign: 'center', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0F172A' }}>
+                    📱 Or Scan Dynamic QR with GPay / PhonePe / Paytm:
+                  </span>
+                  <div style={{ padding: 10, background: '#FFFFFF', borderRadius: 12, border: '1px solid #CBD5E1', display: 'inline-block' }}>
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiDeepLink)}`}
+                      alt={`UPI QR Code for ${effectiveUpiName}`}
+                      style={{ width: 180, height: 180, display: 'block' }}
+                    />
+                  </div>
+                  <p style={{ margin: 0, fontSize: '0.78rem', color: '#64748B', lineHeight: 1.4 }}>
+                    Pre-filled with <strong>₹{totalAmount.toLocaleString('en-IN')}</strong> to <strong>{effectiveUpiName}</strong> ({effectiveUpiId})
+                  </p>
+                </div>
+              </div>
             ) : null}
 
             {/* Useful Fallback Box */}
             <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', padding: 14, borderRadius: 14 }}>
               <p style={{ margin: '0 0 8px 0', fontSize: '0.825rem', fontWeight: 600, color: '#64748B' }}>
-                Unable to open a UPI app? Pay manually using details below:
+                Manual UPI Transfer Details:
               </p>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                 <span style={{ fontSize: '0.85rem', color: '#475569' }}>Vendor UPI ID:</span>
@@ -510,7 +529,7 @@ backendResponse:`, err.response?.data);
                 </div>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.85rem', color: '#475569' }}>Amount:</span>
+                <span style={{ fontSize: '0.85rem', color: '#475569' }}>Exact Amount:</span>
                 <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0D5148' }}>₹{totalAmount.toLocaleString('en-IN')}</span>
               </div>
             </div>
