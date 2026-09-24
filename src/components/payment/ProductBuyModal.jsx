@@ -389,11 +389,11 @@ backendResponse:`, err.response?.data);
           </div>
         )}
 
-        {/* STEP 2: UPI PAYMENT & TRANSACTION ID ENTRY */}
+        {/* STEP 2: UPI QR SCAN & PAYMENT PROOF */}
         {step === 2 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', padding: 16, borderRadius: 16, textAlign: 'center' }}>
-              <span style={{ fontSize: '0.85rem', textTransform: 'uppercase', tracking: '0.05em', color: '#166534', fontWeight: 700 }}>Pay Vendor via UPI</span>
+              <span style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#166534', fontWeight: 700 }}>Scan QR & Pay Vendor via UPI</span>
               <h2 style={{ margin: '4px 0', fontSize: '1.8rem', fontWeight: 800, color: '#0D5148' }}>₹{totalAmount.toLocaleString('en-IN')}</h2>
               <p style={{ margin: 0, fontSize: '0.875rem', color: '#15803D' }}>Order #{order?._id?.slice(-8)}</p>
             </div>
@@ -413,150 +413,106 @@ backendResponse:`, err.response?.data);
                   {effectiveUpiId && (
                     <button
                       onClick={copyUpiId}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#0D5148', display: 'flex', alignItems: 'center', gap: 4 }}
+                      style={{ background: '#0D5148', color: '#FFFFFF', border: 'none', borderRadius: 6, padding: '4px 8px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
                       title="Copy UPI ID"
                     >
-                      <Copy size={16} />
-                      <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>{copied ? 'Copied' : 'Copy'}</span>
+                      <Copy size={14} />
+                      <span>{copied ? 'Copied' : 'Copy'}</span>
                     </button>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Open UPI App Button */}
-            {upiDeepLink ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14, alignItems: 'center' }}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    console.log(`[PAYMENT DEBUG] Triggering UPI Intent link: ${upiDeepLink}`);
-                    window.location.href = upiDeepLink;
-                  }}
-                  style={{
-                    width: '100%',
-                    minHeight: '52px',
-                    padding: '14px 20px',
-                    backgroundColor: '#0D5148',
-                    color: '#FFFFFF',
-                    borderRadius: 14,
-                    fontSize: '1rem',
-                    fontWeight: 800,
-                    border: 'none',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 10,
-                    boxShadow: '0 4px 14px rgba(13, 81, 72, 0.25)',
-                  }}
-                >
-                  <ExternalLink size={20} color="#FFFFFF" />
-                  <span style={{ color: '#FFFFFF', fontSize: '1rem', fontWeight: 800 }}>
-                    Pay ₹{totalAmount.toLocaleString('en-IN')} via GPay / PhonePe
-                  </span>
-                </button>
-
-                {/* Dynamic Vendor UPI QR Code Box */}
-                <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', padding: 18, borderRadius: 16, textAlign: 'center', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0F172A' }}>
-                    📱 Or Scan Dynamic QR with GPay / PhonePe / Paytm:
-                  </span>
-                  <div style={{ padding: 10, background: '#FFFFFF', borderRadius: 12, border: '1px solid #CBD5E1', display: 'inline-block' }}>
-                    <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiDeepLink)}`}
-                      alt={`UPI QR Code for ${effectiveUpiName}`}
-                      style={{ width: 180, height: 180, display: 'block' }}
-                    />
-                  </div>
-                  <p style={{ margin: 0, fontSize: '0.78rem', color: '#64748B', lineHeight: 1.4 }}>
-                    Pre-filled with <strong>₹{totalAmount.toLocaleString('en-IN')}</strong> to <strong>{effectiveUpiName}</strong> ({effectiveUpiId})
-                  </p>
-                </div>
+            {/* Dynamic Vendor UPI QR Code Box */}
+            <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', padding: 18, borderRadius: 16, textAlign: 'center', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0F172A' }}>
+                📷 Scan QR Code with GPay / PhonePe / Paytm:
+              </span>
+              <div style={{ padding: 12, background: '#FFFFFF', borderRadius: 14, border: '2px solid #0D5148', boxShadow: '0 4px 12px rgba(13, 81, 72, 0.1)', display: 'inline-block' }}>
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiDeepLink)}`}
+                  alt={`UPI QR Code for ${effectiveUpiName}`}
+                  style={{ width: 190, height: 190, display: 'block' }}
+                />
               </div>
-            ) : null}
-
-            {/* Useful Fallback Box */}
-            <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', padding: 14, borderRadius: 14 }}>
-              <p style={{ margin: '0 0 8px 0', fontSize: '0.825rem', fontWeight: 600, color: '#64748B' }}>
-                Manual UPI Transfer Details:
+              <p style={{ margin: 0, fontSize: '0.8rem', color: '#475569', lineHeight: 1.4 }}>
+                💡 <strong>Tip:</strong> Take a screenshot of this QR code to scan it from your gallery in Google Pay or PhonePe.
               </p>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <span style={{ fontSize: '0.85rem', color: '#475569' }}>Vendor UPI ID:</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <code style={{ background: '#E2E8F0', padding: '4px 8px', borderRadius: 6, fontSize: '0.875rem', fontWeight: 700, color: '#0F172A' }}>
-                    {effectiveUpiId}
-                  </code>
-                  <button
-                    type="button"
-                    onClick={copyUpiId}
-                    style={{ background: '#0D5148', color: '#FFFFFF', border: 'none', borderRadius: 6, padding: '4px 8px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
-                  >
-                    <Copy size={14} />
-                    {copied ? 'Copied' : 'Copy'}
-                  </button>
-                </div>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.85rem', color: '#475569' }}>Exact Amount:</span>
-                <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0D5148' }}>₹{totalAmount.toLocaleString('en-IN')}</span>
-              </div>
             </div>
 
-            {/* Mandatory UTR / Transaction ID Form */}
-            <form onSubmit={handleSubmitTx} style={{ display: 'flex', flexDirection: 'column', gap: 14, borderTop: '1px solid #E5E7EB', paddingTop: 16 }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, color: '#374151', marginBottom: 6 }}>
-                  Payment completed? Enter UPI Transaction / UTR ID <span style={{ color: '#EF4444' }}>*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. 4268XXXXXXXX (12 digits)"
-                  value={transactionId}
-                  onChange={(e) => setTransactionId(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 14px',
-                    borderRadius: 12,
-                    border: '1px solid #D1D5DB',
-                    fontSize: '0.95rem',
-                    fontFamily: 'monospace',
-                    letterSpacing: '0.05em',
-                  }}
-                />
-                <span style={{ fontSize: '0.75rem', color: '#6B7280', marginTop: 4, display: 'block' }}>
-                  Required for vendor verification. Found in your Google Pay, PhonePe, or Paytm receipt.
-                </span>
-              </div>
-
-              <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', padding: 12, borderRadius: 12, fontSize: '0.8rem', color: '#92400E', display: 'flex', gap: 8, alignItems: 'center' }}>
-                <AlertCircle size={16} color="#D97706" style={{ flexShrink: 0 }} />
-                <span>Payment will remain <strong>PENDING VERIFICATION</strong> until confirmed by vendor.</span>
-              </div>
-
+            {/* Primary Action: Go to Chat & Upload Payment Screenshot */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, borderTop: '1px solid #E5E7EB', paddingTop: 16 }}>
               <button
-                type="submit"
+                type="button"
+                onClick={handleGoToChat}
                 disabled={submittingTx}
                 style={{
                   width: '100%',
-                  minHeight: '50px',
-                  padding: '14px',
-                  backgroundColor: '#111827',
+                  minHeight: '52px',
+                  padding: '14px 20px',
+                  backgroundColor: '#0D5148',
                   color: '#FFFFFF',
-                  border: 'none',
                   borderRadius: 14,
-                  fontSize: '0.95rem',
-                  fontWeight: 700,
+                  fontSize: '1rem',
+                  fontWeight: 800,
+                  border: 'none',
                   cursor: submittingTx ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: 8,
+                  gap: 10,
+                  boxShadow: '0 4px 14px rgba(13, 81, 72, 0.25)',
                 }}
               >
-                {submittingTx ? <Spinner size={18} color="#FFFFFF" /> : 'Submit for Verification'}
+                {submittingTx ? (
+                  <Spinner size={20} color="#FFFFFF" />
+                ) : (
+                  <>
+                    <MessageSquare size={20} color="#FFFFFF" />
+                    <span>Open Seller Chat & Send Payment Proof</span>
+                  </>
+                )}
               </button>
+            </div>
+
+            {/* Optional UTR / Transaction ID Form */}
+            <form onSubmit={handleSubmitTx} style={{ display: 'flex', flexDirection: 'column', gap: 10, background: '#F8FAFC', padding: 14, borderRadius: 14, border: '1px solid #E2E8F0' }}>
+              <label style={{ display: 'block', fontSize: '0.825rem', fontWeight: 700, color: '#475569' }}>
+                Optional: Enter UPI UTR / Transaction ID if available
+              </label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  type="text"
+                  placeholder="e.g. 4268XXXXXXXX"
+                  value={transactionId}
+                  onChange={(e) => setTransactionId(e.target.value)}
+                  style={{
+                    flex: 1,
+                    padding: '10px 12px',
+                    borderRadius: 10,
+                    border: '1px solid #CBD5E1',
+                    fontSize: '0.875rem',
+                    fontFamily: 'monospace',
+                  }}
+                />
+                <button
+                  type="submit"
+                  disabled={submittingTx}
+                  style={{
+                    padding: '10px 16px',
+                    backgroundColor: '#1E293B',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: 10,
+                    fontSize: '0.825rem',
+                    fontWeight: 700,
+                    cursor: submittingTx ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  Submit ID
+                </button>
+              </div>
             </form>
           </div>
         )}

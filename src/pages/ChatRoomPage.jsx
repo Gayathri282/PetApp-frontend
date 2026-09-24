@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getChatMessages, sendMessage } from '../api';
-import { ArrowLeft, Send, Phone, User, ShoppingBag, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Send, Phone, User, ShoppingBag, ChevronRight, Image as ImageIcon, Camera, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Spinner from '../components/ui/Spinner';
 
@@ -13,7 +13,14 @@ export default function ChatRoomPage() {
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(true);
   const [otherUser, setOtherUser] = useState(null);
+  
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [sendingImage, setSendingImage] = useState(false);
+  const [activeLightboxImage, setActiveLightboxImage] = useState(null);
+  
   const scrollRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -44,30 +51,65 @@ export default function ChatRoomPage() {
     }
   }, [messages]);
 
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const handleClearFile = () => {
+    setSelectedFile(null);
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleSend = async (e) => {
     e.preventDefault();
-    if (!content.trim()) return;
+    if (!content.trim() && !selectedFile) return;
+
+    const currentText = content;
+    const currentFile = selectedFile;
+    const currentPreview = previewUrl;
+
+    setContent('');
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
 
     const tempMsg = {
       _id: Date.now(),
       sender: { _id: currentUser._id, name: currentUser.name, avatar: currentUser.avatar },
-      content,
+      content: currentText,
+      image: currentPreview || '',
       createdAt: new Date(),
     };
 
-    setMessages([...messages, tempMsg]);
-    setContent('');
+    setMessages((prev) => [...prev, tempMsg]);
 
     try {
-      await sendMessage({ receiverId: userId, content });
+      if (currentFile) {
+        setSendingImage(true);
+        const formData = new FormData();
+        formData.append('receiverId', userId);
+        if (currentText) formData.append('content', currentText);
+        formData.append('image', currentFile);
+        await sendMessage(formData);
+      } else {
+        await sendMessage({ receiverId: userId, content: currentText });
+      }
     } catch (err) {
       console.error(err);
+    } finally {
+      setSendingImage(false);
     }
   };
 
   const getFullSrc = (url) => {
     if (!url) return '';
-    if (url.startsWith('http')) return url;
+    if (url.startsWith('http') || url.startsWith('blob:')) return url;
     const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
     return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
   };
@@ -371,6 +413,33 @@ export default function ChatRoomPage() {
                     )}
                   </div>
 
+                  {/* Buyer Payment Screenshot Button */}
+                  {isMine && purchaseDetails.status === 'pending_verification' && (
+                    <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid #F3F4F6' }}>
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          backgroundColor: '#E8F1ED',
+                          color: '#0D5148',
+                          border: '1px solid #B8D8CE',
+                          borderRadius: 10,
+                          fontSize: '0.8rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 6,
+                        }}
+                      >
+                        <Camera size={15} color="#0D5148" />
+                        Attach Payment Screenshot
+                      </button>
+                    </div>
+                  )}
+
                   {/* Vendor verification buttons if current user is Vendor & status is pending */}
                   {!isMine && purchaseDetails.status === 'pending_verification' && (
                     <div style={{ display: 'flex', gap: 8, marginTop: 14, paddingTop: 10, borderTop: '1px solid #F3F4F6' }}>
@@ -442,6 +511,16 @@ export default function ChatRoomPage() {
                     whiteSpace: 'pre-wrap',
                   }}
                 >
+                  {m.image && (
+                    <div style={{ marginBottom: m.content ? 8 : 0, borderRadius: 12, overflow: 'hidden', cursor: 'pointer', maxWidth: 280 }}>
+                      <img
+                        src={getFullSrc(m.image)}
+                        alt="Payment proof / Attachment"
+                        onClick={() => setActiveLightboxImage(getFullSrc(m.image))}
+                        style={{ width: '100%', maxHeight: 260, objectFit: 'cover', borderRadius: 12, display: 'block' }}
+                      />
+                    </div>
+                  )}
                   {renderContent(m.content, isMine)}
                   
                   {/* Admin Only Content */}
@@ -461,15 +540,74 @@ export default function ChatRoomPage() {
         })}
       </div>
 
-      {/* Chat Input */}
+      {/* Hidden File Input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept="image/*"
+        onChange={handleFileChange}
+        style={{ display: 'none' }}
+      />
+
+      {/* Image Preview Bar before sending */}
+      {previewUrl && (
+        <div style={{ padding: '8px 16px', background: '#E8F1ED', borderTop: '1px solid #B8D8CE', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            <img src={previewUrl} alt="Preview" style={{ width: 54, height: 54, borderRadius: 10, objectFit: 'cover', border: '2px solid #0D5148' }} />
+            <button
+              onClick={handleClearFile}
+              style={{
+                position: 'absolute',
+                top: -6,
+                right: -6,
+                background: '#EF4444',
+                color: '#FFFFFF',
+                border: 'none',
+                borderRadius: '50%',
+                width: 20,
+                height: 20,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+              }}
+            >
+              <X size={12} />
+            </button>
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: '#0D5148', fontWeight: 700 }}>Payment Screenshot Ready</p>
+            <p style={{ margin: 0, fontSize: '0.75rem', color: '#60736F' }}>Tap send button to attach proof to chat</p>
+          </div>
+        </div>
+      )}
+
+      {/* Chat Input Form */}
       <div style={{ padding: '12px 16px', paddingBottom: 'calc(12px + env(safe-area-inset-bottom))', background: '#FFFFFF', borderTop: '1px solid #D6E3DE' }}>
         <form
           onSubmit={handleSend}
-          style={{ display: 'flex', gap: 10, background: '#F3F8F5', padding: '6px 6px 6px 16px', borderRadius: 24, border: '1px solid #D6E3DE' }}
+          style={{ display: 'flex', gap: 8, background: '#F3F8F5', padding: '6px 6px 6px 12px', borderRadius: 24, border: '1px solid #D6E3DE', alignItems: 'center' }}
         >
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#0D5148',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 4,
+            }}
+            title="Attach payment screenshot or image"
+          >
+            <ImageIcon size={22} color="#0D5148" />
+          </button>
           <input
             type="text"
-            placeholder="Type a message..."
+            placeholder={selectedFile ? "Add caption (optional)..." : "Type a message..."}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             style={{
@@ -484,6 +622,7 @@ export default function ChatRoomPage() {
           />
           <button
             type="submit"
+            disabled={sendingImage}
             style={{
               width: 38,
               height: 38,
@@ -493,15 +632,49 @@ export default function ChatRoomPage() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              cursor: 'pointer',
+              cursor: sendingImage ? 'not-allowed' : 'pointer',
               color: '#FFFFFF',
               flexShrink: 0,
             }}
           >
-            <Send size={17} color="#FFFFFF" />
+            {sendingImage ? <Spinner size={16} color="#FFFFFF" /> : <Send size={17} color="#FFFFFF" />}
           </button>
         </form>
       </div>
+
+      {/* Image Lightbox Modal */}
+      {activeLightboxImage && (
+        <div
+          onClick={() => setActiveLightboxImage(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.88)',
+            backdropFilter: 'blur(6px)',
+            zIndex: 1000,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+          }}
+        >
+          <div style={{ position: 'absolute', top: 16, right: 16 }}>
+            <button
+              onClick={() => setActiveLightboxImage(null)}
+              style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#FFF', borderRadius: '50%', width: 40, height: 40, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <X size={24} />
+            </button>
+          </div>
+          <img
+            src={activeLightboxImage}
+            alt="Full View"
+            style={{ maxWidth: '95vw', maxHeight: '85vh', borderRadius: 12, objectFit: 'contain', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}
+          />
+          <p style={{ color: '#E2E8F0', marginTop: 12, fontSize: '0.85rem', fontWeight: 600 }}>Tap anywhere to close</p>
+        </div>
+      )}
     </div>
   );
 }
