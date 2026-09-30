@@ -86,7 +86,9 @@ export default function BottomNav() {
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              width: 58,
+              flex: '1 1 0px',
+              maxWidth: 68,
+              minWidth: 0,
               height: 52,
               background: 'none',
               border: 'none',
@@ -96,6 +98,7 @@ export default function BottomNav() {
               position: 'relative',
               touchAction: 'manipulation',
               WebkitTapHighlightColor: 'transparent',
+              padding: '0 2px',
             }}
           >
             <div 

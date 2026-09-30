@@ -260,7 +260,7 @@ export default function SearchPage() {
 
       {/* Product Results */}
       {isLoading ? <Spinner /> : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(145px, 1fr))', gap: 12 }}>
           {Array.isArray(displayProducts) && displayProducts.map(p => (
             <ProductCard
               key={p._id}

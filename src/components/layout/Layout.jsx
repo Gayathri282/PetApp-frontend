@@ -66,9 +66,12 @@ export default function Layout({ children }) {
       <main
         style={{
           flex: 1,
-          paddingTop: hideChrome ? 0 : 70,
-          paddingBottom: hideChrome ? 0 : 68,
+          paddingTop: hideChrome ? 0 : 'calc(64px + env(safe-area-inset-top, 0px))',
+          paddingBottom: hideChrome ? 0 : 'calc(76px + env(safe-area-inset-bottom, 0px))',
           minHeight: '100dvh',
+          width: '100%',
+          maxWidth: '100vw',
+          overflowX: 'hidden',
         }}
       >
         {children}
@@ -77,4 +80,5 @@ export default function Layout({ children }) {
     </>
   );
 }
+
 

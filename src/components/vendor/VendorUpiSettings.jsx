@@ -119,7 +119,7 @@ export default function VendorUpiSettings({ user, onSaved }) {
         </div>
 
         {/* UPI ID & Name */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
           <div>
             <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#12332F', marginBottom: 4, display: 'block' }}>
               Vendor UPI ID * (e.g. shop@upi)
@@ -159,7 +159,7 @@ export default function VendorUpiSettings({ user, onSaved }) {
         </div>
 
         {/* PhonePe / GPay Numbers */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
           <div>
             <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#12332F', marginBottom: 4, display: 'block' }}>
               PhonePe Number (Optional)

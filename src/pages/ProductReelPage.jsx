@@ -421,7 +421,7 @@ ${canonicalUrl}`;
             <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '40%', background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', pointerEvents: 'none', zIndex: 5 }} />
 
             {/* Actions (Right Side) */}
-            <div style={{ position: 'absolute', right: 16, bottom: 120, zIndex: 20 }}>
+            <div style={{ position: 'absolute', right: 14, bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', zIndex: 20 }}>
               <ProductActionButtons
                 item={product}
                 onEnquire={handleBuy}
@@ -453,7 +453,7 @@ ${canonicalUrl}`;
             </div>
 
             {/* Vendor Info & Product Details (Bottom Left) */}
-            <div style={{ position: 'absolute', bottom: 100, left: 16, right: 100, zIndex: 15 }}>
+            <div style={{ position: 'absolute', bottom: 'calc(70px + env(safe-area-inset-bottom, 0px))', left: 14, maxWidth: 'calc(100% - 85px)', zIndex: 15 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                 <div style={{ width: 44, height: 44, borderRadius: '50%', border: '2px solid #10B981', padding: 2, background: 'rgba(0,0,0,0.4)', boxShadow: '0 0 12px rgba(16, 185, 129, 0.3)' }}>
                   <img

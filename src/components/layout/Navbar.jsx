@@ -41,8 +41,7 @@ export default function Navbar() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => navigate('/feed')}>
-          <KeralaPetsLogo style={{ width: 36, height: 36 }} />
-          <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0D5148', letterSpacing: '-0.02em' }}>KeralaPets</span>
+          <KeralaPetsLogo size={36} showText={false} layout="horizontal" />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button
@@ -79,7 +78,12 @@ export default function Navbar() {
       <style>{`
         @media (max-width: 768px) {
           .desktop-nav-menu { display: none !important; }
-          .main-navbar-container { height: 60px !important; padding: 0 16px !important; }
+          .main-navbar-container { height: 60px !important; padding: 0 12px !important; }
+        }
+        @media (max-width: 440px) {
+          .kerala-pets-logo-container span { display: none !important; }
+          .main-navbar-actions { gap: 6px !important; }
+          .main-navbar-left { gap: 6px !important; }
         }
       `}</style>
 
@@ -102,7 +106,7 @@ export default function Navbar() {
         }}
       >
         {/* Left: Mobile Hamburger + Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div className="main-navbar-left" style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0, flexShrink: 0 }}>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             style={{
@@ -124,7 +128,7 @@ export default function Navbar() {
             onClick={() => navigate('/feed')}
             style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
           >
-            <KeralaPetsLogo size={36} showText={true} layout="horizontal" />
+            <KeralaPetsLogo size={36} showText={false} layout="horizontal" />
           </div>
         </div>
 
@@ -155,7 +159,7 @@ export default function Navbar() {
         </div>
 
         {/* Right: Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div className="main-navbar-actions" style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
           {/* Search Icon */}
           <button 
             onClick={() => navigate('/search')}

@@ -202,8 +202,8 @@ ${canonicalUrl}`;
       <div
         style={{
           position: 'absolute',
-          right: 16,
-          bottom: 120,
+          right: 14,
+          bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
           zIndex: 20,
         }}
       >
@@ -237,7 +237,7 @@ ${canonicalUrl}`;
       </div>
 
       {/* ── Vendor info & product details (bottom-left) ───────────────────────── */}
-      <div style={{ position: 'absolute', bottom: 100, left: 16, right: 100, zIndex: 15 }}>
+      <div style={{ position: 'absolute', bottom: 'calc(70px + env(safe-area-inset-bottom, 0px))', left: 14, maxWidth: 'calc(100% - 85px)', zIndex: 15 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
           <div
             style={{
