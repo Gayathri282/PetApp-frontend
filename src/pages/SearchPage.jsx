@@ -8,23 +8,15 @@ import Modal from '../components/ui/Modal';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { searchProducts, getFeed } from '../api';
+import { FALLBACK_GUPPY_PRODUCTS } from '../data/guppyProducts';
 
-const TAGS = ['dog', 'cat', 'bird', 'fish', 'other', 'grooming', 'adoption', 'accessories', 'food', 'toys'];
+const TAGS = ['albino', 'blue', 'red', 'koi', 'platinum', 'black', 'snakeskin', 'gold-yellow', 'white', 'silverado', 'mosaic', 'dragon'];
 const SPECIAL_TAGS = ['On Sale', 'Not For Sale', 'Near Me'];
 
 const CATEGORY_MAP = {
-  dogs: 'dog',
-  dog: 'dog',
-  cats: 'cat',
-  cat: 'cat',
-  birds: 'bird',
-  bird: 'bird',
-  fish: 'fish',
-  others: 'other',
-  other: 'other',
-  services: 'services',
-  accessories: 'other',
-  rabbit: 'other',
+  gold: 'gold-yellow',
+  yellow: 'gold-yellow',
+  'gold & yellow': 'gold-yellow',
 };
 
 export default function SearchPage() {
@@ -106,10 +98,11 @@ export default function SearchPage() {
   useEffect(() => {
     (async () => {
       try {
-        const { data } = await getFeed(1, 20);
-        setInitialProducts(data.products || []);
+        const { data } = await getFeed(1, 100);
+        setInitialProducts(data?.products?.length ? data.products : FALLBACK_GUPPY_PRODUCTS);
       } catch (err) {
         console.error('Failed to load initial products:', err);
+        setInitialProducts(FALLBACK_GUPPY_PRODUCTS);
       } finally {
         setInitialLoading(false);
       }
@@ -129,10 +122,28 @@ export default function SearchPage() {
         const isNearMe = selectedTags.includes('near me');
         const cleanTags = selectedTags.filter(t => t !== 'near me');
         const { data } = await searchProducts(query, cleanTags, isNearMe);
-        setResults(data.products || []);
+        if (data?.products?.length) {
+          setResults(data.products);
+        } else {
+          // Fallback filter
+          const qLower = query.toLowerCase().trim();
+          const filtered = FALLBACK_GUPPY_PRODUCTS.filter((p) => {
+            const matchesQuery = !qLower || p.name.toLowerCase().includes(qLower) || p.category.toLowerCase().includes(qLower);
+            const matchesTags = cleanTags.length === 0 || cleanTags.some(t => p.tags.includes(t.toLowerCase()) || p.category.toLowerCase() === t.toLowerCase());
+            return matchesQuery && matchesTags;
+          });
+          setResults(filtered);
+        }
       } catch (e) {
         console.error(e);
-        setResults([]);
+        const qLower = query.toLowerCase().trim();
+        const cleanTags = selectedTags.filter(t => t !== 'near me');
+        const filtered = FALLBACK_GUPPY_PRODUCTS.filter((p) => {
+          const matchesQuery = !qLower || p.name.toLowerCase().includes(qLower) || p.category.toLowerCase().includes(qLower);
+          const matchesTags = cleanTags.length === 0 || cleanTags.some(t => p.tags.includes(t.toLowerCase()) || p.category.toLowerCase() === t.toLowerCase());
+          return matchesQuery && matchesTags;
+        });
+        setResults(filtered);
       } finally {
         setLoading(false);
       }

@@ -8,10 +8,30 @@ import ReelsViewer from '../components/reel/ReelsViewer';
 import Modal from '../components/ui/Modal';
 import Spinner from '../components/ui/Spinner';
 import { getFeed, getLatestTimestamp } from '../api';
-import { CATEGORIES } from '../data/categories';
+import { CATEGORIES, HOME_CATEGORY_COUNT } from '../data/categories';
+import { FALLBACK_GUPPY_PRODUCTS } from '../data/guppyProducts';
 import { getPlayableVideoUrl, getPosterUrl, getFullSrc, logVideoDiagnostics } from '../utils/media';
 
+/** Category image with a colored initial placeholder shown until the image is uploaded. */
+function CategoryImage({ cat, style }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    return (
+      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: cat.bg, color: '#FFFFFF', fontWeight: 800, fontSize: '1.4rem' }}>
+        {cat.name.charAt(0)}
+      </div>
+    );
+  }
+  return <img src={cat.image} alt={cat.name} onError={() => setFailed(true)} style={{ width: '100%', height: '100%', objectFit: 'cover', ...style }} />;
+}
+
 export default function FeedPage() {
+  const [showAllCategories, setShowAllCategories] = useState(false);
+  const homeCategories = CATEGORIES.slice(0, HOME_CATEGORY_COUNT);
+  const openCategory = (cat) => {
+    setShowAllCategories(false);
+    navigate(`/search?category=${cat.tag}`);
+  };
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -60,16 +80,25 @@ export default function FeedPage() {
     try {
       const limit = customLimit || 10;
       const { data } = await getFeed(p, limit);
-      setProducts(prev => {
-        const next = p === 1 ? data.products : [...prev, ...data.products];
-        if (p === 1 && data.products.length > 0 && !newestTimestamp.current) {
-          newestTimestamp.current = data.products[0].createdAt;
-        }
-        return next;
-      });
-      setHasMore(data.hasMore);
+      if (data && data.products && data.products.length > 0) {
+        setProducts(prev => {
+          const next = p === 1 ? data.products : [...prev, ...data.products];
+          if (p === 1 && data.products.length > 0 && !newestTimestamp.current) {
+            newestTimestamp.current = data.products[0].createdAt;
+          }
+          return next;
+        });
+        setHasMore(data.hasMore);
+      } else if (p === 1) {
+        setProducts(FALLBACK_GUPPY_PRODUCTS);
+        setHasMore(false);
+      }
     } catch (e) {
       console.error('Feed error:', e);
+      if (p === 1) {
+        setProducts(FALLBACK_GUPPY_PRODUCTS);
+        setHasMore(false);
+      }
     } finally {
       setLoading(false);
       isFetching.current = false;
@@ -180,15 +209,78 @@ export default function FeedPage() {
   return (
     <div style={{ padding: '16px 16px 100px', maxWidth: 680, margin: '0 auto', background: '#F3F8F5', minHeight: '100dvh' }}>
       
-      {/* 1. Header Hero Section */}
+      {/* 1. Header Hero Section & Farm Banner */}
       <div style={{ marginBottom: 20 }}>
-        <p className="section-label">KERALA'S PET MARKETPLACE</p>
+        <p className="section-label">GUPPY MARKETPLACE</p>
         <h1 className="serif-heading" style={{ fontSize: '1.75rem', marginBottom: 6 }}>
-          Find your next best companion
+          CK Guppies & Bettas
         </h1>
-        <p style={{ fontSize: '0.88rem', color: '#60736F' }}>
-          Connect with trusted breeders and pet lovers across Kerala.
+        <p style={{ fontSize: '0.88rem', color: '#60736F', marginBottom: 14 }}>
+          Discover 100+ premium strains from India’s biggest guppy farm.
         </p>
+
+        {/* Farm Showcase Banner */}
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #0D5148 0%, #163B34 100%)',
+            borderRadius: 20,
+            padding: '16px 18px',
+            color: '#FFFFFF',
+            boxShadow: '0 8px 24px rgba(13, 81, 72, 0.25)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
+            <img
+              src="/ck-guppies-logo.jpg"
+              alt="CK Guppies Logo"
+              style={{
+                width: 58,
+                height: 58,
+                borderRadius: '50%',
+                objectFit: 'cover',
+                border: '2px solid #FFFFFF',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                background: '#FFFFFF',
+              }}
+            />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '0.96rem', fontWeight: 800, color: '#E2F7F2', marginBottom: 2 }}>
+                🏆 India’s Biggest Guppy Farm 🇮🇳
+              </div>
+              <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.85)', margin: 0 }}>
+                contact.ckguppyfarm@gmail.com
+              </p>
+            </div>
+            <a
+              href="https://wa.me/918667377338"
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                background: '#25D366',
+                color: '#FFFFFF',
+                padding: '7px 14px',
+                borderRadius: 20,
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                boxShadow: '0 4px 12px rgba(37, 211, 102, 0.3)',
+              }}
+            >
+              💬 WhatsApp
+            </a>
+          </div>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, fontSize: '0.76rem', opacity: 0.95, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.18)' }}>
+            <span>🎉 <strong>7600+</strong> Happy Customers</span>
+            <span>•</span>
+            <span>🌿 <strong>100+</strong> Premium Strains</span>
+            <span>•</span>
+            <span>💯 Educational 🎬 No Harm to Fish</span>
+          </div>
+        </div>
       </div>
 
       {/* 2. Search Bar */}
@@ -218,36 +310,35 @@ export default function FeedPage() {
 
       {/* 3. Category Avatar Row */}
       <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 10, marginBottom: 26, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-        {CATEGORIES.map((cat) => (
+        {homeCategories.map((cat) => (
           <div
             key={cat.id}
-            onClick={() => {
-              if (cat.featureKey) {
-                setComingSoonFeature(cat.featureKey);
-              } else {
-                navigate(`/search?category=${cat.tag}`);
-              }
-            }}
+            onClick={() => openCategory(cat)}
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0, cursor: 'pointer' }}
           >
             <div style={{
               width: 60,
               height: 60,
               borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
               overflow: 'hidden',
             }}>
-              <img
-                src={cat.image}
-                alt={cat.name}
-                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
-              />
+              <CategoryImage cat={cat} />
             </div>
             <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#12332F' }}>{cat.name}</span>
           </div>
         ))}
+        {CATEGORIES.length > HOME_CATEGORY_COUNT && (
+          <div
+            id="view-more-categories"
+            onClick={() => setShowAllCategories(true)}
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0, cursor: 'pointer' }}
+          >
+            <div style={{ width: 60, height: 60, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#E8F1ED', border: '1.5px dashed #0D5148', color: '#0D5148' }}>
+              <ChevronRight size={26} />
+            </div>
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0D5148' }}>View more</span>
+          </div>
+        )}
       </div>
 
       {/* 4. Marketplace Features Pills */}
@@ -525,24 +616,18 @@ export default function FeedPage() {
             Find your next pet
           </h2>
           <button
-            onClick={() => navigate('/search')}
+            onClick={() => setShowAllCategories(true)}
             style={{ background: 'none', border: 'none', color: '#0D5148', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
           >
-            Browse all <ChevronRight size={16} />
+            View more <ChevronRight size={16} />
           </button>
         </div>
 
         <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-          {CATEGORIES.map((cat) => (
+          {homeCategories.map((cat) => (
             <div
               key={cat.id}
-              onClick={() => {
-                if (cat.featureKey) {
-                  setComingSoonFeature(cat.featureKey);
-                } else {
-                  navigate(`/search?category=${cat.tag}`);
-                }
-              }}
+              onClick={() => openCategory(cat)}
               className="card"
               style={{
                 width: 170,
@@ -554,7 +639,7 @@ export default function FeedPage() {
               }}
             >
               <div style={{ height: 110, width: '100%', overflow: 'hidden', background: '#E8F1ED' }}>
-                <img src={cat.image} alt={cat.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <CategoryImage cat={cat} />
               </div>
               <div style={{ padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
@@ -575,6 +660,22 @@ export default function FeedPage() {
         initialVideoId={reelsViewerState.initialVideoId}
         onClose={() => setReelsViewerState({ isOpen: false, initialVideoId: null, videos: [] })}
       />
+
+      {/* Modal: all guppy categories */}
+      {showAllCategories && (
+        <Modal title="All Guppy Categories" onClose={() => setShowAllCategories(false)}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+            {CATEGORIES.map((cat) => (
+              <div key={cat.id} onClick={() => openCategory(cat)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                <div style={{ width: 72, height: 72, borderRadius: '50%', overflow: 'hidden' }}>
+                  <CategoryImage cat={cat} />
+                </div>
+                <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#12332F', textAlign: 'center' }}>{cat.name}</span>
+              </div>
+            ))}
+          </div>
+        </Modal>
+      )}
 
       {/* Modal for Coming Soon Features */}
       {comingSoonFeature && (
