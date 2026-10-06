@@ -9,7 +9,7 @@ import Modal from '../components/ui/Modal';
 import Spinner from '../components/ui/Spinner';
 import { getFeed, getLatestTimestamp } from '../api';
 import { CATEGORIES, HOME_CATEGORY_COUNT } from '../data/categories';
-import { FALLBACK_GUPPY_PRODUCTS } from '../data/guppyProducts';
+import { FALLBACK_GUPPY_PRODUCTS, GUPPY_VARIETIES_LIST } from '../data/guppyProducts';
 import { getPlayableVideoUrl, getPosterUrl, getFullSrc, logVideoDiagnostics } from '../utils/media';
 
 /** Category image with a colored initial placeholder shown until the image is uploaded. */
@@ -27,6 +27,9 @@ function CategoryImage({ cat, style }) {
 
 export default function FeedPage() {
   const [showAllCategories, setShowAllCategories] = useState(false);
+  const [modalViewTab, setModalViewTab] = useState('breeds');
+  const [breedSearchQuery, setBreedSearchQuery] = useState('');
+  const [modalSelectedCat, setModalSelectedCat] = useState('all');
   const homeCategories = CATEGORIES.slice(0, HOME_CATEGORY_COUNT);
   const openCategory = (cat) => {
     setShowAllCategories(false);
@@ -43,6 +46,13 @@ export default function FeedPage() {
   const [selectedReelIndex, setSelectedReelIndex] = useState(0);
   const [activeModalItem, setActiveModalItem] = useState(null);
   const [activeVideoId, setActiveVideoId] = useState(null);
+
+  const filteredBreeds = GUPPY_VARIETIES_LIST.filter(b => {
+    const matchesCat = modalSelectedCat === 'all' || b.cat === modalSelectedCat;
+    const qLower = breedSearchQuery.toLowerCase().trim();
+    const matchesSearch = !qLower || b.name.toLowerCase().includes(qLower) || String(b.no) === qLower || b.cat.toLowerCase().includes(qLower);
+    return matchesCat && matchesSearch;
+  });
 
   const [reelsViewerState, setReelsViewerState] = useState({
     isOpen: false,
@@ -582,21 +592,181 @@ export default function FeedPage() {
         onClose={() => setReelsViewerState({ isOpen: false, initialVideoId: null, videos: [] })}
       />
 
-      {/* Modal: all guppy categories */}
-      <Modal isOpen={showAllCategories} title="All Guppy Categories" onClose={() => setShowAllCategories(false)}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, padding: '8px 0' }}>
-          {CATEGORIES.map((cat) => (
-            <div
-              key={cat.id}
-              onClick={() => openCategory(cat)}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, cursor: 'pointer' }}
+      {/* Modal: all guppy categories & 111 breeds */}
+      <Modal isOpen={showAllCategories} title="All 111 Guppy Breeds & Categories" onClose={() => setShowAllCategories(false)}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '4px 0', maxHeight: '70vh', overflowY: 'auto' }}>
+          {/* Tab Toggle: All 111 Breeds vs 12 Categories Grid */}
+          <div style={{ display: 'flex', gap: 8, background: '#E8F1ED', padding: 4, borderRadius: 12 }}>
+            <button
+              onClick={() => setModalViewTab('breeds')}
+              style={{
+                flex: 1,
+                padding: '8px 12px',
+                borderRadius: 8,
+                border: 'none',
+                background: modalViewTab === 'breeds' ? '#0D5148' : 'transparent',
+                color: modalViewTab === 'breeds' ? '#FFFFFF' : '#60736F',
+                fontWeight: 700,
+                fontSize: '0.82rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
             >
-              <div style={{ width: 72, height: 72, borderRadius: '50%', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-                <CategoryImage cat={cat} />
-              </div>
-              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#12332F', textAlign: 'center' }}>{cat.name}</span>
+              All 111 Breeds ({filteredBreeds.length})
+            </button>
+            <button
+              onClick={() => setModalViewTab('categories')}
+              style={{
+                flex: 1,
+                padding: '8px 12px',
+                borderRadius: 8,
+                border: 'none',
+                background: modalViewTab === 'categories' ? '#0D5148' : 'transparent',
+                color: modalViewTab === 'categories' ? '#FFFFFF' : '#60736F',
+                fontWeight: 700,
+                fontSize: '0.82rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+            >
+              12 Category Circles
+            </button>
+          </div>
+
+          {/* Search Input for Breeds */}
+          <div style={{ position: 'relative' }}>
+            <Search size={16} color="#60736F" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
+            <input
+              type="text"
+              className="input-field"
+              placeholder="Search 111 Guppy strains (e.g. AFR, Koi, Silverado)..."
+              value={breedSearchQuery}
+              onChange={(e) => setBreedSearchQuery(e.target.value)}
+              style={{ paddingLeft: 36, fontSize: '0.85rem' }}
+            />
+            {breedSearchQuery && (
+              <button
+                onClick={() => setBreedSearchQuery('')}
+                style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#60736F', fontWeight: 700 }}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Category Filter Pills */}
+          <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
+            <button
+              onClick={() => setModalSelectedCat('all')}
+              style={{
+                whiteSpace: 'nowrap',
+                padding: '5px 12px',
+                borderRadius: 999,
+                border: modalSelectedCat === 'all' ? 'none' : '1px solid #D6E3DE',
+                background: modalSelectedCat === 'all' ? '#0D5148' : '#FFFFFF',
+                color: modalSelectedCat === 'all' ? '#FFFFFF' : '#60736F',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              All (111)
+            </button>
+            {CATEGORIES.map(c => {
+              const count = GUPPY_VARIETIES_LIST.filter(v => v.cat === c.id).length;
+              const isSel = modalSelectedCat === c.id;
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => { setModalSelectedCat(c.id); setModalViewTab('breeds'); }}
+                  style={{
+                    whiteSpace: 'nowrap',
+                    padding: '5px 12px',
+                    borderRadius: 999,
+                    border: isSel ? 'none' : '1px solid #D6E3DE',
+                    background: isSel ? '#0D5148' : '#FFFFFF',
+                    color: isSel ? '#FFFFFF' : '#60736F',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {c.name} ({count})
+                </button>
+              );
+            })}
+          </div>
+
+          {/* View Content */}
+          {modalViewTab === 'categories' ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, padding: '8px 0' }}>
+              {CATEGORIES.map((cat) => (
+                <div
+                  key={cat.id}
+                  onClick={() => openCategory(cat)}
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, cursor: 'pointer' }}
+                >
+                  <div style={{ width: 72, height: 72, borderRadius: '50%', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                    <CategoryImage cat={cat} />
+                  </div>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#12332F', textAlign: 'center' }}>{cat.name}</span>
+                </div>
+              ))}
             </div>
-          ))}
+          ) : (
+            /* Breeds List (111 items) */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {filteredBreeds.length === 0 ? (
+                <p style={{ textAlign: 'center', color: '#60736F', padding: 20, fontSize: '0.85rem' }}>No guppy breeds match your search query</p>
+              ) : (
+                filteredBreeds.map((breed) => {
+                  const catObj = CATEGORIES.find(c => c.id === breed.cat);
+                  return (
+                    <div
+                      key={breed.no}
+                      onClick={() => {
+                        setShowAllCategories(false);
+                        navigate(`/search?q=${encodeURIComponent(breed.name)}`);
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '10px 14px',
+                        background: '#FFFFFF',
+                        borderRadius: 14,
+                        border: '1px solid #E2ECE8',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.borderColor = '#0D5148'}
+                      onMouseLeave={(e) => e.currentTarget.style.borderColor = '#E2ECE8'}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <span style={{
+                          width: 32, height: 32, borderRadius: '50%', background: '#E8F1ED',
+                          color: '#0D5148', fontWeight: 800, fontSize: '0.72rem',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                        }}>
+                          #{breed.no}
+                        </span>
+                        <div>
+                          <h5 style={{ fontSize: '0.88rem', fontWeight: 700, color: '#12332F', margin: 0 }}>{breed.name}</h5>
+                          <span style={{ fontSize: '0.72rem', color: '#60736F' }}>Category: {catObj?.name || breed.cat}</span>
+                        </div>
+                      </div>
+                      <span style={{
+                        fontSize: '0.68rem', fontWeight: 700, color: '#0D5148',
+                        background: '#E8F1ED', padding: '4px 10px', borderRadius: 999, flexShrink: 0
+                      }}>
+                        View Strain →
+                      </span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
         </div>
       </Modal>
 

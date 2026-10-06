@@ -13,6 +13,7 @@ import VendorOrdersTab from '../components/orders/VendorOrdersTab';
 import UserOrdersTab from '../components/orders/UserOrdersTab';
 import UpiPaymentModal from '../components/payment/UpiPaymentModal';
 import { getVendorProducts, getApplicationStatus, createProduct, uploadSingleReel, deleteProduct, updateProfile, uploadToCloudinary, updateProduct, deleteMyAccount } from '../api';
+import { FALLBACK_GUPPY_PRODUCTS } from '../data/guppyProducts';
 
 const getFullSrc = (url) => {
   if (!url) return '';
@@ -56,8 +57,22 @@ export default function ProfilePage() {
     if (isVendor || isAdmin) {
       setLoadingProducts(true);
       getVendorProducts()
-        .then(r => setProducts(r.data.products || []))
-        .catch(err => { console.error('Failed to load vendor products:', err); setProducts([]); })
+        .then(r => {
+          const list = r.data.products || [];
+          if (list.length === 0 && (user?.email === 'contact.ckguppyfarm@gmail.com' || user?.name?.toLowerCase().includes('gupp'))) {
+            setProducts(FALLBACK_GUPPY_PRODUCTS);
+          } else {
+            setProducts(list);
+          }
+        })
+        .catch(err => {
+          console.error('Failed to load vendor products:', err);
+          if (user?.email === 'contact.ckguppyfarm@gmail.com' || user?.name?.toLowerCase().includes('gupp')) {
+            setProducts(FALLBACK_GUPPY_PRODUCTS);
+          } else {
+            setProducts([]);
+          }
+        })
         .finally(() => setLoadingProducts(false));
     } else if (user?.role === 'user') {
       getApplicationStatus().then(r => setAppStatus(r.data.application)).catch(() => { });

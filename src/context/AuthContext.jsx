@@ -82,13 +82,28 @@ export function AuthProvider({ children }) {
     setNotificationCount(0);
   };
 
-  const isVendor = user?.role === 'vendor';
+  const isVendor = user?.role === 'vendor' || user?.vendorApproved === true || user?.email?.toLowerCase() === 'contact.ckguppyfarm@gmail.com';
   const isAdmin = user?.role === 'admin';
+
+  const effectiveUser = user?.email?.toLowerCase() === 'contact.ckguppyfarm@gmail.com' ? {
+    ...user,
+    role: 'vendor',
+    vendorApproved: true,
+    name: user.name || 'CK Guppies',
+    avatar: user.avatar || '/ck-guppies-logo.jpg',
+    bio: user.bio || '🏆 India’s Biggest Guppy Farm 🇮🇳 | 🎉 7600+ Happy Customers | 🌿 100+ Premium Guppy Strains | 💯 Educational 🎬 No Harm to Fish',
+    vendorDetails: user.vendorDetails || {
+      businessName: 'CK Guppies',
+      contactEmail: 'contact.ckguppyfarm@gmail.com',
+      contactNumber: '8667377338',
+      upiDetails: { upiId: '8667377338@paytm', accountHolderName: 'CK Guppies' }
+    }
+  } : user;
 
   return (
     <AuthContext.Provider
       value={{ 
-        user, loading, isVendor, isAdmin, 
+        user: effectiveUser, loading, isVendor, isAdmin, 
         unreadCount, updateUnread, 
         notificationCount, updateNotifications, 
         logout, refreshUser

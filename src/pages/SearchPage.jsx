@@ -53,11 +53,15 @@ export default function SearchPage() {
   const [showLocPrompt, setShowLocPrompt] = useState(false);
   const toast = useToast();
 
-  // Listen to URL search params (e.g. /search?category=dog or /search)
+  // Listen to URL search params (e.g. /search?category=dog or /search?q=AFR)
   useEffect(() => {
     const params = new URLSearchParams(location.search);
+    const qParam = params.get('q');
     const rawCat = params.get('category') || params.get('tag');
-    if (rawCat) {
+    if (qParam) {
+      setQuery(qParam);
+      setSelectedTags([]);
+    } else if (rawCat) {
       const normalized = rawCat.toLowerCase();
       const mappedTag = CATEGORY_MAP[normalized] || normalized;
       setSelectedTags([mappedTag]);
