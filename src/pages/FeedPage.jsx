@@ -310,7 +310,7 @@ export default function FeedPage() {
             />
             <div style={{ flex: 1 }}>
               <h3 style={{ fontSize: '1.08rem', fontWeight: 800, color: '#FFFFFF', marginBottom: 2 }}>
-                CK Guppies & Bettas
+                CK Guppies
               </h3>
               <p style={{ fontSize: '0.82rem', fontWeight: 700, color: '#A3E2D5', marginBottom: 2 }}>
                 🏆 India’s Biggest Guppy Farm 🇮🇳

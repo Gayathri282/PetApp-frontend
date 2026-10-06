@@ -225,13 +225,13 @@ export const FALLBACK_GUPPY_PRODUCTS = GUPPY_VARIETIES_LIST.map((v, index) => {
     },
     vendor: {
       _id: 'ck_guppies_vendor_id',
-      name: 'CK Guppies & Bettas',
+      name: 'CK Guppies',
       email: 'contact.ckguppyfarm@gmail.com',
       avatar: '/ck-guppies-logo.jpg',
       vendorDetails: {
         upiDetails: {
           upiId: '8667377338@paytm',
-          accountHolderName: 'CK Guppies & Bettas',
+          accountHolderName: 'CK Guppies',
         }
       }
     },
