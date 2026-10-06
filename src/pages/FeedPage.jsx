@@ -209,78 +209,15 @@ export default function FeedPage() {
   return (
     <div style={{ padding: '16px 16px 100px', maxWidth: 680, margin: '0 auto', background: '#F3F8F5', minHeight: '100dvh' }}>
       
-      {/* 1. Header Hero Section & Farm Banner */}
+      {/* 1. Header Hero Section */}
       <div style={{ marginBottom: 20 }}>
-        <p className="section-label">GUPPY MARKETPLACE</p>
+        <p className="section-label">TRUSTED BY LOCAL PET LOVERS</p>
         <h1 className="serif-heading" style={{ fontSize: '1.75rem', marginBottom: 6 }}>
-          CK Guppies & Bettas
+          Kerala's Pet Marketplace
         </h1>
-        <p style={{ fontSize: '0.88rem', color: '#60736F', marginBottom: 14 }}>
-          Discover 100+ premium strains from India’s biggest guppy farm.
+        <p style={{ fontSize: '0.88rem', color: '#60736F' }}>
+          Connect with verified local breeders and pet lovers across Kerala.
         </p>
-
-        {/* Farm Showcase Banner */}
-        <div
-          style={{
-            background: 'linear-gradient(135deg, #0D5148 0%, #163B34 100%)',
-            borderRadius: 20,
-            padding: '16px 18px',
-            color: '#FFFFFF',
-            boxShadow: '0 8px 24px rgba(13, 81, 72, 0.25)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
-            <img
-              src="/ck-guppies-logo.jpg"
-              alt="CK Guppies Logo"
-              style={{
-                width: 58,
-                height: 58,
-                borderRadius: '50%',
-                objectFit: 'cover',
-                border: '2px solid #FFFFFF',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                background: '#FFFFFF',
-              }}
-            />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '0.96rem', fontWeight: 800, color: '#E2F7F2', marginBottom: 2 }}>
-                🏆 India’s Biggest Guppy Farm 🇮🇳
-              </div>
-              <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.85)', margin: 0 }}>
-                contact.ckguppyfarm@gmail.com
-              </p>
-            </div>
-            <a
-              href="https://wa.me/918667377338"
-              target="_blank"
-              rel="noreferrer"
-              style={{
-                background: '#25D366',
-                color: '#FFFFFF',
-                padding: '7px 14px',
-                borderRadius: 20,
-                fontSize: '0.78rem',
-                fontWeight: 700,
-                textDecoration: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 5,
-                boxShadow: '0 4px 12px rgba(37, 211, 102, 0.3)',
-              }}
-            >
-              💬 WhatsApp
-            </a>
-          </div>
-
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, fontSize: '0.76rem', opacity: 0.95, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.18)' }}>
-            <span>🎉 <strong>7600+</strong> Happy Customers</span>
-            <span>•</span>
-            <span>🌿 <strong>100+</strong> Premium Strains</span>
-            <span>•</span>
-            <span>💯 Educational 🎬 No Harm to Fish</span>
-          </div>
-        </div>
       </div>
 
       {/* 2. Search Bar */}
@@ -339,6 +276,79 @@ export default function FeedPage() {
             <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0D5148' }}>View more</span>
           </div>
         )}
+      </div>
+
+      {/* 4. Meet Kerala's top breeders Section */}
+      <div style={{ marginBottom: 30 }}>
+        <p className="section-label">FEATURED BREEDERS</p>
+        <h2 className="serif-heading" style={{ fontSize: '1.35rem', marginBottom: 12 }}>
+          Meet Kerala's top breeders
+        </h2>
+
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #0D5148 0%, #163B34 100%)',
+            borderRadius: 20,
+            padding: '18px 20px',
+            color: '#FFFFFF',
+            boxShadow: '0 8px 24px rgba(13, 81, 72, 0.22)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
+            <img
+              src="/ck-guppies-logo.jpg"
+              alt="CK Guppies Logo"
+              style={{
+                width: 60,
+                height: 60,
+                borderRadius: '50%',
+                objectFit: 'cover',
+                border: '2.5px solid #FFFFFF',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                background: '#FFFFFF',
+              }}
+            />
+            <div style={{ flex: 1 }}>
+              <h3 style={{ fontSize: '1.08rem', fontWeight: 800, color: '#FFFFFF', marginBottom: 2 }}>
+                CK Guppies & Bettas
+              </h3>
+              <p style={{ fontSize: '0.82rem', fontWeight: 700, color: '#A3E2D5', marginBottom: 2 }}>
+                🏆 India’s Biggest Guppy Farm 🇮🇳
+              </p>
+              <p style={{ fontSize: '0.76rem', color: 'rgba(255,255,255,0.8)' }}>
+                contact.ckguppyfarm@gmail.com
+              </p>
+            </div>
+            <a
+              href="https://wa.me/918667377338"
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                background: '#25D366',
+                color: '#FFFFFF',
+                padding: '8px 14px',
+                borderRadius: 22,
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                boxShadow: '0 4px 12px rgba(37, 211, 102, 0.35)',
+              }}
+            >
+              💬 WhatsApp
+            </a>
+          </div>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, fontSize: '0.76rem', opacity: 0.95, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.18)' }}>
+            <span>🎉 <strong>7600+</strong> Happy Customers</span>
+            <span>•</span>
+            <span>🌿 <strong>100+</strong> Premium Strains</span>
+            <span>•</span>
+            <span>💯 Educational 🎬 No Harm to Fish</span>
+          </div>
+        </div>
       </div>
 
       {/* 4. Marketplace Features Pills */}
