@@ -657,41 +657,41 @@ export default function FeedPage() {
       />
 
       {/* Modal: all guppy categories */}
-      {showAllCategories && (
-        <Modal title="All Guppy Categories" onClose={() => setShowAllCategories(false)}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-            {CATEGORIES.map((cat) => (
-              <div key={cat.id} onClick={() => openCategory(cat)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
-                <div style={{ width: 72, height: 72, borderRadius: '50%', overflow: 'hidden' }}>
-                  <CategoryImage cat={cat} />
-                </div>
-                <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#12332F', textAlign: 'center' }}>{cat.name}</span>
+      <Modal isOpen={showAllCategories} title="All Guppy Categories" onClose={() => setShowAllCategories(false)}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, padding: '8px 0' }}>
+          {CATEGORIES.map((cat) => (
+            <div
+              key={cat.id}
+              onClick={() => openCategory(cat)}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, cursor: 'pointer' }}
+            >
+              <div style={{ width: 72, height: 72, borderRadius: '50%', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                <CategoryImage cat={cat} />
               </div>
-            ))}
-          </div>
-        </Modal>
-      )}
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#12332F', textAlign: 'center' }}>{cat.name}</span>
+            </div>
+          ))}
+        </div>
+      </Modal>
 
       {/* Modal for Coming Soon Features */}
-      {comingSoonFeature && (
-        <Modal title="Feature Coming Soon" onClose={() => setComingSoonFeature(null)}>
-          <div style={{ textAlign: 'center', padding: '20px 0' }}>
-            <h3 style={{ fontSize: '1.1rem', color: '#0D5148', fontWeight: 700, marginBottom: 8 }}>
-              {comingSoonFeature.toUpperCase()} SERVICES
-            </h3>
-            <p style={{ fontSize: '0.85rem', color: '#60736F', marginBottom: 20 }}>
-              We are currently onboarding verified local partners across Kerala for {comingSoonFeature}.
-            </p>
-            <button
-              onClick={() => setComingSoonFeature(null)}
-              className="btn-primary"
-              style={{ width: '100%' }}
-            >
-              Understood
-            </button>
-          </div>
-        </Modal>
-      )}
+      <Modal isOpen={Boolean(comingSoonFeature)} title="Feature Coming Soon" onClose={() => setComingSoonFeature(null)}>
+        <div style={{ textAlign: 'center', padding: '20px 0' }}>
+          <h3 style={{ fontSize: '1.1rem', color: '#0D5148', fontWeight: 700, marginBottom: 8 }}>
+            {comingSoonFeature?.toUpperCase()} SERVICES
+          </h3>
+          <p style={{ fontSize: '0.85rem', color: '#60736F', marginBottom: 20 }}>
+            We are currently onboarding verified local partners across Kerala for {comingSoonFeature}.
+          </p>
+          <button
+            onClick={() => setComingSoonFeature(null)}
+            className="btn-primary"
+            style={{ width: '100%' }}
+          >
+            Understood
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }
