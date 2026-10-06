@@ -278,6 +278,62 @@ export default function FeedPage() {
         )}
       </div>
 
+      {/* 4. AUTHORISED TOP BREEDERS Section (Positioned at the very top) */}
+      <div style={{ marginBottom: 30 }}>
+        <p className="section-label">AUTHORISED TOP BREEDERS</p>
+        <h2 className="serif-heading" style={{ fontSize: '1.35rem', marginBottom: 14 }}>
+          Meet Kerala's top breeders
+        </h2>
+
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #0D5148 0%, #163B34 100%)',
+            borderRadius: 20,
+            padding: '20px',
+            color: '#FFFFFF',
+            boxShadow: '0 8px 24px rgba(13, 81, 72, 0.22)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
+            <img
+              src="/ck-guppies-logo.jpg"
+              alt="CK Guppies Logo"
+              style={{
+                width: 62,
+                height: 62,
+                borderRadius: '50%',
+                objectFit: 'cover',
+                border: '2.5px solid #FFFFFF',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                background: '#FFFFFF',
+              }}
+            />
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
+                  CK Guppies
+                </h3>
+                <CheckCircle size={18} color="#F3C34E" fill="#0D5148" />
+              </div>
+              <p style={{ fontSize: '0.84rem', fontWeight: 700, color: '#A3E2D5', margin: 0 }}>
+                🏆 India’s Biggest Guppy Farm 🇮🇳
+              </p>
+            </div>
+            <span style={{ fontSize: '0.68rem', fontWeight: 800, background: '#F3C34E', color: '#082F2B', padding: '4px 12px', borderRadius: 999 }}>
+              VERIFIED BREEDER
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, fontSize: '0.78rem', opacity: 0.95, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.18)' }}>
+            <span>🎉 <strong>7600+</strong> Happy Customers</span>
+            <span>•</span>
+            <span>🌿 <strong>100+</strong> Premium Strains</span>
+            <span>•</span>
+            <span>💯 Educational 🎬 No Harm to Fish</span>
+          </div>
+        </div>
+      </div>
+
 
 
       {/* 4. Marketplace Features Pills */}
@@ -418,42 +474,7 @@ export default function FeedPage() {
         )}
       </div>
 
-      {/* 6. Promotional Banner */}
-      <div style={{
-        background: '#F3C34E',
-        borderRadius: 22,
-        padding: 20,
-        marginBottom: 34,
-        color: '#082F2B',
-        boxShadow: '0 4px 18px rgba(243, 195, 78, 0.25)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 10,
-      }}>
-        <p style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase' }}>SELL WITH CONFIDENCE</p>
-        <h3 className="serif-heading" style={{ fontSize: '1.3rem', color: '#082F2B' }}>
-          Reach trusted pet lovers across Kerala
-        </h3>
-        <p style={{ fontSize: '0.84rem', color: '#123F3A', lineHeight: 1.4 }}>
-          List your pet or breed with verified badge protection and direct local enquiries.
-        </p>
-        <button
-          onClick={() => navigate('/vendor/apply')}
-          style={{
-            marginTop: 4,
-            alignSelf: 'flex-start',
-            background: '#0D5148',
-            color: '#FFFFFF',
-            border: 'none',
-            padding: '10px 20px',
-            fontSize: '0.85rem',
-            fontWeight: 700,
-            cursor: 'pointer',
-          }}
-        >
-          List Your Pet
-        </button>
-      </div>
+
 
       {/* 8. WATCH PET REELS (Trending Reels Horizontal Carousel — ALL Reels) */}
       <div style={{ marginBottom: 34 }}>
@@ -506,61 +527,7 @@ export default function FeedPage() {
         </div>
       </div>
 
-      {/* 9. FEATURED BREEDERS (Placed AFTER the Reels Section — No contact details or WhatsApp button) */}
-      <div style={{ marginBottom: 34 }}>
-        <p className="section-label">FEATURED BREEDERS</p>
-        <h2 className="serif-heading" style={{ fontSize: '1.35rem', marginBottom: 14 }}>
-          Meet Kerala's top breeders
-        </h2>
 
-        <div
-          style={{
-            background: 'linear-gradient(135deg, #0D5148 0%, #163B34 100%)',
-            borderRadius: 20,
-            padding: '20px',
-            color: '#FFFFFF',
-            boxShadow: '0 8px 24px rgba(13, 81, 72, 0.22)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
-            <img
-              src="/ck-guppies-logo.jpg"
-              alt="CK Guppies Logo"
-              style={{
-                width: 62,
-                height: 62,
-                borderRadius: '50%',
-                objectFit: 'cover',
-                border: '2.5px solid #FFFFFF',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                background: '#FFFFFF',
-              }}
-            />
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
-                  CK Guppies
-                </h3>
-                <CheckCircle size={18} color="#F3C34E" fill="#0D5148" />
-              </div>
-              <p style={{ fontSize: '0.84rem', fontWeight: 700, color: '#A3E2D5', margin: 0 }}>
-                🏆 India’s Biggest Guppy Farm 🇮🇳
-              </p>
-            </div>
-            <span style={{ fontSize: '0.68rem', fontWeight: 800, background: '#F3C34E', color: '#082F2B', padding: '4px 12px', borderRadius: 999 }}>
-              VERIFIED BREEDER
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, fontSize: '0.78rem', opacity: 0.95, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.18)' }}>
-            <span>🎉 <strong>7600+</strong> Happy Customers</span>
-            <span>•</span>
-            <span>🌿 <strong>100+</strong> Premium Strains</span>
-            <span>•</span>
-            <span>💯 Educational 🎬 No Harm to Fish</span>
-          </div>
-        </div>
-      </div>
 
       {/* 9. START WITH A CATEGORY Cards Carousel (Positioned at the Bottom) */}
       <div style={{ marginBottom: 34 }}>
