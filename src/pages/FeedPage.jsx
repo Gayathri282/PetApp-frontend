@@ -445,7 +445,6 @@ export default function FeedPage() {
             background: '#0D5148',
             color: '#FFFFFF',
             border: 'none',
-            borderRadius: 14,
             padding: '10px 20px',
             fontSize: '0.85rem',
             fontWeight: 700,
@@ -454,46 +453,6 @@ export default function FeedPage() {
         >
           List Your Pet
         </button>
-      </div>
-
-      {/* 7. TRUSTED BREEDERS SECTION */}
-      <div style={{ marginBottom: 34 }}>
-        <p className="section-label">TRUSTED BY LOCAL PET LOVERS</p>
-        <h2 className="serif-heading" style={{ fontSize: '1.35rem', marginBottom: 14 }}>
-          Meet Kerala's top breeders
-        </h2>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 }}>
-          <div className="card" style={{ padding: 16, background: '#0D5148', color: '#FFFFFF' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <span style={{ fontSize: '0.65rem', fontWeight: 800, background: 'rgba(255,255,255,0.15)', padding: '4px 10px', borderRadius: 999, letterSpacing: '0.08em' }}>PROFESSIONAL BREEDER</span>
-              <span style={{ fontSize: '0.65rem', fontWeight: 800, background: '#F3C34E', color: '#082F2B', padding: '4px 10px', borderRadius: 999 }}>TOP BREEDER</span>
-            </div>
-            <h4 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-              GreenFin Aquatics & Pets <CheckCircle size={16} color="#F3C34E" />
-            </h4>
-            <p style={{ fontSize: '0.78rem', color: '#E8F1ED', marginBottom: 12 }}>Kozhikode, Kerala</p>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.8rem', paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.15)' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 700, color: '#F3C34E' }}><Star size={14} fill="#F3C34E" /> 4.9 Rating</span>
-              <span style={{ color: '#E8F1ED' }}>328 Verified Reviews</span>
-            </div>
-          </div>
-
-          <div className="card" style={{ padding: 16, background: '#FFFFFF' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <span style={{ fontSize: '0.65rem', fontWeight: 800, background: '#E8F1ED', color: '#0D5148', padding: '4px 10px', borderRadius: 999, letterSpacing: '0.08em' }}>CERTIFIED HOME BREEDER</span>
-              <span style={{ fontSize: '0.65rem', fontWeight: 800, background: '#E8F1ED', color: '#0D5148', padding: '4px 10px', borderRadius: 999 }}>VERIFIED</span>
-            </div>
-            <h4 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#12332F', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-              BlueWave Companion Kennels <CheckCircle size={16} color="#0D5148" />
-            </h4>
-            <p style={{ fontSize: '0.78rem', color: '#60736F', marginBottom: 12 }}>Ernakulam, Kochi</p>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.8rem', paddingTop: 10, borderTop: '1px solid #D6E3DE' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 700, color: '#0D5148' }}><Star size={14} fill="#0D5148" /> 4.8 Rating</span>
-              <span style={{ color: '#60736F' }}>194 Verified Reviews</span>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* 8. WATCH PET REELS (Trending Reels Horizontal Carousel — ALL Reels) */}
