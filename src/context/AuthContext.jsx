@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getMe, logout as logoutApi, getConversations, getNotifications } from '../api';
+import { DEFAULT_CK_CUSTOM_CATEGORIES } from '../data/ckGuppyCategories';
 
 const AuthContext = createContext(null);
 
@@ -92,11 +93,15 @@ export function AuthProvider({ children }) {
     name: user.name || 'CK Guppies',
     avatar: user.avatar || '/ck-guppies-logo.jpg',
     bio: user.bio || '🏆 India’s Biggest Guppy Farm 🇮🇳 | 🎉 7600+ Happy Customers | 🌿 100+ Premium Guppy Strains | 💯 Educational 🎬 No Harm to Fish',
-    vendorDetails: user.vendorDetails || {
-      businessName: 'CK Guppies',
-      contactEmail: 'contact.ckguppyfarm@gmail.com',
-      contactNumber: '8667377338',
-      upiDetails: { upiId: '8667377338@paytm', accountHolderName: 'CK Guppies' }
+    vendorDetails: {
+      ...(user?.vendorDetails || {}),
+      businessName: user?.vendorDetails?.businessName || 'CK Guppies',
+      contactEmail: user?.vendorDetails?.contactEmail || 'contact.ckguppyfarm@gmail.com',
+      contactNumber: user?.vendorDetails?.contactNumber || '8667377338',
+      upiDetails: user?.vendorDetails?.upiDetails || { upiId: '8667377338@paytm', accountHolderName: 'CK Guppies' },
+      customCategories: (user?.vendorDetails?.customCategories && user.vendorDetails.customCategories.length > 0)
+        ? user.vendorDetails.customCategories
+        : DEFAULT_CK_CUSTOM_CATEGORIES,
     }
   } : user;
 
