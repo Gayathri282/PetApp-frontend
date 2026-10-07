@@ -8,9 +8,12 @@ import {
   vendorClearCategories 
 } from '../../api';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
+import { DEFAULT_CK_CUSTOM_CATEGORIES } from '../../data/ckGuppyCategories';
 
 export default function VendorCategoriesManager({ onDataCleared }) {
   const toast = useToast();
+  const { user } = useAuth();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -37,9 +40,17 @@ export default function VendorCategoriesManager({ onDataCleared }) {
     try {
       setLoading(true);
       const res = await getVendorCustomCategories();
-      setCategories(res.data.categories || []);
+      const loaded = res.data.categories || [];
+      if (loaded.length === 0 && (user?.email?.toLowerCase() === 'contact.ckguppyfarm@gmail.com' || user?.name?.toLowerCase().includes('gupp'))) {
+        setCategories(DEFAULT_CK_CUSTOM_CATEGORIES);
+      } else {
+        setCategories(loaded);
+      }
     } catch (err) {
       console.error('Failed to load custom categories:', err);
+      if (user?.email?.toLowerCase() === 'contact.ckguppyfarm@gmail.com' || user?.name?.toLowerCase().includes('gupp')) {
+        setCategories(DEFAULT_CK_CUSTOM_CATEGORIES);
+      }
     } finally {
       setLoading(false);
     }
