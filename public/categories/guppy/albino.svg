@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2A1B28"/>
+      <stop offset="100%" stop-color="#120A14"/>
+    </linearGradient>
+    <linearGradient id="body" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFD6E8"/>
+      <stop offset="60%" stop-color="#FF7597"/>
+      <stop offset="100%" stop-color="#FF2E63"/>
+    </linearGradient>
+    <linearGradient id="tail" x1="0%" y1="0%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#FF4D79"/>
+      <stop offset="50%" stop-color="#FF1A4D"/>
+      <stop offset="100%" stop-color="#C70039"/>
+    </linearGradient>
+    <radialGradient id="eye" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FF0040"/>
+      <stop offset="100%" stop-color="#800020"/>
+    </radialGradient>
+  </defs>
+  <circle cx="100" cy="100" r="100" fill="url(#bg)"/>
+  <!-- Tail -->
+  <path d="M 105 100 C 120 70, 175 40, 185 65 C 190 90, 195 125, 180 145 C 165 160, 120 125, 105 100 Z" fill="url(#tail)" opacity="0.95"/>
+  <path d="M 110 100 C 130 80, 170 55, 180 75 C 185 95, 180 120, 170 135 C 150 145, 125 115, 110 100 Z" fill="#FF85A1" opacity="0.4"/>
+  <!-- Body -->
+  <path d="M 35 100 C 45 75, 80 75, 110 92 C 115 100, 110 108, 100 110 C 70 115, 45 115, 35 100 Z" fill="url(#body)"/>
+  <!-- Dorsal Fin -->
+  <path d="M 65 80 C 60 50, 95 40, 125 50 C 115 70, 90 75, 75 80 Z" fill="url(#tail)" opacity="0.9"/>
+  <!-- Pectoral Fin -->
+  <path d="M 55 105 C 50 115, 60 125, 70 120 C 72 112, 65 105, 55 105 Z" fill="#FFA3B8" opacity="0.8"/>
+  <!-- Ruby Eye -->
+  <circle cx="50" cy="94" r="5" fill="url(#eye)"/>
+  <circle cx="48" cy="92" r="1.5" fill="#FFFFFF"/>
+</svg>

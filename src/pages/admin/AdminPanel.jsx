@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, MessageSquare, Package, BarChart3, Check, X, Trash2, CheckCircle, Play as PlayIcon, Film, ShieldAlert, UserCheck, UserX } from 'lucide-react';
+import { ArrowLeft, Users, MessageSquare, Package, BarChart3, Check, X, Trash2, CheckCircle, Play as PlayIcon, Film, ShieldAlert, UserCheck, UserX, Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import Spinner from '../../components/ui/Spinner';
 import Modal from '../../components/ui/Modal';
 import VideoPlayer from '../../components/reel/VideoPlayer';
+import AdminShowcaseManager from '../../components/admin/AdminShowcaseManager';
 import {
   getAdminStats,
   getApplications,
@@ -230,6 +231,7 @@ export default function AdminPanel() {
     { key: 'products', icon: Package, label: 'Products' },
     { key: 'users', icon: Users, label: 'Users' },
     { key: 'apps', icon: CheckCircle, label: 'Applications' },
+    { key: 'showcase', icon: Sparkles, label: 'Home Showcase' },
   ];
 
   return (
@@ -721,6 +723,9 @@ export default function AdminPanel() {
               ))}
             </div>
           )}
+
+          {/* Home Showcase Tab */}
+          {tab === 'showcase' && <AdminShowcaseManager />}
         </div>
       )}
 

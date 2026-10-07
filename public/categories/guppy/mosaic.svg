@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg_mos" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2E1065"/>
+      <stop offset="100%" stop-color="#0F051D"/>
+    </linearGradient>
+    <linearGradient id="mos_red" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EF4444"/>
+      <stop offset="100%" stop-color="#B91C1C"/>
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="100" fill="url(#bg_mos)"/>
+  <path d="M 105 100 C 120 65, 178 35, 190 62 C 196 92, 192 132, 178 150 C 160 165, 120 125, 105 100 Z" fill="url(#mos_red)"/>
+  <!-- Mosaic Dots & Mesh -->
+  <circle cx="140" cy="80" r="4" fill="#0F051D"/>
+  <circle cx="155" cy="95" r="5" fill="#0F051D"/>
+  <circle cx="165" cy="115" r="4" fill="#0F051D"/>
+  <circle cx="145" cy="130" r="4.5" fill="#0F051D"/>
+  <circle cx="130" cy="110" r="3.5" fill="#0F051D"/>
+  <!-- Body -->
+  <path d="M 35 100 C 45 75, 80 75, 110 92 C 115 100, 110 108, 100 110 C 70 115, 45 115, 35 100 Z" fill="#F43F5E"/>
+  <path d="M 65 80 C 60 48, 95 38, 128 48 C 115 68, 90 75, 75 80 Z" fill="url(#mos_red)"/>
+  <circle cx="50" cy="94" r="5" fill="#0F051D"/>
+  <circle cx="48" cy="92" r="1.5" fill="#FFFFFF"/>
+</svg>

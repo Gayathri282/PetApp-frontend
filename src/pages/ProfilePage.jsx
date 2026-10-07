@@ -2,13 +2,14 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { Share2, Plus, LogOut, Film, Package, X, Upload, Edit2, ShoppingBag, CreditCard } from 'lucide-react';
+import { Share2, Plus, LogOut, Film, Package, X, Upload, Edit2, ShoppingBag, CreditCard, Layers } from 'lucide-react';
 import ProductCard from '../components/product/ProductCard';
 import ShareModal from '../components/ui/ShareModal';
 import Modal from '../components/ui/Modal';
 import Spinner from '../components/ui/Spinner';
 import VendorUpiSettings from '../components/vendor/VendorUpiSettings';
 import VendorShippingSettings from '../components/vendor/VendorShippingSettings';
+import VendorCategoriesManager from '../components/vendor/VendorCategoriesManager';
 import VendorOrdersTab from '../components/orders/VendorOrdersTab';
 import UserOrdersTab from '../components/orders/UserOrdersTab';
 import UpiPaymentModal from '../components/payment/UpiPaymentModal';
@@ -201,7 +202,8 @@ export default function ProfilePage() {
               { key: 'reels', icon: Film, label: 'Reels' },
               { key: 'products', icon: Package, label: 'Products' },
               { key: 'orders', icon: ShoppingBag, label: 'Orders' },
-              { key: 'upi', icon: CreditCard, label: 'UPI & Categories' },
+              { key: 'categories', icon: Layers, label: 'Categories' },
+              { key: 'upi', icon: CreditCard, label: 'UPI & Shipping' },
             ].map((t) => (
               <button
                 key={t.key}
@@ -251,6 +253,15 @@ export default function ProfilePage() {
               )}
 
               {tab === 'orders' && <VendorOrdersTab />}
+
+              {tab === 'categories' && (
+                <VendorCategoriesManager 
+                  onDataCleared={(type) => {
+                    if (type === 'reels') setProducts(prev => prev.filter(p => p.category !== 'promotional' && !p.reels?.length));
+                    if (type === 'products') setProducts(prev => prev.filter(p => p.category === 'promotional' || (p.reels?.length === 1 && !p.isOnSale)));
+                  }} 
+                />
+              )}
 
               {tab === 'upi' && (
                 <>

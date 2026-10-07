@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg_plat" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+    <linearGradient id="plat_body" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="50%" stop-color="#E2E8F0"/>
+      <stop offset="100%" stop-color="#CBD5E1"/>
+    </linearGradient>
+    <linearGradient id="plat_tail" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="50%" stop-color="#94A3B8"/>
+      <stop offset="100%" stop-color="#64748B"/>
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="100" fill="url(#bg_plat)"/>
+  <path d="M 105 100 C 120 68, 175 38, 186 64 C 192 90, 188 128, 176 145 C 160 160, 120 125, 105 100 Z" fill="url(#plat_tail)"/>
+  <path d="M 35 100 C 45 75, 80 75, 110 92 C 115 100, 110 108, 100 110 C 70 115, 45 115, 35 100 Z" fill="url(#plat_body)"/>
+  <!-- Dumbo Ear Fin -->
+  <path d="M 58 102 C 50 118, 70 135, 82 122 C 84 112, 72 102, 58 102 Z" fill="#F1F5F9" opacity="0.85"/>
+  <path d="M 65 80 C 60 48, 95 38, 128 48 C 115 68, 90 75, 75 80 Z" fill="url(#plat_tail)"/>
+  <circle cx="50" cy="94" r="5" fill="#0F172A"/>
+  <circle cx="48" cy="92" r="1.5" fill="#FFFFFF"/>
+</svg>

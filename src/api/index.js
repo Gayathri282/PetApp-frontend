@@ -64,6 +64,14 @@ export const getVendorProducts = () => api.get('/api/vendor/products');
 export const uploadSingleReel = (data) => api.post('/api/vendor/reel', data);
 export const updateVendorUpiSettings = (data) => api.put('/api/vendor/upi-settings', data);
 export const updateVendorShippingSettings = (data) => api.put('/api/vendor/shipping-settings', data);
+export const getVendorCustomCategories = () => api.get('/api/vendor/custom-categories');
+export const updateVendorCustomCategories = (categories) => api.put('/api/vendor/custom-categories', { categories });
+export const vendorClearReels = () => api.delete('/api/vendor/clear/reels');
+export const vendorClearProducts = () => api.delete('/api/vendor/clear/products');
+export const vendorClearCategories = () => api.delete('/api/vendor/clear/categories');
+
+// ── Homepage Showcase ──────────────────────────────────
+export const getHomepageShowcase = () => api.get('/api/products/homepage-showcase');
 
 // ── Orders & Payments ──────────────────────────────────
 export const createOrder = (data) => api.post('/api/orders', data);
@@ -119,6 +127,10 @@ export const adminSuspendUser = (id, suspend = true, reason = '') =>
   api.put(`/api/admin/users/${id}/suspend`, { suspend, reason });
 export const adminDeleteUser = (id, reason = '') => api.delete(`/api/admin/users/${id}`, { data: { reason } });
 export const adminCleanDummyData = () => api.post('/api/admin/clean-dummy-data');
+export const adminGetVendorCategories = () => api.get('/api/admin/vendor-categories');
+export const adminGetHomepageShowcase = () => api.get('/api/admin/homepage-showcase');
+export const adminUpdateHomepageShowcase = (data) => api.put('/api/admin/homepage-showcase', data);
+
 
 // ── Media / Cloudinary ────────────────────────────────
 export const getCloudinarySignature = () => api.get('/api/media/cloudinary-signature');

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg_blue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F2027"/>
+      <stop offset="100%" stop-color="#203A43"/>
+    </linearGradient>
+    <linearGradient id="body_blue" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7F7FD5"/>
+      <stop offset="50%" stop-color="#86A8E7"/>
+      <stop offset="100%" stop-color="#00D2FF"/>
+    </linearGradient>
+    <linearGradient id="tail_blue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0052D4"/>
+      <stop offset="50%" stop-color="#4364F7"/>
+      <stop offset="100%" stop-color="#6FB1FC"/>
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="100" fill="url(#bg_blue)"/>
+  <path d="M 105 100 C 120 70, 175 35, 188 60 C 195 90, 190 130, 175 148 C 160 162, 120 125, 105 100 Z" fill="url(#tail_blue)"/>
+  <path d="M 110 100 C 130 75, 168 50, 178 70 C 182 90, 178 118, 168 132 C 148 140, 125 115, 110 100 Z" fill="#99D5FF" opacity="0.35"/>
+  <path d="M 35 100 C 45 75, 80 75, 110 92 C 115 100, 110 108, 100 110 C 70 115, 45 115, 35 100 Z" fill="url(#body_blue)"/>
+  <path d="M 65 80 C 60 48, 95 38, 128 48 C 115 68, 90 75, 75 80 Z" fill="url(#tail_blue)" opacity="0.9"/>
+  <circle cx="50" cy="94" r="5" fill="#0A1128"/>
+  <circle cx="48" cy="92" r="1.5" fill="#FFFFFF"/>
+</svg>

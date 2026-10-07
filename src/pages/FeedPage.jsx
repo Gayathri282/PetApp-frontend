@@ -7,7 +7,7 @@ import PetVideoCard from '../components/video/PetVideoCard';
 import ReelsViewer from '../components/reel/ReelsViewer';
 import Modal from '../components/ui/Modal';
 import Spinner from '../components/ui/Spinner';
-import { getFeed, getLatestTimestamp } from '../api';
+import { getFeed, getLatestTimestamp, getHomepageShowcase } from '../api';
 import { CATEGORIES, HOME_CATEGORY_COUNT } from '../data/categories';
 import { FALLBACK_GUPPY_PRODUCTS, GUPPY_VARIETIES_LIST } from '../data/guppyProducts';
 import { getPlayableVideoUrl, getPosterUrl, getFullSrc, logVideoDiagnostics } from '../utils/media';
@@ -46,6 +46,7 @@ export default function FeedPage() {
   const [selectedReelIndex, setSelectedReelIndex] = useState(0);
   const [activeModalItem, setActiveModalItem] = useState(null);
   const [activeVideoId, setActiveVideoId] = useState(null);
+  const [adminShowcase, setAdminShowcase] = useState({ featuredCategories: [], featuredBreeds: [] });
 
   const filteredBreeds = GUPPY_VARIETIES_LIST.filter(b => {
     const matchesCat = modalSelectedCat === 'all' || b.cat === modalSelectedCat;
@@ -118,6 +119,9 @@ export default function FeedPage() {
   useEffect(() => {
     isFetching.current = false;
     loadFeed(1, 10);
+    getHomepageShowcase()
+      .then(res => setAdminShowcase(res.data.showcase || { featuredCategories: [], featuredBreeds: [] }))
+      .catch(() => {});
     return () => {
       isFetching.current = false;
     };
@@ -254,6 +258,63 @@ export default function FeedPage() {
           Search pets, breeds, products...
         </div>
       </div>
+
+      {/* Admin Featured Categories & Breeds Showcase */}
+      {((adminShowcase.featuredCategories || []).length > 0 || (adminShowcase.featuredBreeds || []).length > 0) && (
+        <div style={{ marginBottom: 24, background: '#FFFFFF', borderRadius: 16, padding: 14, border: '1px solid #D6E3DE', boxShadow: '0 4px 14px rgba(13, 81, 72, 0.04)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#0D5148', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+              ✨ FEATURED VENDOR SHOWCASE
+            </span>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {(adminShowcase.featuredCategories || []).map((fc, idx) => (
+              <button
+                key={`cat-${idx}`}
+                onClick={() => navigate(`/search?q=${encodeURIComponent(fc.categoryName)}`)}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 20,
+                  background: 'linear-gradient(135deg, #0D5148 0%, #163B34 100%)',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  fontSize: '0.82rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  boxShadow: '0 2px 6px rgba(13, 81, 72, 0.2)',
+                }}
+              >
+                🏷️ {fc.categoryName} <span style={{ opacity: 0.8, fontSize: '0.74rem' }}>({fc.vendorName})</span>
+              </button>
+            ))}
+
+            {(adminShowcase.featuredBreeds || []).map((fb, idx) => (
+              <button
+                key={`breed-${idx}`}
+                onClick={() => navigate(`/search?q=${encodeURIComponent(fb.breedName)}`)}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 20,
+                  background: '#F0F7F4',
+                  color: '#0D5148',
+                  border: '1px solid #B8D5CB',
+                  fontSize: '0.82rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                🐾 {fb.breedName} <span style={{ opacity: 0.8, fontSize: '0.74rem' }}>({fb.vendorName})</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 3. Category Avatar Row */}
       <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 10, marginBottom: 26, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
