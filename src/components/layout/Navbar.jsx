@@ -160,53 +160,6 @@ export default function Navbar() {
 
         {/* Right: Actions */}
         <div className="main-navbar-actions" style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-          {/* Search Icon */}
-          <button 
-            onClick={() => navigate('/search')}
-            style={{ 
-              cursor: 'pointer', 
-              display: 'flex', 
-              alignItems: 'center', 
-              background: '#F3F8F5',
-              padding: 8,
-              borderRadius: 12,
-              border: '1px solid #D6E3DE',
-              color: '#0D5148'
-            }}
-          >
-            <Search size={18} />
-          </button>
-
-          {/* Messages */}
-          <button 
-            onClick={() => navigate('/chat')}
-            style={{ 
-              cursor: 'pointer', 
-              display: 'flex', 
-              alignItems: 'center', 
-              position: 'relative',
-              background: '#F3F8F5',
-              padding: 8,
-              borderRadius: 12,
-              border: '1px solid #D6E3DE',
-              color: '#0D5148'
-            }}
-          >
-            <MessageCircle size={18} />
-            {unreadCount > 0 && (
-              <div style={{
-                position: 'absolute',
-                top: -3, right: -3, width: 16, height: 16,
-                background: '#ef4444', borderRadius: '50%',
-                fontSize: '0.62rem', color: '#fff',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontWeight: 800, border: '2px solid #FFFFFF'
-              }}>
-                {unreadCount}
-              </div>
-            )}
-          </button>
-
           {/* Notifications */}
           <button 
             onClick={() => navigate('/notifications')}
