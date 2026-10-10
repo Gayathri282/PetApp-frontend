@@ -790,6 +790,7 @@ function UploadReelModal({ open, onClose, onSuccess, user, vendorProducts }) {
       });
 
       toast.success('Reel uploaded!');
+      window.dispatchEvent(new CustomEvent('app-data-updated'));
       onSuccess(data.product);
       setFile(null); setName(''); setDesc(''); setTags([]);
       onClose();
@@ -885,6 +886,7 @@ function UploadProductModal({ open, onClose, onSuccess, user, vendorProducts }) 
       });
 
       toast.success('Product created!');
+      window.dispatchEvent(new CustomEvent('app-data-updated'));
       onSuccess(data.product);
       setForm({ name: '', description: '', category: '', price: '', shippingChargeKerala: '', isOnSale: true }); setShippingGroups([]); setTags([]); setVideos([]); setImages([]);
     } catch (e) {

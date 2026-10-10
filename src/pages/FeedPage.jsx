@@ -130,6 +130,10 @@ export default function FeedPage() {
   useEffect(() => { if (page > 1) loadFeed(page); }, [page, loadFeed]);
 
   useEffect(() => {
+    const handleDataUpdate = () => {
+      loadFeed(1, 10);
+    };
+
     const poll = async () => {
       try {
         const { data } = await getLatestTimestamp();
@@ -138,14 +142,22 @@ export default function FeedPage() {
           newestTimestamp.current &&
           new Date(data.latestTimestamp) > new Date(newestTimestamp.current)
         ) {
-          setShowNewReels(true);
+          loadFeed(1, 10);
+          setShowNewReels(false);
         }
       } catch {}
     };
 
-    const timer = setInterval(poll, 60_000);
-    return () => clearInterval(timer);
-  }, []);
+    window.addEventListener('focus', handleDataUpdate);
+    window.addEventListener('app-data-updated', handleDataUpdate);
+    const timer = setInterval(poll, 5_000);
+
+    return () => {
+      window.removeEventListener('focus', handleDataUpdate);
+      window.removeEventListener('app-data-updated', handleDataUpdate);
+      clearInterval(timer);
+    };
+  }, [loadFeed]);
 
   const openFullReelAt = (index) => {
     setSelectedReelIndex(index);

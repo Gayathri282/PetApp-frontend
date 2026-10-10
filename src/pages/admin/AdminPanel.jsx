@@ -148,6 +148,7 @@ export default function AdminPanel() {
       await adminReviewReel(id, status, reason);
       setReels(prev => prev.map(r => r._id === id ? { ...r, status } : r));
       loadStats();
+      window.dispatchEvent(new CustomEvent('app-data-updated'));
       toast.success(`Reel ${status}`);
     } catch {
       toast.error('Failed to update reel status');
@@ -159,6 +160,7 @@ export default function AdminPanel() {
       await reviewProduct(id, status, reason);
       setProducts(prev => prev.map(p => p._id === id ? { ...p, status } : p));
       loadStats();
+      window.dispatchEvent(new CustomEvent('app-data-updated'));
       toast.success(`Product ${status}`);
     } catch {
       toast.error('Failed to update product status');
@@ -171,6 +173,7 @@ export default function AdminPanel() {
       await adminSuspendUser(userId, nextSuspend);
       setUsers(prev => prev.map(u => u._id === userId ? { ...u, status: nextSuspend ? 'suspended' : 'active', isSuspended: nextSuspend } : u));
       loadStats();
+      window.dispatchEvent(new CustomEvent('app-data-updated'));
       toast.success(`User account ${nextSuspend ? 'suspended' : 'activated'}`);
     } catch {
       toast.error('Failed to update user status');
@@ -201,6 +204,7 @@ export default function AdminPanel() {
         toast.success('User account removed.');
       }
       loadStats();
+      window.dispatchEvent(new CustomEvent('app-data-updated'));
       setTakedownModal(null);
     } catch {
       toast.error('Moderation action failed.');

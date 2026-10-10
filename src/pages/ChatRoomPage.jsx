@@ -41,7 +41,7 @@ export default function ChatRoomPage() {
     };
 
     fetchMessages();
-    const interval = setInterval(fetchMessages, 3000);
+    const interval = setInterval(fetchMessages, 1500);
     return () => clearInterval(interval);
   }, [userId, updateUnread]);
 
