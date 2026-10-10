@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -55,34 +55,47 @@ export default function ProfilePage() {
     }
   }, [location.search]);
 
+  const fetchVendorProducts = useCallback((showSpinner = false) => {
+    if (showSpinner) setLoadingProducts(true);
+    getVendorProducts()
+      .then(r => {
+        const list = r.data.products || [];
+        if (list.length === 0 && (user?.email === 'contact.ckguppyfarm@gmail.com' || user?.name?.toLowerCase().includes('gupp'))) {
+          setProducts(FALLBACK_GUPPY_PRODUCTS);
+        } else {
+          setProducts(list);
+        }
+      })
+      .catch(err => {
+        console.error('Failed to load vendor products:', err);
+        if (user?.email === 'contact.ckguppyfarm@gmail.com' || user?.name?.toLowerCase().includes('gupp')) {
+          setProducts(FALLBACK_GUPPY_PRODUCTS);
+        } else {
+          setProducts([]);
+        }
+      })
+      .finally(() => {
+        if (showSpinner) setLoadingProducts(false);
+      });
+  }, [user]);
+
   useEffect(() => {
     if (isVendor || isAdmin) {
-      setLoadingProducts(true);
-      getVendorProducts()
-        .then(r => {
-          const list = r.data.products || [];
-          if (list.length === 0 && (user?.email === 'contact.ckguppyfarm@gmail.com' || user?.name?.toLowerCase().includes('gupp'))) {
-            setProducts(FALLBACK_GUPPY_PRODUCTS);
-          } else {
-            setProducts(list);
-          }
-        })
-        .catch(err => {
-          console.error('Failed to load vendor products:', err);
-          if (user?.email === 'contact.ckguppyfarm@gmail.com' || user?.name?.toLowerCase().includes('gupp')) {
-            setProducts(FALLBACK_GUPPY_PRODUCTS);
-          } else {
-            setProducts([]);
-          }
-        })
-        .finally(() => setLoadingProducts(false));
+      fetchVendorProducts(true);
+      const handleUpdate = () => fetchVendorProducts(false);
+      window.addEventListener('app-data-updated', handleUpdate);
+      const timer = setInterval(() => fetchVendorProducts(false), 5000);
+      return () => {
+        window.removeEventListener('app-data-updated', handleUpdate);
+        clearInterval(timer);
+      };
     } else if (user?.role === 'user') {
       getApplicationStatus().then(r => setAppStatus(r.data.application)).catch(() => { });
     }
-  }, [isVendor, isAdmin, user]);
+  }, [isVendor, isAdmin, user, fetchVendorProducts]);
 
-  const reels = (products || []).filter(p => p.category === 'promotional' || (!p.isOnSale && p.reels?.length === 1));
-  const saleProducts = (products || []).filter(p => p.isOnSale || (p.reels?.length > 1 && p.category !== 'promotional'));
+  const reels = (products || []).filter(p => p.category === 'promotional' || p.type === 'reel');
+  const saleProducts = (products || []).filter(p => p.category !== 'promotional' && p.type !== 'reel');
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this item?')) return;
