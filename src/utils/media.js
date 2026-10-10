@@ -48,6 +48,7 @@ export const getPlayableVideoUrl = (item) => {
     typeof subReel === 'string' ? subReel : null,
 
     // Direct item properties
+    Array.isArray(item.videoUrls) ? item.videoUrls[0] : null,
     item.videoUrl,
     item.video_url,
     item.mediaUrl,
@@ -60,6 +61,9 @@ export const getPlayableVideoUrl = (item) => {
       : typeof item.media === 'string'
       ? item.media
       : item.media?.url,
+    Array.isArray(item.images) && typeof item.images[0] === 'string' && (item.images[0].includes('.mp4') || item.images[0].includes('cloudinary.com/video'))
+      ? item.images[0]
+      : null,
   ];
 
   for (const candidate of candidates) {

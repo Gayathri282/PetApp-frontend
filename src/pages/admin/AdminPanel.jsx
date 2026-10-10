@@ -143,6 +143,18 @@ export default function AdminPanel() {
     return () => { isCancelled = true; };
   }, [tab, reelFilter, productFilter, userFilter, searchQuery]);
 
+  // Video Preview Handler
+  const handleOpenVideoPreview = (item) => {
+    const url = getPlayableVideoUrl(item);
+    const poster = getPosterUrl(item);
+    console.log('🎥 [ADMIN VIDEO PREVIEW] Reel:', item.name, 'Resolved Video URL:', url);
+    if (!url) {
+      toast.info('No playable video file attached to this reel');
+      return;
+    }
+    setPreviewVideo({ id: item._id, url, name: item.name, poster });
+  };
+
   // Moderation Action Handlers
   const handleReelAction = async (id, status, reason = '') => {
     try {
@@ -475,7 +487,7 @@ export default function AdminPanel() {
                   <div key={r._id} className="card" style={{ padding: 16, background: '#FFFFFF', border: '1px solid #D6E3DE' }}>
                     <div style={{ display: 'flex', gap: 12 }}>
                       <div
-                        onClick={() => setPreviewVideo({ id: r._id, url: videoUrl, name: r.name, poster: posterUrl })}
+                        onClick={() => handleOpenVideoPreview(r)}
                         style={{ width: 84, height: 115, borderRadius: 12, overflow: 'hidden', background: '#000000', flexShrink: 0, cursor: 'pointer', position: 'relative' }}
                       >
                         {posterUrl ? (
@@ -525,7 +537,7 @@ export default function AdminPanel() {
                         {/* Moderation Actions */}
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                           <button
-                            onClick={() => setPreviewVideo({ id: r._id, url: videoUrl, name: r.name, poster: posterUrl })}
+                            onClick={() => handleOpenVideoPreview(r)}
                             style={{ background: '#E8F1ED', color: '#0D5148', border: '1px solid #B8D5CB', borderRadius: 8, padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
                           >
                             <PlayIcon size={13} fill="#0D5148" /> Watch Video
