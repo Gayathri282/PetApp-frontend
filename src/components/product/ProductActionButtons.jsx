@@ -6,6 +6,7 @@ export default function ProductActionButtons({
   item,
   onEnquire,
   onBuy,
+  hideBuy = false,
   likeCount = 0,
   isLiked = false,
   onLikeToggle,
@@ -23,7 +24,7 @@ export default function ProductActionButtons({
 
   if (!item) return null;
 
-  const showBuy = isProductItem(item);
+  const showBuy = !hideBuy && Boolean(onBuy) && isProductItem(item);
 
   return (
     <div

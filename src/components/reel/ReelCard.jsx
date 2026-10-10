@@ -4,7 +4,7 @@ import { Heart, Send, Zap, Layers, Volume2, VolumeX } from 'lucide-react';
 import VideoPlayer from './VideoPlayer';
 import ShareModal from '../ui/ShareModal';
 import Modal from '../ui/Modal';
-import ProductBuyModal from '../payment/ProductBuyModal';
+import SubVideoModal from './SubVideoModal';
 import ProductActionButtons from '../product/ProductActionButtons';
 import { isProductItem } from '../../utils/productUtils';
 import { toggleLike, submitEnquiry, updateProfile, trackInterest, sendMessage } from '../../api';
@@ -24,7 +24,7 @@ export default function ReelCard({ product, onLikeUpdate }) {
   const [likeAnimating, setLikeAnimating] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showEnquiry, setShowEnquiry] = useState(false);
-  const [showBuyModal, setShowBuyModal] = useState(false);
+  const [showMoreVideos, setShowMoreVideos] = useState(false);
   const [sending, setSending] = useState(false);
   const [isMuted, setIsMuted] = useState(!getSoundPreference());
   const [shareAnimating, setShareAnimating] = useState(false);
@@ -210,7 +210,7 @@ ${canonicalUrl}`;
         <ProductActionButtons
           item={product}
           onEnquire={handleEnquiry}
-          onBuy={() => setShowBuyModal(true)}
+          hideBuy={true}
           likeCount={likeCount}
           isLiked={liked}
           onLikeToggle={handleLike}
@@ -325,6 +325,35 @@ ${canonicalUrl}`;
               Shipping across Kerala: {product.shippingChargeKerala > 0 ? `₹${product.shippingChargeKerala.toLocaleString('en-IN')}` : (product.shippingChargeKerala === 0 ? 'FREE' : 'Not set')}
             </span>
           )}
+
+          {/* More Videos Button for Multiple Videos */}
+          {Array.isArray(product.reels) && product.reels.length > 1 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMoreVideos(true);
+              }}
+              style={{
+                marginTop: 8,
+                pointerEvents: 'auto',
+                background: 'linear-gradient(135deg, #0D5148 0%, #163B34 100%)',
+                color: '#FFFFFF',
+                border: '1px solid #10B981',
+                borderRadius: 20,
+                padding: '6px 14px',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
+              }}
+            >
+              <Layers size={14} color="#10B981" />
+              More Videos ({product.reels.length})
+            </button>
+          )}
         </div>
       </div>
 
@@ -336,10 +365,10 @@ ${canonicalUrl}`;
         title="Share Reel"
       />
 
-      <ProductBuyModal
-        product={product}
-        isOpen={showBuyModal}
-        onClose={() => setShowBuyModal(false)}
+      <SubVideoModal
+        item={product}
+        isOpen={showMoreVideos}
+        onClose={() => setShowMoreVideos(false)}
       />
 
       <Modal isOpen={showEnquiry} onClose={() => setShowEnquiry(false)} title="Register Interest">

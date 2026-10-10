@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useLayoutEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Volume2, VolumeX, Heart, Send, MessageCircle, Play, Pause, RefreshCw, MapPin, CheckCircle, ShieldCheck } from 'lucide-react';
-import ProductBuyModal from '../payment/ProductBuyModal';
+import { X, Volume2, VolumeX, Heart, Send, MessageCircle, Play, Pause, RefreshCw, MapPin, CheckCircle, ShieldCheck, Layers } from 'lucide-react';
+import SubVideoModal from './SubVideoModal';
 import ProductActionButtons from '../product/ProductActionButtons';
 import { isProductItem } from '../../utils/productUtils';
 import { getPlayableVideoUrl, getPosterUrl, normalizeMediaItem, logVideoDiagnostics } from '../../utils/media';
@@ -33,7 +33,7 @@ function SingleReelItem({
   const [liked, setLiked] = useState(item?.isLiked || false);
   const [likeCount, setLikeCount] = useState(item?.likeCount || 0);
   const [likeAnimating, setLikeAnimating] = useState(false);
-  const [showBuyModal, setShowBuyModal] = useState(false);
+  const [showMoreVideos, setShowMoreVideos] = useState(false);
 
   const videoUrl = normalized.url;
   const posterUrl = normalized.thumbnail;
@@ -477,7 +477,7 @@ function SingleReelItem({
         <ProductActionButtons
           item={item}
           onEnquire={handleEnquiry}
-          onBuy={() => setShowBuyModal(true)}
+          hideBuy={true}
           likeCount={likeCount}
           isLiked={liked}
           onLikeToggle={handleLike}
@@ -552,12 +552,42 @@ function SingleReelItem({
           <MapPin size={13} color="#F3C34E" />
           <span>{city}</span>
         </div>
+
+        {/* More Videos Button for Multiple Videos */}
+        {Array.isArray(item.reels) && item.reels.length > 1 && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowMoreVideos(true);
+            }}
+            style={{
+              marginTop: 6,
+              alignSelf: 'flex-start',
+              pointerEvents: 'auto',
+              background: 'linear-gradient(135deg, #0D5148 0%, #163B34 100%)',
+              color: '#FFFFFF',
+              border: '1px solid #10B981',
+              borderRadius: 20,
+              padding: '6px 14px',
+              fontSize: '0.78rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
+            }}
+          >
+            <Layers size={14} color="#10B981" />
+            More Videos ({item.reels.length})
+          </button>
+        )}
       </div>
 
-      <ProductBuyModal
-        product={item}
-        isOpen={showBuyModal}
-        onClose={() => setShowBuyModal(false)}
+      <SubVideoModal
+        item={item}
+        isOpen={showMoreVideos}
+        onClose={() => setShowMoreVideos(false)}
       />
     </div>
   );

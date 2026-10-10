@@ -424,7 +424,8 @@ ${canonicalUrl}`;
               <ProductActionButtons
                 item={product}
                 onEnquire={handleBuy}
-                onBuy={() => setShowBuyModal(true)}
+                onBuy={isProductItem(product) ? () => setShowBuyModal(true) : undefined}
+                hideBuy={!isProductItem(product)}
                 likeCount={reelItem.isLiked ? (product.likeCount || 0) : (product.likeCount || 0)}
                 isLiked={reelItem.isLiked || false}
                 onLikeToggle={() => handleLike(i)}
