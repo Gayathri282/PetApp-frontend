@@ -37,6 +37,29 @@ export default function App() {
     import('./api').then(({ default: api }) => {
       api.get('/api/health').catch(() => {});
     });
+
+    // Global Console Action & Button Click Logger
+    const handleGlobalClick = (e) => {
+      const target = e.target.closest('button, a, [role="button"], input[type="submit"], input[type="button"], .card, .tag-pill');
+      if (target) {
+        const text = (target.innerText || target.getAttribute('aria-label') || target.getAttribute('placeholder') || target.tagName).trim().replace(/\s+/g, ' ');
+        console.log(
+          `%c[USER ACTION] 🖱️ Clicked: "${text.slice(0, 60)}"`,
+          'color: #0D5148; font-weight: bold; background: #E8F1ED; padding: 3px 8px; border-radius: 4px; border: 1px solid #B8D5CB;',
+          {
+            label: text,
+            element: target,
+            tagName: target.tagName,
+            id: target.id || undefined,
+            className: target.className || undefined,
+            timestamp: new Date().toLocaleTimeString(),
+          }
+        );
+      }
+    };
+
+    window.addEventListener('click', handleGlobalClick, true);
+    return () => window.removeEventListener('click', handleGlobalClick, true);
   }, []);
 
   if (isLoading) {
