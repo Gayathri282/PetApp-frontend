@@ -590,7 +590,6 @@ export default function FeedPage() {
                   <p style={{ fontSize: '0.84rem', fontWeight: 700, color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2 }}>
                     {product.name}
                   </p>
-                  <p style={{ fontSize: '0.7rem', color: '#E8F1ED' }}>₹{product.price?.toLocaleString() || '0'}</p>
                 </div>
               </PetVideoCard>
             </div>

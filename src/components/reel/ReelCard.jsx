@@ -304,7 +304,7 @@ ${canonicalUrl}`;
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
-          {product.price > 0 && (
+          {isProductItem(product) && product.price > 0 && (
             <span
               style={{
                 background: 'linear-gradient(135deg, #0D5148 0%, #177366 100%)',

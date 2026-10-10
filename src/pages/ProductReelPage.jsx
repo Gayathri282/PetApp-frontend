@@ -232,13 +232,12 @@ export default function ProductReelPage() {
     }
 
     const canonicalUrl = `${window.location.origin}/product/${product._id}`;
-    const priceStr = product.price > 0 ? `₹${product.price.toLocaleString('en-IN')}` : 'Price on request';
+    const priceStr = isProductItem(product) && product.price > 0 ? `💰 ₹${product.price.toLocaleString('en-IN')}\n` : '';
 
     const textMsg = `Hi, I'm interested in this pet:
 
 🐾 ${product.name}
-💰 ${priceStr}
-👤 Seller: ${product.vendor?.name || 'Vendor'}
+${priceStr}👤 Seller: ${product.vendor?.name || 'Vendor'}
 
 View Product:
 ${canonicalUrl}`;
@@ -472,7 +471,7 @@ ${canonicalUrl}`;
               <p style={{ fontSize: '0.85rem', color: 'rgba(245,245,236,0.85)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', marginBottom: 8, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>{product.description}</p>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
-                {product.price > 0 && <span style={{ background: 'linear-gradient(135deg, #0D5148 0%, #177366 100%)', color: '#FFFFFF', padding: '5px 14px', borderRadius: 12, fontSize: '1rem', fontWeight: 800, boxShadow: '0 4px 15px rgba(13, 81, 72, 0.4)' }}>₹{product.price.toLocaleString('en-IN')}</span>}
+                {isProductItem(product) && product.price > 0 && <span style={{ background: 'linear-gradient(135deg, #0D5148 0%, #177366 100%)', color: '#FFFFFF', padding: '5px 14px', borderRadius: 12, fontSize: '1rem', fontWeight: 800, boxShadow: '0 4px 15px rgba(13, 81, 72, 0.4)' }}>₹{product.price.toLocaleString('en-IN')}</span>}
                 {isProductItem(product) && (
                   <span style={{ fontSize: '0.8rem', color: '#A7F3D0', fontWeight: 700, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
                     Shipping across Kerala: {product.shippingChargeKerala > 0 ? `₹${product.shippingChargeKerala.toLocaleString('en-IN')}` : (product.shippingChargeKerala === 0 ? 'FREE' : 'Not set')}

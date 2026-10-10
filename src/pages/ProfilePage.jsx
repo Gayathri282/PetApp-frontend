@@ -10,6 +10,7 @@ import Spinner from '../components/ui/Spinner';
 import VendorUpiSettings from '../components/vendor/VendorUpiSettings';
 import VendorShippingSettings from '../components/vendor/VendorShippingSettings';
 import VendorCategoriesManager from '../components/vendor/VendorCategoriesManager';
+import TagSuggestionsSelector from '../components/vendor/TagSuggestionsSelector';
 import VendorOrdersTab from '../components/orders/VendorOrdersTab';
 import UserOrdersTab from '../components/orders/UserOrdersTab';
 import UpiPaymentModal from '../components/payment/UpiPaymentModal';
@@ -307,10 +308,10 @@ export default function ProfilePage() {
 
       <ShareModal isOpen={showShare} onClose={() => setShowShare(false)} url={`${window.location.origin}/profile`} title="Share Profile" />
       <EditProfileModal open={showEditProfile} onClose={() => setShowEditProfile(false)} user={user} />
-      <UploadReelModal open={showUploadReel} onClose={() => setShowUploadReel(false)} user={user} onSuccess={p => { setProducts(prev => [p, ...prev]); setShowUploadReel(false); }} />
-      <UploadProductModal open={showUploadProduct} onClose={() => setShowUploadProduct(false)} user={user} onSuccess={p => { setProducts(prev => [p, ...prev]); setShowUploadProduct(false); }} />
-      <EditProductModal open={showEditProduct} product={editingProduct} onClose={() => { setShowEditProduct(false); setEditingProduct(null); }} onSuccess={p => { setProducts(prev => prev.map(x => x._id === p._id ? p : x)); setShowEditProduct(false); }} />
-      <EditReelModal open={showEditReel} product={editingProduct} onClose={() => { setShowEditReel(false); setEditingProduct(null); }} onSuccess={p => { setProducts(prev => prev.map(x => x._id === p._id ? p : x)); setShowEditReel(false); }} />
+      <UploadReelModal open={showUploadReel} onClose={() => setShowUploadReel(false)} user={user} vendorProducts={products} onSuccess={p => { setProducts(prev => [p, ...prev]); setShowUploadReel(false); }} />
+      <UploadProductModal open={showUploadProduct} onClose={() => setShowUploadProduct(false)} user={user} vendorProducts={products} onSuccess={p => { setProducts(prev => [p, ...prev]); setShowUploadProduct(false); }} />
+      <EditProductModal open={showEditProduct} product={editingProduct} vendorProducts={products} onClose={() => { setShowEditProduct(false); setEditingProduct(null); }} onSuccess={p => { setProducts(prev => prev.map(x => x._id === p._id ? p : x)); setShowEditProduct(false); }} />
+      <EditReelModal open={showEditReel} product={editingProduct} vendorProducts={products} onClose={() => { setShowEditReel(false); setEditingProduct(null); }} onSuccess={p => { setProducts(prev => prev.map(x => x._id === p._id ? p : x)); setShowEditReel(false); }} />
 
       {/* Delete Account Confirmation Modal */}
       <Modal isOpen={showDeleteAccount} onClose={() => setShowDeleteAccount(false)} title="Delete Account">
@@ -345,7 +346,7 @@ export default function ProfilePage() {
 
 
 /* ── Edit Product Modal ───────────────────────── */
-function EditProductModal({ open, product, onClose, onSuccess }) {
+function EditProductModal({ open, product, onClose, onSuccess, vendorProducts }) {
   const toast = useToast();
   const [form, setForm] = useState({ name: '', description: '', category: '', price: '', shippingChargeKerala: '', isOnSale: true });
   const [shippingGroups, setShippingGroups] = useState([]);
@@ -498,17 +499,7 @@ function EditProductModal({ open, product, onClose, onSuccess }) {
           <label className="toggle-switch"><input type="checkbox" checked={form.deliveryChargesAdditional} onChange={e => setForm({ ...form, deliveryChargesAdditional: e.target.checked })} /><span className="toggle-slider"></span></label>
         </div>
 
-        <div>
-          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#94a3b8', marginBottom: 8, display: 'block' }}>Tags</label>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
-            {TAG_OPTIONS.map(t => (
-              <button key={t} type="button" className={`tag-pill ${tags.includes(t) ? 'active' : ''}`} onClick={() => setTags(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}>{t}</button>
-            ))}
-            {tags.filter(t => !TAG_OPTIONS.includes(t)).map(t => (
-              <button key={t} type="button" className="tag-pill active" onClick={() => setTags(prev => prev.filter(x => x !== t))}>{t} ✕</button>
-            ))}
-          </div>
-        </div>
+        <TagSuggestionsSelector tags={tags} setTags={setTags} vendorProducts={vendorProducts} inputId="edit-product-tag-input" />
 
         {/* Add replacement videos */}
         <div>
@@ -556,7 +547,7 @@ function EditProductModal({ open, product, onClose, onSuccess }) {
 }
 
 /* ── Edit Reel Modal ──────────────────────────── */
-function EditReelModal({ open, product, onClose, onSuccess }) {
+function EditReelModal({ open, product, onClose, onSuccess, vendorProducts }) {
   const toast = useToast();
   const [name, setName] = useState('');
   const [desc, setDesc] = useState('');
@@ -607,14 +598,7 @@ function EditReelModal({ open, product, onClose, onSuccess }) {
         <input className="input-field" placeholder="Reel title (optional)" value={name} onChange={e => setName(e.target.value)} />
         <textarea className="input-field" placeholder="Description (optional)" value={desc} onChange={e => setDesc(e.target.value)} />
 
-        <div>
-          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#94a3b8', marginBottom: 8, display: 'block' }}>Tags</label>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
-            {tags.map(t => (
-              <button key={t} type="button" className="tag-pill active" onClick={() => setTags(prev => prev.filter(x => x !== t))}>{t} ✕</button>
-            ))}
-          </div>
-        </div>
+        <TagSuggestionsSelector tags={tags} setTags={setTags} vendorProducts={vendorProducts} inputId="edit-reel-tag-input" />
 
         {/* Replacement video */}
         <div>
@@ -772,7 +756,7 @@ function EditProfileModal({ open, onClose, user }) {
 }
 
 /* ── Upload Reel Modal ──────────────────────────── */
-function UploadReelModal({ open, onClose, onSuccess, user }) {
+function UploadReelModal({ open, onClose, onSuccess, user, vendorProducts }) {
   const toast = useToast();
   const [file, setFile] = useState(null);
   const [name, setName] = useState('');
@@ -834,54 +818,12 @@ function UploadReelModal({ open, onClose, onSuccess, user }) {
         <input className="input-field" placeholder="Reel title (optional)" value={name} onChange={e => setName(e.target.value)} />
         <textarea className="input-field" placeholder="Description (optional)" value={desc} onChange={e => setDesc(e.target.value)} />
 
-        <div>
-          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#94a3b8', marginBottom: 8, display: 'block' }}>Tags</label>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
-            {tags.map(t => (
-              <button
-                key={t}
-                type="button"
-                className="tag-pill active"
-                onClick={() => setTags(prev => prev.filter(x => x !== t))}
-              >
-                {t} ✕
-              </button>
-            ))}
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input
-              id="reel-tag-input"
-              className="input-field"
-              placeholder="Add tag (e.g. funny, kitten)..."
-              style={{ flex: 1, height: 38, fontSize: '0.85rem' }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  const val = e.target.value.trim().toLowerCase();
-                  if (val && !tags.includes(val)) {
-                    setTags([...tags, val]);
-                    e.target.value = '';
-                  }
-                }
-              }}
-            />
-            <button
-              type="button"
-              className="btn-accent"
-              style={{ padding: '0 16px', height: 38, fontSize: '0.8rem' }}
-              onClick={() => {
-                const input = document.getElementById('reel-tag-input');
-                const val = input.value.trim().toLowerCase();
-                if (val && !tags.includes(val)) {
-                  setTags([...tags, val]);
-                  input.value = '';
-                }
-              }}
-            >
-              Add
-            </button>
-          </div>
-        </div>
+        <TagSuggestionsSelector
+          tags={tags}
+          setTags={setTags}
+          vendorProducts={vendorProducts}
+          inputId="upload-reel-tag-input"
+        />
 
         <button className="btn-primary" onClick={handleSubmit} disabled={loading} style={{ width: '100%' }}>{loading ? 'Uploading...' : 'Upload Reel'}</button>
       </div>
@@ -890,7 +832,7 @@ function UploadReelModal({ open, onClose, onSuccess, user }) {
 }
 
 /* ── Upload Product Modal ──────────────────────── */
-function UploadProductModal({ open, onClose, onSuccess, user }) {
+function UploadProductModal({ open, onClose, onSuccess, user, vendorProducts }) {
   const toast = useToast();
   const [form, setForm] = useState({ name: '', description: '', category: '', price: '', shippingChargeKerala: '', isOnSale: true });
   const [shippingGroups, setShippingGroups] = useState([]);
@@ -898,8 +840,6 @@ function UploadProductModal({ open, onClose, onSuccess, user }) {
   const [videos, setVideos] = useState([]);
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
-
-  const TAG_OPTIONS = ['dog', 'cat', 'bird', 'fish', 'reptile', 'rabbit', 'accessories', 'food', 'toys'];
 
   const handleSubmit = async () => {
     if (!form.name || videos.length === 0) { toast.error('Name and at least one video required'); return; }
@@ -1051,64 +991,12 @@ function UploadProductModal({ open, onClose, onSuccess, user }) {
           <label className="toggle-switch"><input type="checkbox" checked={form.deliveryChargesAdditional} onChange={e => setForm({ ...form, deliveryChargesAdditional: e.target.checked })} /><span className="toggle-slider"></span></label>
         </div>
 
-        <div>
-          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#94a3b8', marginBottom: 8, display: 'block' }}>Tags</label>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
-            {TAG_OPTIONS.map(t => (
-              <button
-                key={t}
-                type="button"
-                className={`tag-pill ${tags.includes(t) ? 'active' : ''}`}
-                onClick={() => setTags(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}
-              >
-                {t}
-              </button>
-            ))}
-            {tags.filter(t => !TAG_OPTIONS.includes(t)).map(t => (
-              <button
-                key={t}
-                type="button"
-                className="tag-pill active"
-                onClick={() => setTags(prev => prev.filter(x => x !== t))}
-              >
-                {t} ✕
-              </button>
-            ))}
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input
-              id="custom-tag-input"
-              className="input-field"
-              placeholder="Add custom tag..."
-              style={{ flex: 1, height: 38, fontSize: '0.85rem' }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  const val = e.target.value.trim().toLowerCase();
-                  if (val && !tags.includes(val)) {
-                    setTags([...tags, val]);
-                    e.target.value = '';
-                  }
-                }
-              }}
-            />
-            <button
-              type="button"
-              className="btn-accent"
-              style={{ padding: '0 16px', height: 38, fontSize: '0.8rem' }}
-              onClick={() => {
-                const input = document.getElementById('custom-tag-input');
-                const val = input.value.trim().toLowerCase();
-                if (val && !tags.includes(val)) {
-                  setTags([...tags, val]);
-                  input.value = '';
-                }
-              }}
-            >
-              Add
-            </button>
-          </div>
-        </div>
+        <TagSuggestionsSelector
+          tags={tags}
+          setTags={setTags}
+          vendorProducts={vendorProducts}
+          inputId="upload-product-tag-input"
+        />
 
         <FileDropZone accept="video/*" multiple onChange={files => {
           setVideos(prev => {

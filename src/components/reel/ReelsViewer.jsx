@@ -214,7 +214,7 @@ function SingleReelItem({
   };
 
   const title = item.name || item.title || item.caption || 'Kerala Pet';
-  const price = item.price !== undefined && item.price !== null ? `₹${Number(item.price).toLocaleString('en-IN')}` : '';
+  const price = isProductItem(item) && item.price !== undefined && item.price !== null && Number(item.price) > 0 ? `₹${Number(item.price).toLocaleString('en-IN')}` : '';
   const vendorName = item.vendor?.name || 'Kerala Pets Verified';
   const city = item.location?.city || item.city || 'Kochi, Kerala';
 
