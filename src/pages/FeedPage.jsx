@@ -11,6 +11,7 @@ import { getFeed, getLatestTimestamp, getHomepageShowcase } from '../api';
 import { CATEGORIES, HOME_CATEGORY_COUNT } from '../data/categories';
 import { FALLBACK_GUPPY_PRODUCTS, GUPPY_VARIETIES_LIST } from '../data/guppyProducts';
 import { getPlayableVideoUrl, getPosterUrl, getFullSrc, logVideoDiagnostics } from '../utils/media';
+import { isReelItem, isProductItem } from '../utils/productUtils';
 
 /** Category image with a colored initial placeholder shown until the image is uploaded. */
 function CategoryImage({ cat, style }) {
@@ -174,6 +175,12 @@ export default function FeedPage() {
     }
   }, [viewMode, selectedReelIndex]);
 
+  // ── Data Filtering ─────────────────────────────────────────────────────────────
+  // Only promotional / standalone reels (never products)
+  const allPetReels = products.filter(p => isReelItem(p));
+  // Only pets / products currently listed for sale
+  const onSaleReels = products.filter(p => isProductItem(p) && p.isOnSale !== false);
+
   // ── Fullscreen Reels Vertical Scroll View Mode ─────────────────────────────────
   if (viewMode === 'reels') {
     return (
@@ -211,7 +218,7 @@ export default function FeedPage() {
           </button>
         </div>
 
-        {products.map((product, i) => (
+        {allPetReels.map((product, i) => (
           <div
             key={product._id}
             className="reel-wrapper"
@@ -225,12 +232,6 @@ export default function FeedPage() {
       </div>
     );
   }
-
-  // ── Data Filtering ─────────────────────────────────────────────────────────────
-  // All pet reels — no filtering
-  const allPetReels = products;
-  // Only pets currently listed for sale
-  const onSaleReels = products.filter(p => p.isOnSale === true);
 
   return (
     <div style={{ padding: '16px 16px 100px', maxWidth: 680, margin: '0 auto', background: '#F3F8F5', minHeight: '100dvh' }}>
