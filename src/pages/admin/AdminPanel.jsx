@@ -7,6 +7,7 @@ import Spinner from '../../components/ui/Spinner';
 import Modal from '../../components/ui/Modal';
 import VideoPlayer from '../../components/reel/VideoPlayer';
 import AdminShowcaseManager from '../../components/admin/AdminShowcaseManager';
+import { getPlayableVideoUrl, getPosterUrl, getFullSrc } from '../../utils/media';
 import {
   getAdminStats,
   getApplications,
@@ -466,84 +467,99 @@ export default function AdminPanel() {
                   No reels match filter: <strong>{reelFilter}</strong>
                 </p>
               )}
-              {reels.map((r) => (
-                <div key={r._id} className="card" style={{ padding: 16, background: '#FFFFFF', border: '1px solid #D6E3DE' }}>
-                  <div style={{ display: 'flex', gap: 12 }}>
-                    <div
-                      onClick={() => setPreviewVideo({ id: r._id, url: r.reels?.[0]?.videoUrl || '', name: r.name })}
-                      style={{ width: 80, height: 110, borderRadius: 12, overflow: 'hidden', background: '#E8F1ED', flexShrink: 0, cursor: 'pointer', position: 'relative' }}
-                    >
-                      {r.reels?.[0]?.videoUrl ? (
-                        <video src={getFullSrc(r.reels[0].videoUrl)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      ) : (
-                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><PlayIcon size={20} color="#0D5148" /></div>
-                      )}
-                      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <PlayIcon size={20} color="#fff" fill="#fff" />
-                      </div>
-                    </div>
+              {reels.map((r) => {
+                const videoUrl = getPlayableVideoUrl(r);
+                const posterUrl = getPosterUrl(r);
 
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                        <h4 style={{ fontSize: '0.96rem', fontWeight: 700, color: '#12332F', margin: 0, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                          {r.name}
-                        </h4>
-                        <span style={{
-                          fontSize: '0.65rem',
-                          padding: '3px 8px',
-                          borderRadius: 999,
-                          fontWeight: 800,
-                          textTransform: 'uppercase',
-                          background: r.status === 'approved' ? '#dcfce7' : r.status === 'pending' ? '#ffedd5' : '#fee2e2',
-                          color: r.status === 'approved' ? '#166534' : r.status === 'pending' ? '#c2410c' : '#991b1b',
-                        }}>
-                          {r.status}
-                        </span>
+                return (
+                  <div key={r._id} className="card" style={{ padding: 16, background: '#FFFFFF', border: '1px solid #D6E3DE' }}>
+                    <div style={{ display: 'flex', gap: 12 }}>
+                      <div
+                        onClick={() => setPreviewVideo({ id: r._id, url: videoUrl, name: r.name, poster: posterUrl })}
+                        style={{ width: 84, height: 115, borderRadius: 12, overflow: 'hidden', background: '#000000', flexShrink: 0, cursor: 'pointer', position: 'relative' }}
+                      >
+                        {posterUrl ? (
+                          <img src={posterUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : videoUrl ? (
+                          <video src={videoUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted />
+                        ) : (
+                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#E8F1ED' }}>
+                            <Film size={24} color="#0D5148" />
+                          </div>
+                        )}
+                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <PlayIcon size={24} color="#ffffff" fill="#ffffff" />
+                        </div>
                       </div>
 
-                      <p style={{ fontSize: '0.78rem', color: '#60736F', margin: '2px 0 4px' }}>
-                        Seller: <strong>{r.vendor?.name || 'Vendor'}</strong> ({r.vendor?.email || 'N/A'})
-                      </p>
-                      <p style={{ fontSize: '0.75rem', color: '#60736F', margin: '0 0 8px' }}>
-                        Submitted: {new Date(r.createdAt).toLocaleDateString()}
-                      </p>
-                      {r.description && (
-                        <p style={{ fontSize: '0.78rem', color: '#12332F', marginBottom: 10, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                          "{r.description}"
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                          <h4 style={{ fontSize: '0.96rem', fontWeight: 700, color: '#12332F', margin: 0, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                            {r.name}
+                          </h4>
+                          <span style={{
+                            fontSize: '0.65rem',
+                            padding: '3px 8px',
+                            borderRadius: 999,
+                            fontWeight: 800,
+                            textTransform: 'uppercase',
+                            background: r.status === 'approved' ? '#dcfce7' : r.status === 'pending' ? '#ffedd5' : '#fee2e2',
+                            color: r.status === 'approved' ? '#166534' : r.status === 'pending' ? '#c2410c' : '#991b1b',
+                          }}>
+                            {r.status}
+                          </span>
+                        </div>
+
+                        <p style={{ fontSize: '0.78rem', color: '#60736F', margin: '2px 0 4px' }}>
+                          Seller: <strong>{r.vendor?.name || 'Vendor'}</strong> ({r.vendor?.email || 'N/A'})
                         </p>
-                      )}
+                        <p style={{ fontSize: '0.75rem', color: '#60736F', margin: '0 0 8px' }}>
+                          Submitted: {new Date(r.createdAt).toLocaleDateString()}
+                        </p>
+                        {r.description && (
+                          <p style={{ fontSize: '0.78rem', color: '#12332F', marginBottom: 10, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                            "{r.description}"
+                          </p>
+                        )}
 
-                      {/* Moderation Actions */}
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        {r.status !== 'approved' && (
+                        {/* Moderation Actions */}
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                           <button
-                            onClick={() => handleReelAction(r._id, 'approved')}
-                            style={{ background: '#0D5148', color: '#FFFFFF', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+                            onClick={() => setPreviewVideo({ id: r._id, url: videoUrl, name: r.name, poster: posterUrl })}
+                            style={{ background: '#E8F1ED', color: '#0D5148', border: '1px solid #B8D5CB', borderRadius: 8, padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
                           >
-                            Approve
+                            <PlayIcon size={13} fill="#0D5148" /> Watch Video
                           </button>
-                        )}
-                        {r.status !== 'rejected' && (
-                          <button
-                            onClick={() => handleReelAction(r._id, 'rejected')}
-                            style={{ background: '#f97316', color: '#FFFFFF', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
-                          >
-                            Reject
-                          </button>
-                        )}
-                        {r.status !== 'deleted' && (
-                          <button
-                            onClick={() => openTakedownModal(r._id, r.name, 'delete_reel')}
-                            style={{ background: '#ef4444', color: '#FFFFFF', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
-                          >
-                            Delete Reel
-                          </button>
-                        )}
+                          {r.status !== 'approved' && (
+                            <button
+                              onClick={() => handleReelAction(r._id, 'approved')}
+                              style={{ background: '#0D5148', color: '#FFFFFF', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+                            >
+                              Approve
+                            </button>
+                          )}
+                          {r.status !== 'rejected' && (
+                            <button
+                              onClick={() => handleReelAction(r._id, 'rejected')}
+                              style={{ background: '#f97316', color: '#FFFFFF', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+                            >
+                              Reject
+                            </button>
+                          )}
+                          {r.status !== 'deleted' && (
+                            <button
+                              onClick={() => openTakedownModal(r._id, r.name, 'delete_reel')}
+                              style={{ background: '#ef4444', color: '#FFFFFF', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+                            >
+                              Delete Reel
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
@@ -735,10 +751,23 @@ export default function AdminPanel() {
 
       {/* Video Preview Modal */}
       {previewVideo && (
-        <Modal title={`Preview: ${previewVideo.name}`} onClose={() => setPreviewVideo(null)}>
+        <Modal title={`Preview Reel: ${previewVideo.name}`} onClose={() => setPreviewVideo(null)}>
           <div style={{ padding: 16, textAlign: 'center' }}>
-            <div style={{ width: '100%', height: 320, borderRadius: 16, overflow: 'hidden', background: '#000', marginBottom: 16 }}>
-              <VideoPlayer src={previewVideo.url} />
+            <div style={{ width: '100%', height: 380, borderRadius: 16, overflow: 'hidden', background: '#000000', marginBottom: 16, position: 'relative' }}>
+              {previewVideo.url ? (
+                <video
+                  src={previewVideo.url}
+                  poster={previewVideo.poster}
+                  controls
+                  autoPlay
+                  playsInline
+                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                />
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94A3B8' }}>
+                  No playable video stream found
+                </div>
+              )}
             </div>
             <button className="btn-primary" style={{ width: '100%' }} onClick={() => setPreviewVideo(null)}>Close Preview</button>
           </div>
