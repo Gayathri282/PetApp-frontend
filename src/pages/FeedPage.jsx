@@ -27,10 +27,28 @@ function CategoryImage({ cat, style }) {
 }
 
 export default function FeedPage() {
+  const navigate = useNavigate();
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [showNewReels, setShowNewReels] = useState(false);
+  const [viewMode, setViewMode] = useState('home'); // 'home' or 'reels'
+  const [comingSoonFeature, setComingSoonFeature] = useState(null);
+  const [selectedReelIndex, setSelectedReelIndex] = useState(0);
+  const [activeModalItem, setActiveModalItem] = useState(null);
+  const [activeVideoId, setActiveVideoId] = useState(null);
+  const [adminShowcase, setAdminShowcase] = useState({ featuredCategories: [], featuredBreeds: [], breedCircles: [] });
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [modalViewTab, setModalViewTab] = useState('breeds');
   const [breedSearchQuery, setBreedSearchQuery] = useState('');
   const [modalSelectedCat, setModalSelectedCat] = useState('all');
+  const [reelsViewerState, setReelsViewerState] = useState({
+    isOpen: false,
+    initialVideoId: null,
+    videos: [],
+  });
+
   const homeCategories = (adminShowcase.breedCircles && adminShowcase.breedCircles.length > 0)
     ? adminShowcase.breedCircles.map(c => ({
         id: c.id || c.tag || c.name.toLowerCase().replace(/\s+/g, '_'),
@@ -47,30 +65,12 @@ export default function FeedPage() {
     setShowAllCategories(false);
     navigate(`/search?q=${encodeURIComponent(cat.tag || cat.name)}`);
   };
-  const navigate = useNavigate();
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [showNewReels, setShowNewReels] = useState(false);
-  const [viewMode, setViewMode] = useState('home'); // 'home' or 'reels'
-  const [comingSoonFeature, setComingSoonFeature] = useState(null);
-  const [selectedReelIndex, setSelectedReelIndex] = useState(0);
-  const [activeModalItem, setActiveModalItem] = useState(null);
-  const [activeVideoId, setActiveVideoId] = useState(null);
-  const [adminShowcase, setAdminShowcase] = useState({ featuredCategories: [], featuredBreeds: [] });
 
   const filteredBreeds = GUPPY_VARIETIES_LIST.filter(b => {
     const matchesCat = modalSelectedCat === 'all' || b.cat === modalSelectedCat;
     const qLower = breedSearchQuery.toLowerCase().trim();
     const matchesSearch = !qLower || b.name.toLowerCase().includes(qLower) || String(b.no) === qLower || b.cat.toLowerCase().includes(qLower);
     return matchesCat && matchesSearch;
-  });
-
-  const [reelsViewerState, setReelsViewerState] = useState({
-    isOpen: false,
-    initialVideoId: null,
-    videos: [],
   });
 
   const handleOpenReels = (clickedItem, list = products) => {
