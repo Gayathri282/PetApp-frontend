@@ -1,11 +1,19 @@
+import { useState, useEffect, memo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Search, User, MessageCircle, Plus } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
-export default function BottomNav() {
+const BottomNav = memo(function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
   const { unreadCount, isVendor, isAdmin } = useAuth();
+  
+  // Optimistic active path for zero latency visual feedback
+  const [activePath, setActivePath] = useState(location.pathname);
+
+  useEffect(() => {
+    setActivePath(location.pathname);
+  }, [location.pathname]);
 
   const navItems = [
     { path: '/feed', icon: Home, label: 'Home' },
@@ -16,15 +24,16 @@ export default function BottomNav() {
   ];
 
   const handleNavClick = (item) => {
-    if (item.isAdd) {
-      if (isVendor || isAdmin) {
-        navigate('/profile?action=add');
-      } else {
-        navigate('/vendor/apply');
-      }
-    } else {
-      navigate(item.path);
-    }
+    const targetPath = item.isAdd 
+      ? (isVendor || isAdmin ? '/profile?action=add' : '/vendor/apply')
+      : item.path;
+
+    setActivePath(item.path);
+
+    // Instant non-blocking navigation
+    window.requestAnimationFrame(() => {
+      navigate(targetPath);
+    });
   };
 
   return (
@@ -43,17 +52,22 @@ export default function BottomNav() {
         background: '#FFFFFF',
         borderTop: '1px solid #D6E3DE',
         boxShadow: '0 -4px 18px rgba(13, 81, 72, 0.05)',
+        willChange: 'transform',
+        transform: 'translateZ(0)',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
       }}
     >
       {navItems.map((item) => {
         const Icon = item.icon;
-        const isActive = location.pathname === item.path || (item.path === '/feed' && location.pathname === '/');
+        const isActive = activePath === item.path || (item.path === '/feed' && (activePath === '/' || activePath === '/feed'));
 
         if (item.isAdd) {
           return (
             <div key="add-btn" style={{ position: 'relative', top: -12 }}>
               <button
-                onClick={() => handleNavClick(item)}
+                onPointerDown={() => handleNavClick(item)}
+                onClick={(e) => { e.preventDefault(); handleNavClick(item); }}
                 style={{
                   width: 48,
                   height: 48,
@@ -66,9 +80,10 @@ export default function BottomNav() {
                   justifyContent: 'center',
                   color: '#FFFFFF',
                   boxShadow: '0 4px 16px rgba(13, 81, 72, 0.25)',
-                  transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  transition: 'transform 0.1s ease',
                   touchAction: 'manipulation',
                   WebkitTapHighlightColor: 'transparent',
+                  transform: 'translateZ(0)',
                 }}
               >
                 <Plus size={24} strokeWidth={2.8} />
@@ -80,7 +95,8 @@ export default function BottomNav() {
         return (
           <button
             key={item.path}
-            onClick={() => handleNavClick(item)}
+            onPointerDown={() => handleNavClick(item)}
+            onClick={(e) => { e.preventDefault(); handleNavClick(item); }}
             style={{
               display: 'flex',
               flexDirection: 'column',
@@ -94,20 +110,21 @@ export default function BottomNav() {
               border: 'none',
               cursor: 'pointer',
               color: isActive ? '#0D5148' : '#94A3B8',
-              transition: 'all 0.2s ease',
+              transition: 'color 0.1s ease, transform 0.1s ease',
               position: 'relative',
               touchAction: 'manipulation',
               WebkitTapHighlightColor: 'transparent',
               padding: '0 2px',
+              transform: 'translateZ(0)',
             }}
           >
             <div 
               style={{ 
                 marginBottom: 2, 
-                transition: 'transform 0.2s ease',
-                transform: isActive ? 'translateY(-2px)' : 'none',
+                transition: 'transform 0.1s ease',
+                transform: isActive ? 'scale(1.1) translateY(-1px)' : 'scale(1)',
                 position: 'relative',
-                pointerEvents: 'none'
+                pointerEvents: 'none',
               }}
             >
               <Icon 
@@ -166,4 +183,6 @@ export default function BottomNav() {
       })}
     </div>
   );
-}
+});
+
+export default BottomNav;
