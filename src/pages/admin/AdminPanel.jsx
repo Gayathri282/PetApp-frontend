@@ -46,6 +46,7 @@ export default function AdminPanel() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [previewVideo, setPreviewVideo] = useState(null);
+  const [expandedVideoId, setExpandedVideoId] = useState(null);
   const [takedownModal, setTakedownModal] = useState(null); // { id, name, type }
   const [takedownReason, setTakedownReason] = useState('');
   const [takingDown, setTakingDown] = useState(false);
@@ -143,16 +144,15 @@ export default function AdminPanel() {
     return () => { isCancelled = true; };
   }, [tab, reelFilter, productFilter, userFilter, searchQuery]);
 
-  // Video Preview Handler
+  // Video Preview Handler (Inline panel toggle)
   const handleOpenVideoPreview = (item) => {
     const url = getPlayableVideoUrl(item);
-    const poster = getPosterUrl(item);
     console.log('🎥 [ADMIN VIDEO PREVIEW] Reel:', item.name, 'Resolved Video URL:', url);
     if (!url) {
       toast.info('No playable video file attached to this reel');
       return;
     }
-    setPreviewVideo({ id: item._id, url, name: item.name, poster });
+    setExpandedVideoId(prev => prev === item._id ? null : item._id);
   };
 
   // Moderation Action Handlers
@@ -538,9 +538,22 @@ export default function AdminPanel() {
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                           <button
                             onClick={() => handleOpenVideoPreview(r)}
-                            style={{ background: '#E8F1ED', color: '#0D5148', border: '1px solid #B8D5CB', borderRadius: 8, padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                            style={{
+                              background: expandedVideoId === r._id ? '#0D5148' : '#E8F1ED',
+                              color: expandedVideoId === r._id ? '#FFFFFF' : '#0D5148',
+                              border: '1px solid #B8D5CB',
+                              borderRadius: 8,
+                              padding: '6px 12px',
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 4
+                            }}
                           >
-                            <PlayIcon size={13} fill="#0D5148" /> Watch Video
+                            <PlayIcon size={13} fill={expandedVideoId === r._id ? '#FFFFFF' : '#0D5148'} />
+                            {expandedVideoId === r._id ? 'Hide Video' : 'Watch Video'}
                           </button>
                           {r.status !== 'approved' && (
                             <button
@@ -569,6 +582,29 @@ export default function AdminPanel() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Inline Video Player Panel */}
+                    {expandedVideoId === r._id && videoUrl && (
+                      <div style={{ marginTop: 14, borderRadius: 12, overflow: 'hidden', background: '#000000', border: '1px solid #0D5148' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 14px', background: '#0D5148', color: '#FFFFFF', fontSize: '0.8rem', fontWeight: 700 }}>
+                          <span>🎥 Playing: {r.name}</span>
+                          <button
+                            onClick={() => setExpandedVideoId(null)}
+                            style={{ background: 'transparent', border: 'none', color: '#FFFFFF', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem' }}
+                          >
+                            ✕ Close
+                          </button>
+                        </div>
+                        <video
+                          src={videoUrl}
+                          poster={posterUrl}
+                          controls
+                          autoPlay
+                          playsInline
+                          style={{ width: '100%', maxHeight: 420, display: 'block', objectFit: 'contain', background: '#000000' }}
+                        />
+                      </div>
+                    )}
                   </div>
                 );
               })}
