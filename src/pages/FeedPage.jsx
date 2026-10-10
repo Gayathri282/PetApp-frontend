@@ -31,10 +31,21 @@ export default function FeedPage() {
   const [modalViewTab, setModalViewTab] = useState('breeds');
   const [breedSearchQuery, setBreedSearchQuery] = useState('');
   const [modalSelectedCat, setModalSelectedCat] = useState('all');
-  const homeCategories = CATEGORIES.slice(0, HOME_CATEGORY_COUNT);
+  const homeCategories = (adminShowcase.breedCircles && adminShowcase.breedCircles.length > 0)
+    ? adminShowcase.breedCircles.map(c => ({
+        id: c.id || c.tag || c.name.toLowerCase().replace(/\s+/g, '_'),
+        name: c.name,
+        tag: c.tag || c.id || c.name.toLowerCase().replace(/\s+/g, '_'),
+        count: c.count || 'Breeds & Varieties',
+        image: c.image || 'https://upload.wikimedia.org/wikipedia/commons/c/c5/Guppy_02.JPG',
+        color: c.color || '#0D5148',
+        bg: `linear-gradient(135deg, ${c.color || '#0D5148'} 0%, rgba(12, 18, 16, 0.96) 100%)`,
+      }))
+    : CATEGORIES.slice(0, HOME_CATEGORY_COUNT);
+
   const openCategory = (cat) => {
     setShowAllCategories(false);
-    navigate(`/search?category=${cat.tag}`);
+    navigate(`/search?q=${encodeURIComponent(cat.tag || cat.name)}`);
   };
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
