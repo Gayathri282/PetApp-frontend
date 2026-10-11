@@ -9,7 +9,7 @@ import Modal from '../components/ui/Modal';
 import Spinner from '../components/ui/Spinner';
 import { getFeed, getApprovedReels, getLatestTimestamp, getHomepageShowcase } from '../api';
 import { CATEGORIES, HOME_CATEGORY_COUNT } from '../data/categories';
-import { FALLBACK_GUPPY_PRODUCTS, GUPPY_VARIETIES_LIST, SAMPLE_PROMOTIONAL_REELS } from '../data/guppyProducts';
+import { FALLBACK_GUPPY_PRODUCTS, GUPPY_VARIETIES_LIST } from '../data/guppyProducts';
 import { getPlayableVideoUrl, getPosterUrl, getFullSrc, logVideoDiagnostics } from '../utils/media';
 import { isReelItem, isProductItem } from '../utils/productUtils';
 
@@ -216,10 +216,10 @@ export default function FeedPage() {
   }, [viewMode, selectedReelIndex]);
 
   // ── Data Filtering ─────────────────────────────────────────────────────────────
-  // Section 8 ("Watch pet reels") ONLY shows reels APPROVED by admin:
-  // Never show products, and never show pending or rejected reels!
+  // Section 8 ("Watch pet reels") ONLY shows real reels APPROVED by admin:
+  // Never show products, never show pending or rejected reels, and NEVER show dummy videos!
   const allApprovedReels = [
-    ...approvedReels.filter(r => isReelItem(r) && r.status === 'approved'),
+    ...approvedReels.filter(r => isReelItem(r)),
     ...products.filter(p => isReelItem(p) && p.status === 'approved'),
   ];
 
@@ -234,9 +234,7 @@ export default function FeedPage() {
     }
   }
 
-  const trendingPetReels = uniqueApprovedReels.length > 0 
-    ? uniqueApprovedReels 
-    : SAMPLE_PROMOTIONAL_REELS;
+  const trendingPetReels = uniqueApprovedReels;
 
   // Only pets / products currently listed for sale
   const onSaleReels = products.filter(p => isProductItem(p) && p.isOnSale !== false);
@@ -278,17 +276,24 @@ export default function FeedPage() {
           </button>
         </div>
 
-        {trendingPetReels.map((product, i) => (
-          <div
-            key={product._id}
-            className="reel-wrapper"
-            data-index={i}
-            data-product-id={product._id}
-            style={{ height: '100dvh', scrollSnapAlign: 'start' }}
-          >
-            <ReelCard product={product} />
+        {trendingPetReels.length > 0 ? (
+          trendingPetReels.map((product, i) => (
+            <div
+              key={product._id}
+              className="reel-wrapper"
+              data-index={i}
+              data-product-id={product._id}
+              style={{ height: '100dvh', scrollSnapAlign: 'start' }}
+            >
+              <ReelCard product={product} />
+            </div>
+          ))
+        ) : (
+          <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff', textAlign: 'center', padding: 24 }}>
+            <p style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 8 }}>No approved pet reels available yet</p>
+            <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)' }}>Reels approved by admin will appear here.</p>
           </div>
-        ))}
+        )}
       </div>
     );
   }
@@ -655,54 +660,76 @@ export default function FeedPage() {
 
 
 
-      {/* 8. WATCH PET REELS (Trending Reels Horizontal Carousel — Exclusively Promotional Reels) */}
+      {/* 8. WATCH PET REELS (Trending Reels Horizontal Carousel — Exclusively Approved Reels) */}
       <div style={{ marginBottom: 34 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
           <div>
             <p className="section-label">TRENDING REELS</p>
             <h2 className="serif-heading" style={{ fontSize: '1.35rem' }}>Watch pet reels</h2>
           </div>
-          <button
-            onClick={() => handleOpenReels(trendingPetReels[0], trendingPetReels)}
-            style={{ background: 'none', border: 'none', color: '#0D5148', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
-          >
-            View all <ChevronRight size={16} />
-          </button>
+          {trendingPetReels.length > 0 && (
+            <button
+              onClick={() => handleOpenReels(trendingPetReels[0], trendingPetReels)}
+              style={{ background: 'none', border: 'none', color: '#0D5148', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+            >
+              View all <ChevronRight size={16} />
+            </button>
+          )}
         </div>
 
-        <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-          {trendingPetReels.map((product) => (
-            <div
-              key={product._id}
-              className="card"
-              style={{
-                width: 165,
-                height: 230,
-                flexShrink: 0,
-                position: 'relative',
-                overflow: 'hidden',
-                padding: 0,
-                borderRadius: 18,
-              }}
-            >
-              <PetVideoCard
-                item={product}
-                activeVideoId={activeVideoId}
-                setActiveVideoId={setActiveVideoId}
-                onVideoClick={(item) => handleOpenReels(item, trendingPetReels)}
-                mediaHeight={230}
-                sectionName="Watch Pet Reels"
+        {trendingPetReels.length > 0 ? (
+          <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+            {trendingPetReels.map((product) => (
+              <div
+                key={product._id}
+                className="card"
+                style={{
+                  width: 165,
+                  height: 230,
+                  flexShrink: 0,
+                  position: 'relative',
+                  overflow: 'hidden',
+                  padding: 0,
+                  borderRadius: 18,
+                }}
               >
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(8,47,43,0.9) 0%, transparent 60%)', pointerEvents: 'none' }} />
-                <div style={{ position: 'absolute', bottom: 10, left: 10, right: 10, color: '#fff', pointerEvents: 'none' }}>
-                  <p style={{ fontSize: '0.84rem', fontWeight: 700, color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2 }}>
-                    {product.name}
-                  </p>
-                </div>
-              </PetVideoCard>
-            </div>
-          ))}
-        </div>
+                <PetVideoCard
+                  item={product}
+                  activeVideoId={activeVideoId}
+                  setActiveVideoId={setActiveVideoId}
+                  onVideoClick={(item) => handleOpenReels(item, trendingPetReels)}
+                  mediaHeight={230}
+                  sectionName="Watch Pet Reels"
+                >
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(8,47,43,0.9) 0%, transparent 60%)', pointerEvents: 'none' }} />
+                  <div style={{ position: 'absolute', bottom: 10, left: 10, right: 10, color: '#fff', pointerEvents: 'none' }}>
+                    <p style={{ fontSize: '0.84rem', fontWeight: 700, color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2 }}>
+                      {product.name}
+                    </p>
+                  </div>
+                </PetVideoCard>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div
+            style={{
+              padding: '24px 18px',
+              background: '#FFFFFF',
+              borderRadius: 18,
+              border: '1px dashed rgba(13, 81, 72, 0.15)',
+              textAlign: 'center',
+              color: '#60736F',
+            }}
+          >
+            <p style={{ fontSize: '0.88rem', fontWeight: 700, color: '#12332F', margin: '0 0 4px' }}>
+              No pet reels available yet
+            </p>
+            <p style={{ fontSize: '0.76rem', color: '#60736F', margin: 0 }}>
+              Reels approved by admin will appear here.
+            </p>
+          </div>
+        )}
       </div>
 
 

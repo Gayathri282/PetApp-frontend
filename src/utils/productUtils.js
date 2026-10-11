@@ -1,14 +1,15 @@
 export function getItemType(item) {
   if (!item) return 'product';
-  // 1. Explicit database type property if present
-  if (item.type === 'reel' || item.type === 'product') {
-    return item.type;
-  }
-  // 2. Fallback category normalization
-  if (item.category === 'promotional' || item.category === 'reel' || item.category === 'reels') {
+  // If item is explicitly marked as a reel or promotional category, it is a REEL
+  if (
+    item.type === 'reel' ||
+    item.category === 'promotional' ||
+    item.category === 'reel' ||
+    item.category === 'reels'
+  ) {
     return 'reel';
   }
-  // Products (including products containing video) are PRODUCTS!
+  // Otherwise it is a standard product listing
   return 'product';
 }
 
