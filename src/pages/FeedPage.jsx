@@ -9,7 +9,7 @@ import Modal from '../components/ui/Modal';
 import Spinner from '../components/ui/Spinner';
 import { getFeed, getLatestTimestamp, getHomepageShowcase } from '../api';
 import { CATEGORIES, HOME_CATEGORY_COUNT } from '../data/categories';
-import { FALLBACK_GUPPY_PRODUCTS, GUPPY_VARIETIES_LIST } from '../data/guppyProducts';
+import { FALLBACK_GUPPY_PRODUCTS, GUPPY_VARIETIES_LIST, SAMPLE_PROMOTIONAL_REELS } from '../data/guppyProducts';
 import { getPlayableVideoUrl, getPosterUrl, getFullSrc, logVideoDiagnostics } from '../utils/media';
 import { isReelItem, isProductItem } from '../utils/productUtils';
 
@@ -202,18 +202,11 @@ export default function FeedPage() {
   }, [viewMode, selectedReelIndex]);
 
   // ── Data Filtering ─────────────────────────────────────────────────────────────
-  // All video reels: standalone promotional reels and any listings with video reels
-  const allPetReels = products.filter(p => {
-    if (isReelItem(p)) return true;
-    if (Array.isArray(p.reels) && p.reels.length > 0 && Boolean(p.reels[0]?.videoUrl)) return true;
-    if (Boolean(p.primaryReel?.videoUrl)) return true;
-    if (Boolean(getPlayableVideoUrl(p))) return true;
-    return false;
-  });
-
-  const displayPetReels = allPetReels.length > 0 
-    ? allPetReels 
-    : (products.length > 0 ? products : FALLBACK_GUPPY_PRODUCTS);
+  // Section 8 ("Watch pet reels") ONLY shows true promotional reels, NEVER products:
+  const uploadedPetReels = products.filter(p => isReelItem(p));
+  const trendingPetReels = uploadedPetReels.length > 0 
+    ? uploadedPetReels 
+    : SAMPLE_PROMOTIONAL_REELS;
 
   // Only pets / products currently listed for sale
   const onSaleReels = products.filter(p => isProductItem(p) && p.isOnSale !== false);
@@ -255,7 +248,7 @@ export default function FeedPage() {
           </button>
         </div>
 
-        {displayPetReels.map((product, i) => (
+        {trendingPetReels.map((product, i) => (
           <div
             key={product._id}
             className="reel-wrapper"
@@ -632,7 +625,7 @@ export default function FeedPage() {
 
 
 
-      {/* 8. WATCH PET REELS (Trending Reels Horizontal Carousel — ALL Reels) */}
+      {/* 8. WATCH PET REELS (Trending Reels Horizontal Carousel — Exclusively Promotional Reels) */}
       <div style={{ marginBottom: 34 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
           <div>
@@ -640,7 +633,7 @@ export default function FeedPage() {
             <h2 className="serif-heading" style={{ fontSize: '1.35rem' }}>Watch pet reels</h2>
           </div>
           <button
-            onClick={() => handleOpenReels(displayPetReels[0], displayPetReels)}
+            onClick={() => handleOpenReels(trendingPetReels[0], trendingPetReels)}
             style={{ background: 'none', border: 'none', color: '#0D5148', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
           >
             View all <ChevronRight size={16} />
@@ -648,7 +641,7 @@ export default function FeedPage() {
         </div>
 
         <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-          {displayPetReels.map((product) => (
+          {trendingPetReels.map((product) => (
             <div
               key={product._id}
               className="card"
@@ -666,7 +659,7 @@ export default function FeedPage() {
                 item={product}
                 activeVideoId={activeVideoId}
                 setActiveVideoId={setActiveVideoId}
-                onVideoClick={(item) => handleOpenReels(item, displayPetReels)}
+                onVideoClick={(item) => handleOpenReels(item, trendingPetReels)}
                 mediaHeight={230}
                 sectionName="Watch Pet Reels"
               >

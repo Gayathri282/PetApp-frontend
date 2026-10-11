@@ -5,7 +5,7 @@ import VideoPlayer from './VideoPlayer';
 import ShareModal from '../ui/ShareModal';
 import Modal from '../ui/Modal';
 import ProductActionButtons from '../product/ProductActionButtons';
-import { isProductItem } from '../../utils/productUtils';
+import { isProductItem, isReelItem } from '../../utils/productUtils';
 import { toggleLike, submitEnquiry, updateProfile, trackInterest, sendMessage } from '../../api';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
@@ -211,7 +211,7 @@ ${canonicalUrl}`;
       >
         <ProductActionButtons
           item={product}
-          onEnquire={handleEnquiry}
+          onEnquire={isReelItem(product) ? null : handleEnquiry}
           hideBuy={true}
           likeCount={likeCount}
           isLiked={liked}
@@ -306,7 +306,7 @@ ${canonicalUrl}`;
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
-          {isProductItem(product) && product.price > 0 && (
+          {!isReelItem(product) && isProductItem(product) && product.price > 0 && (
             <span
               style={{
                 background: 'linear-gradient(135deg, #0D5148 0%, #177366 100%)',
@@ -322,7 +322,7 @@ ${canonicalUrl}`;
               ₹{product.price.toLocaleString('en-IN')}
             </span>
           )}
-          {isProductItem(product) && (
+          {!isReelItem(product) && isProductItem(product) && (
             <span style={{ fontSize: '0.8rem', color: '#A7F3D0', fontWeight: 700, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
               Shipping across Kerala: {product.shippingChargeKerala > 0 ? `₹${product.shippingChargeKerala.toLocaleString('en-IN')}` : (product.shippingChargeKerala === 0 ? 'FREE' : 'Not set')}
             </span>

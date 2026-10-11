@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Heart, Send, Volume2, VolumeX, ShoppingBag, Zap } from 'lucide-react';
-import { isProductItem, logItemTypeDebug } from '../../utils/productUtils';
+import { isProductItem, isReelItem, logItemTypeDebug } from '../../utils/productUtils';
 
 export default function ProductActionButtons({
   item,
@@ -24,7 +24,9 @@ export default function ProductActionButtons({
 
   if (!item) return null;
 
-  const showBuy = !hideBuy && Boolean(onBuy) && isProductItem(item);
+  const isReel = isReelItem(item);
+  const showEnquire = !isReel && Boolean(onEnquire);
+  const showBuy = !hideBuy && !isReel && Boolean(onBuy) && isProductItem(item);
 
   return (
     <div
@@ -121,28 +123,30 @@ export default function ProductActionButtons({
         </button>
       )}
 
-      {/* Enquire button (ALWAYS shown for both Products and Reels) */}
-      <button
-        onClick={onEnquire}
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 4,
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          color: '#fff',
-          padding: 0,
-        }}
-      >
-        <div style={{ display: 'flex', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>
-          <ShoppingBag size={24} strokeWidth={2.2} />
-        </div>
-        <span style={{ fontSize: '0.7rem', fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
-          Enquire
-        </span>
-      </button>
+      {/* Enquire button (NEVER shown for reels, only shown for products) */}
+      {showEnquire && (
+        <button
+          onClick={onEnquire}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 4,
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: '#fff',
+            padding: 0,
+          }}
+        >
+          <div style={{ display: 'flex', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>
+            <ShoppingBag size={24} strokeWidth={2.2} />
+          </div>
+          <span style={{ fontSize: '0.7rem', fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+            Enquire
+          </span>
+        </button>
+      )}
 
       {/* Buy button (SHOWN ONLY IF item is a PRODUCT) */}
       {showBuy && (

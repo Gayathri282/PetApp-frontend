@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useLayoutEffect, useCallback } from 'react
 import { useNavigate } from 'react-router-dom';
 import { X, Volume2, VolumeX, Heart, Send, MessageCircle, Play, Pause, RefreshCw, MapPin, CheckCircle, ShieldCheck, Layers, ArrowLeft } from 'lucide-react';
 import ProductActionButtons from '../product/ProductActionButtons';
-import { isProductItem } from '../../utils/productUtils';
+import { isProductItem, isReelItem } from '../../utils/productUtils';
 import { getPlayableVideoUrl, getPosterUrl, normalizeMediaItem, logVideoDiagnostics } from '../../utils/media';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -223,7 +223,8 @@ function SingleReelItem({
   };
 
   const title = item.name || item.title || item.caption || 'Kerala Pet';
-  const price = isProductItem(item) && item.price !== undefined && item.price !== null && Number(item.price) > 0 ? `₹${Number(item.price).toLocaleString('en-IN')}` : '';
+  const isReel = isReelItem(item);
+  const price = !isReel && isProductItem(item) && item.price !== undefined && item.price !== null && Number(item.price) > 0 ? `₹${Number(item.price).toLocaleString('en-IN')}` : '';
   const vendorName = item.vendor?.name || 'Kerala Pets Verified';
   const city = item.location?.city || item.city || 'Kochi, Kerala';
 
@@ -535,7 +536,7 @@ function SingleReelItem({
       >
         <ProductActionButtons
           item={item}
-          onEnquire={handleEnquiry}
+          onEnquire={isReel ? null : handleEnquiry}
           hideBuy={true}
           likeCount={likeCount}
           isLiked={liked}
@@ -575,13 +576,13 @@ function SingleReelItem({
           {title}
         </h2>
 
-        {price && (
+        {!isReel && price && (
           <p style={{ fontSize: '1.25rem', fontWeight: 800, color: '#F3C34E', margin: 0, textShadow: '0 2px 4px rgba(0,0,0,0.9)' }}>
             {price}
           </p>
         )}
 
-        {isProductItem(item) && (
+        {!isReel && isProductItem(item) && (
           <span style={{ fontSize: '0.78rem', color: '#A7F3D0', fontWeight: 700, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
             Shipping across Kerala: {item.shippingChargeKerala > 0 ? `₹${item.shippingChargeKerala.toLocaleString('en-IN')}` : (item.shippingChargeKerala === 0 ? 'FREE' : 'Not set')}
           </span>
