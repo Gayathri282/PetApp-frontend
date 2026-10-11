@@ -968,7 +968,7 @@ export default function AdminPanel() {
         const isItemReel = modalVideoItem.type === 'reel' || modalVideoItem.category === 'promotional';
 
         return (
-          <Modal title={`Preview: ${modalVideoItem.name}`} onClose={() => setModalVideoItem(null)}>
+          <Modal isOpen={true} title={`Preview: ${modalVideoItem.name}`} onClose={() => setModalVideoItem(null)}>
             <div style={{ padding: 16 }}>
               {/* Multi-video switch pills if > 1 video */}
               {reelsList.length > 1 && (
@@ -1130,7 +1130,7 @@ export default function AdminPanel() {
 
       {/* Takedown / Reason Modal */}
       {takedownModal && (
-        <Modal title={`Action Notice: ${takedownModal.name}`} onClose={() => setTakedownModal(null)}>
+        <Modal isOpen={true} title={`Action Notice: ${takedownModal.name}`} onClose={() => setTakedownModal(null)}>
           <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
             <p style={{ fontSize: '0.85rem', color: '#60736F' }}>Please state the moderation reason for this action (optional):</p>
             <textarea
