@@ -59,10 +59,11 @@ export default function SearchPage() {
     const qParam = params.get('q');
     const rawCat = params.get('category') || params.get('tag');
     if (qParam) {
-      setQuery(qParam);
+      const cleanQ = qParam.replace(/_/g, ' ').trim();
+      setQuery(cleanQ);
       setSelectedTags([]);
     } else if (rawCat) {
-      const normalized = rawCat.toLowerCase();
+      const normalized = rawCat.toLowerCase().replace(/_/g, ' ').trim();
       const mappedTag = CATEGORY_MAP[normalized] || normalized;
       setSelectedTags([mappedTag]);
     } else {
@@ -125,26 +126,53 @@ export default function SearchPage() {
       try {
         const isNearMe = selectedTags.includes('near me');
         const cleanTags = selectedTags.filter(t => t !== 'near me');
-        const { data } = await searchProducts(query, cleanTags, isNearMe);
+        const cleanQuery = query.replace(/_/g, ' ').trim();
+        const { data } = await searchProducts(cleanQuery, cleanTags, isNearMe);
         if (data?.products?.length) {
           setResults(data.products);
         } else {
-          // Fallback filter
-          const qLower = query.toLowerCase().trim();
-          const filtered = FALLBACK_GUPPY_PRODUCTS.filter((p) => {
-            const matchesQuery = !qLower || p.name.toLowerCase().includes(qLower) || p.category.toLowerCase().includes(qLower);
-            const matchesTags = cleanTags.length === 0 || cleanTags.some(t => p.tags.includes(t.toLowerCase()) || p.category.toLowerCase() === t.toLowerCase());
+          // Robust client-side search across initialProducts and fallback pool
+          const pool = (initialProducts && initialProducts.length > 0) ? initialProducts : FALLBACK_GUPPY_PRODUCTS;
+          const qClean = cleanQuery.toLowerCase();
+          const qWords = qClean.split(/\s+/).filter(Boolean);
+          const filtered = pool.filter((p) => {
+            const name = (p.name || '').toLowerCase();
+            const cat = (p.category || '').toLowerCase();
+            const tags = (p.tags || []).map(t => String(t).toLowerCase());
+            const breed = (p.animalCompliance?.breed || '').toLowerCase();
+
+            const matchesQuery = !qClean ||
+              name.includes(qClean) ||
+              cat.includes(qClean) ||
+              breed.includes(qClean) ||
+              tags.some(t => t.includes(qClean)) ||
+              (qWords.length > 0 && qWords.some(w => name.includes(w) || cat.includes(w) || breed.includes(w) || tags.some(t => t.includes(w))));
+
+            const matchesTags = cleanTags.length === 0 || cleanTags.some(t => tags.includes(t.toLowerCase()) || cat === t.toLowerCase());
             return matchesQuery && matchesTags;
           });
           setResults(filtered);
         }
       } catch (e) {
         console.error(e);
-        const qLower = query.toLowerCase().trim();
+        const pool = (initialProducts && initialProducts.length > 0) ? initialProducts : FALLBACK_GUPPY_PRODUCTS;
+        const qClean = query.replace(/_/g, ' ').toLowerCase().trim();
+        const qWords = qClean.split(/\s+/).filter(Boolean);
         const cleanTags = selectedTags.filter(t => t !== 'near me');
-        const filtered = FALLBACK_GUPPY_PRODUCTS.filter((p) => {
-          const matchesQuery = !qLower || p.name.toLowerCase().includes(qLower) || p.category.toLowerCase().includes(qLower);
-          const matchesTags = cleanTags.length === 0 || cleanTags.some(t => p.tags.includes(t.toLowerCase()) || p.category.toLowerCase() === t.toLowerCase());
+        const filtered = pool.filter((p) => {
+          const name = (p.name || '').toLowerCase();
+          const cat = (p.category || '').toLowerCase();
+          const tags = (p.tags || []).map(t => String(t).toLowerCase());
+          const breed = (p.animalCompliance?.breed || '').toLowerCase();
+
+          const matchesQuery = !qClean ||
+            name.includes(qClean) ||
+            cat.includes(qClean) ||
+            breed.includes(qClean) ||
+            tags.some(t => t.includes(qClean)) ||
+            (qWords.length > 0 && qWords.some(w => name.includes(w) || cat.includes(w) || breed.includes(w) || tags.some(t => t.includes(w))));
+
+          const matchesTags = cleanTags.length === 0 || cleanTags.some(t => tags.includes(t.toLowerCase()) || cat === t.toLowerCase());
           return matchesQuery && matchesTags;
         });
         setResults(filtered);

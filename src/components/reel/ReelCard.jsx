@@ -1,10 +1,9 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Send, Zap, Layers, Volume2, VolumeX } from 'lucide-react';
+import { Heart, Send, Zap, Layers, Volume2, VolumeX, ArrowLeft } from 'lucide-react';
 import VideoPlayer from './VideoPlayer';
 import ShareModal from '../ui/ShareModal';
 import Modal from '../ui/Modal';
-import SubVideoModal from './SubVideoModal';
 import ProductActionButtons from '../product/ProductActionButtons';
 import { isProductItem } from '../../utils/productUtils';
 import { toggleLike, submitEnquiry, updateProfile, trackInterest, sendMessage } from '../../api';
@@ -12,7 +11,7 @@ import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { getSoundPreference, setSoundPreference } from '../../hooks/useSoundPreference';
 import { openReel } from '../../utils/navigation';
-import { getPlayableVideoUrl, logVideoDiagnostics } from '../../utils/media';
+import { getPlayableVideoUrl, getPosterUrl, logVideoDiagnostics } from '../../utils/media';
 
 export default function ReelCard({ product, onLikeUpdate }) {
   const navigate = useNavigate();
@@ -24,14 +23,17 @@ export default function ReelCard({ product, onLikeUpdate }) {
   const [likeAnimating, setLikeAnimating] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showEnquiry, setShowEnquiry] = useState(false);
-  const [showMoreVideos, setShowMoreVideos] = useState(false);
+  const [subIndex, setSubIndex] = useState(0);
   const [sending, setSending] = useState(false);
   const [isMuted, setIsMuted] = useState(!getSoundPreference());
   const [shareAnimating, setShareAnimating] = useState(false);
   const [tempPhone, setTempPhone] = useState('');
   const videoRef = useRef(null);
 
-  const videoUrl = getPlayableVideoUrl(product);
+  const reelsList = Array.isArray(product.reels) && product.reels.length > 0 ? product.reels : [];
+  const currentVideoItem = (reelsList.length > 0 && reelsList[subIndex]) ? reelsList[subIndex] : product;
+  const videoUrl = getPlayableVideoUrl(currentVideoItem) || getPlayableVideoUrl(product);
+  const posterUrl = getPosterUrl(currentVideoItem) || getPosterUrl(product);
   logVideoDiagnostics('ReelCard', product);
 
   // ─── Handlers ───────────────────────────────────────────────────────────────
@@ -182,7 +184,7 @@ ${canonicalUrl}`;
         overflow: 'hidden',
       }}
     >
-      <VideoPlayer src={videoUrl} poster={getPosterUrl(product)} muted={isMuted} externalRef={videoRef} />
+      <VideoPlayer key={`${product._id}-${subIndex}`} src={videoUrl} poster={posterUrl} muted={isMuted} externalRef={videoRef} />
 
       {/* Bottom gradient overlay */}
       <div
@@ -326,33 +328,82 @@ ${canonicalUrl}`;
             </span>
           )}
 
-          {/* More Videos Button for Multiple Videos */}
-          {Array.isArray(product.reels) && product.reels.length > 1 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowMoreVideos(true);
-              }}
-              style={{
-                marginTop: 8,
-                pointerEvents: 'auto',
-                background: 'linear-gradient(135deg, #0D5148 0%, #163B34 100%)',
-                color: '#FFFFFF',
-                border: '1px solid #10B981',
-                borderRadius: 20,
-                padding: '6px 14px',
-                fontSize: '0.78rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
-              }}
-            >
-              <Layers size={14} color="#10B981" />
-              More Videos ({product.reels.length})
-            </button>
+          {/* More Videos Buttons (Inline Cycling within Reel Layout) */}
+          {reelsList.length > 1 && (
+            <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap', pointerEvents: 'auto' }}>
+              {subIndex > 0 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSubIndex(0);
+                  }}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.25)',
+                    color: '#FFFFFF',
+                    border: '1px solid rgba(255, 255, 255, 0.5)',
+                    borderRadius: 20,
+                    padding: '6px 14px',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    backdropFilter: 'blur(8px)',
+                  }}
+                >
+                  <ArrowLeft size={14} /> Back to Main Video
+                </button>
+              )}
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSubIndex((prev) => (prev + 1) % reelsList.length);
+                }}
+                style={{
+                  background: 'linear-gradient(135deg, #0D5148 0%, #163B34 100%)',
+                  color: '#FFFFFF',
+                  border: '1px solid #10B981',
+                  borderRadius: 20,
+                  padding: '6px 14px',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
+                }}
+              >
+                <Layers size={14} color="#10B981" />
+                {subIndex === 0
+                  ? `More Videos (${reelsList.length})`
+                  : `Next Video (${subIndex + 1}/${reelsList.length}) →`}
+              </button>
+
+              {/* Quick-switch indicator dots for sub-videos */}
+              <div style={{ display: 'flex', gap: 4, alignItems: 'center', marginLeft: 4 }}>
+                {reelsList.map((_, dotIdx) => (
+                  <div
+                    key={dotIdx}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSubIndex(dotIdx);
+                    }}
+                    title={`Play video ${dotIdx + 1}`}
+                    style={{
+                      width: dotIdx === subIndex ? 18 : 6,
+                      height: 6,
+                      borderRadius: 3,
+                      background: dotIdx === subIndex ? '#10B981' : 'rgba(255,255,255,0.4)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
           )}
         </div>
       </div>
@@ -363,12 +414,6 @@ ${canonicalUrl}`;
         onClose={() => setShowShare(false)}
         url={`${window.location.origin}/product/${product._id}`}
         title="Share Reel"
-      />
-
-      <SubVideoModal
-        item={product}
-        isOpen={showMoreVideos}
-        onClose={() => setShowMoreVideos(false)}
       />
 
       <Modal isOpen={showEnquiry} onClose={() => setShowEnquiry(false)} title="Register Interest">

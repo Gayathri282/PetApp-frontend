@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useLayoutEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Volume2, VolumeX, Heart, Send, MessageCircle, Play, Pause, RefreshCw, MapPin, CheckCircle, ShieldCheck, Layers } from 'lucide-react';
-import SubVideoModal from './SubVideoModal';
+import { X, Volume2, VolumeX, Heart, Send, MessageCircle, Play, Pause, RefreshCw, MapPin, CheckCircle, ShieldCheck, Layers, ArrowLeft } from 'lucide-react';
 import ProductActionButtons from '../product/ProductActionButtons';
 import { isProductItem } from '../../utils/productUtils';
 import { getPlayableVideoUrl, getPosterUrl, normalizeMediaItem, logVideoDiagnostics } from '../../utils/media';
@@ -25,7 +24,6 @@ function SingleReelItem({
 }) {
   const videoRef = useRef(null);
   const toast = useToast();
-  const normalized = normalizeMediaItem(item);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -33,10 +31,21 @@ function SingleReelItem({
   const [liked, setLiked] = useState(item?.isLiked || false);
   const [likeCount, setLikeCount] = useState(item?.likeCount || 0);
   const [likeAnimating, setLikeAnimating] = useState(false);
-  const [showMoreVideos, setShowMoreVideos] = useState(false);
+  const [subIndex, setSubIndex] = useState(0);
 
-  const videoUrl = normalized.url;
-  const posterUrl = normalized.thumbnail;
+  // Reset to parent video when scrolled out of view
+  useEffect(() => {
+    if (!isActive) {
+      setSubIndex(0);
+    }
+  }, [isActive]);
+
+  const reelsList = Array.isArray(item?.reels) && item.reels.length > 0 ? item.reels : [];
+  const currentReelItem = (reelsList.length > 0 && reelsList[subIndex]) ? reelsList[subIndex] : item;
+  const normalized = normalizeMediaItem(currentReelItem);
+
+  const videoUrl = normalized.url || getPlayableVideoUrl(item);
+  const posterUrl = normalized.thumbnail || getPosterUrl(item);
 
   // Diagnostic logging
   useEffect(() => {
@@ -273,6 +282,7 @@ function SingleReelItem({
       {videoUrl && !hasError && (
         <video
           ref={videoRef}
+          key={`${videoUrl}-${subIndex}`}
           src={videoUrl}
           poster={posterUrl}
           playsInline
@@ -400,55 +410,104 @@ function SingleReelItem({
           pointerEvents: 'auto',
         }}
       >
-        {/* Close Button (top-left) */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onClose();
-          }}
-          aria-label="Close Reels Viewer"
-          style={{
-            background: 'rgba(0, 0, 0, 0.55)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '50%',
-            width: 40,
-            height: 40,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#FFFFFF',
-            cursor: 'pointer',
-            backdropFilter: 'blur(8px)',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-          }}
-        >
-          <X size={22} />
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Close Button (top-left) */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
+            aria-label="Close Reels Viewer"
+            style={{
+              background: 'rgba(0, 0, 0, 0.55)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '50%',
+              width: 40,
+              height: 40,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#FFFFFF',
+              cursor: 'pointer',
+              backdropFilter: 'blur(8px)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+            }}
+          >
+            <X size={22} />
+          </button>
 
-        {/* Mute/Unmute Button (top-right) */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleMute();
-          }}
-          aria-label={isMuted ? 'Unmute sound' : 'Mute sound'}
-          style={{
-            background: 'rgba(0, 0, 0, 0.55)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '50%',
-            width: 40,
-            height: 40,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#FFFFFF',
-            cursor: 'pointer',
-            backdropFilter: 'blur(8px)',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-          }}
-        >
-          {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-        </button>
+          {/* Quick Back to Parent Video when viewing sub-videos */}
+          {subIndex > 0 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setSubIndex(0);
+              }}
+              style={{
+                background: 'rgba(0, 0, 0, 0.65)',
+                border: '1px solid rgba(255, 255, 255, 0.35)',
+                borderRadius: 20,
+                padding: '6px 14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                color: '#FFFFFF',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                backdropFilter: 'blur(8px)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+              }}
+            >
+              <ArrowLeft size={16} /> Parent Video
+            </button>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Video pill indicator if multiple videos */}
+          {reelsList.length > 1 && (
+            <div
+              style={{
+                background: 'rgba(0, 0, 0, 0.6)',
+                border: '1px solid rgba(255, 255, 255, 0.25)',
+                borderRadius: 20,
+                padding: '4px 10px',
+                fontSize: '0.74rem',
+                fontWeight: 800,
+                color: '#F3C34E',
+                backdropFilter: 'blur(8px)',
+              }}
+            >
+              Video {subIndex + 1}/{reelsList.length}
+            </div>
+          )}
+
+          {/* Mute/Unmute Button (top-right) */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleMute();
+            }}
+            aria-label={isMuted ? 'Unmute sound' : 'Mute sound'}
+            style={{
+              background: 'rgba(0, 0, 0, 0.55)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '50%',
+              width: 40,
+              height: 40,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#FFFFFF',
+              cursor: 'pointer',
+              backdropFilter: 'blur(8px)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+            }}
+          >
+            {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+          </button>
+        </div>
       </div>
 
       {/* 6. Bottom Gradient Overlay for typography legibility */}
@@ -553,42 +612,85 @@ function SingleReelItem({
           <span>{city}</span>
         </div>
 
-        {/* More Videos Button for Multiple Videos */}
-        {Array.isArray(item.reels) && item.reels.length > 1 && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowMoreVideos(true);
-            }}
-            style={{
-              marginTop: 6,
-              alignSelf: 'flex-start',
-              pointerEvents: 'auto',
-              background: 'linear-gradient(135deg, #0D5148 0%, #163B34 100%)',
-              color: '#FFFFFF',
-              border: '1px solid #10B981',
-              borderRadius: 20,
-              padding: '6px 14px',
-              fontSize: '0.78rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
-            }}
-          >
-            <Layers size={14} color="#10B981" />
-            More Videos ({item.reels.length})
-          </button>
+        {/* More Videos Buttons (Inline Cycling within Reel Layout) */}
+        {reelsList.length > 1 && (
+          <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap', pointerEvents: 'auto', alignItems: 'center' }}>
+            {subIndex > 0 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSubIndex(0);
+                }}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.22)',
+                  color: '#FFFFFF',
+                  border: '1px solid rgba(255, 255, 255, 0.5)',
+                  borderRadius: 20,
+                  padding: '6px 14px',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  backdropFilter: 'blur(8px)',
+                }}
+              >
+                <ArrowLeft size={14} /> Back to Main Video
+              </button>
+            )}
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                // When clicked, advance to next video of the same product
+                setSubIndex((prev) => (prev + 1) % reelsList.length);
+              }}
+              style={{
+                background: 'linear-gradient(135deg, #0D5148 0%, #163B34 100%)',
+                color: '#FFFFFF',
+                border: '1px solid #10B981',
+                borderRadius: 20,
+                padding: '6px 14px',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
+              }}
+            >
+              <Layers size={14} color="#10B981" />
+              {subIndex === 0
+                ? `More Videos (${reelsList.length})`
+                : `Next Video (${subIndex + 1}/${reelsList.length}) →`}
+            </button>
+
+            {/* Quick-switch indicator dots for sub-videos */}
+            <div style={{ display: 'flex', gap: 4, alignItems: 'center', marginLeft: 4 }}>
+              {reelsList.map((_, dotIdx) => (
+                <div
+                  key={dotIdx}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSubIndex(dotIdx);
+                  }}
+                  title={`Play video ${dotIdx + 1}`}
+                  style={{
+                    width: dotIdx === subIndex ? 18 : 6,
+                    height: 6,
+                    borderRadius: 3,
+                    background: dotIdx === subIndex ? '#10B981' : 'rgba(255,255,255,0.4)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                  }}
+                />
+              ))}
+            </div>
+          </div>
         )}
       </div>
-
-      <SubVideoModal
-        item={item}
-        isOpen={showMoreVideos}
-        onClose={() => setShowMoreVideos(false)}
-      />
     </div>
   );
 }

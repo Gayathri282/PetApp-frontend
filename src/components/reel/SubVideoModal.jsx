@@ -2,8 +2,14 @@ import React, { useState } from 'react';
 import { ArrowLeft, ChevronLeft, ChevronRight, X, Film } from 'lucide-react';
 import { getPlayableVideoUrl, getPosterUrl } from '../../utils/media';
 
-export default function SubVideoModal({ item, isOpen, onClose }) {
-  const [subIndex, setSubIndex] = useState(0);
+export default function SubVideoModal({ item, isOpen, onClose, initialIndex = 1 }) {
+  const [subIndex, setSubIndex] = useState(initialIndex || 1);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setSubIndex(initialIndex || 1);
+    }
+  }, [isOpen, initialIndex]);
 
   if (!isOpen || !item) return null;
 

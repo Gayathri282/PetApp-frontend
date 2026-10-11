@@ -94,7 +94,12 @@ export default function ProfilePage() {
     }
   }, [isVendor, isAdmin, user, fetchVendorProducts]);
 
-  const reels = (products || []).filter(p => p.category === 'promotional' || p.type === 'reel');
+  const reels = (products || []).filter(p => 
+    p.category === 'promotional' || 
+    p.type === 'reel' || 
+    (Array.isArray(p.reels) && p.reels.length > 0 && Boolean(p.reels[0]?.videoUrl)) ||
+    Boolean(p.primaryReel?.videoUrl)
+  );
   const saleProducts = (products || []).filter(p => p.category !== 'promotional' && p.type !== 'reel');
 
   const handleDelete = async (id) => {

@@ -63,7 +63,8 @@ export default function FeedPage() {
 
   const openCategory = (cat) => {
     setShowAllCategories(false);
-    navigate(`/search?q=${encodeURIComponent(cat.tag || cat.name)}`);
+    const queryStr = (cat.name || cat.tag || '').replace(/_/g, ' ').trim();
+    navigate(`/search?q=${encodeURIComponent(queryStr)}`);
   };
 
   const filteredBreeds = GUPPY_VARIETIES_LIST.filter(b => {
@@ -98,7 +99,10 @@ export default function FeedPage() {
   const loadFeed = useCallback(async (p, customLimit) => {
     if (isFetching.current) return;
     isFetching.current = true;
-    if (p > 1 || (customLimit && customLimit > 5)) setLoading(true);
+    setProducts(prev => {
+      if (prev.length === 0) setLoading(true);
+      return prev;
+    });
 
     try {
       const limit = customLimit || 10;
@@ -106,8 +110,17 @@ export default function FeedPage() {
       if (data && data.products && data.products.length > 0) {
         setProducts(prev => {
           const next = p === 1 ? data.products : [...prev, ...data.products];
-          if (p === 1 && data.products.length > 0 && !newestTimestamp.current) {
-            newestTimestamp.current = data.products[0].createdAt;
+          if (p === 1 && data.products.length > 0) {
+            const maxTs = data.products.reduce((max, prod) => {
+              const prodTs = new Date(prod.createdAt || 0).getTime();
+              return prodTs > max ? prodTs : max;
+            }, 0);
+            if (maxTs > 0) {
+              const maxIso = new Date(maxTs).toISOString();
+              if (!newestTimestamp.current || new Date(maxIso) > new Date(newestTimestamp.current)) {
+                newestTimestamp.current = maxIso;
+              }
+            }
           }
           return next;
         });
@@ -149,23 +162,25 @@ export default function FeedPage() {
     const poll = async () => {
       try {
         const { data } = await getLatestTimestamp();
-        if (
-          data.latestTimestamp &&
-          newestTimestamp.current &&
-          new Date(data.latestTimestamp) > new Date(newestTimestamp.current)
-        ) {
-          loadFeed(1, 10);
-          setShowNewReels(false);
+        if (!data?.latestTimestamp) return;
+
+        if (!newestTimestamp.current) {
+          newestTimestamp.current = data.latestTimestamp;
+          return;
+        }
+
+        if (new Date(data.latestTimestamp) > new Date(newestTimestamp.current)) {
+          newestTimestamp.current = data.latestTimestamp;
+          // Notify user non-intrusively instead of constantly wiping and reloading their active feed
+          setShowNewReels(true);
         }
       } catch {}
     };
 
-    window.addEventListener('focus', handleDataUpdate);
     window.addEventListener('app-data-updated', handleDataUpdate);
-    const timer = setInterval(poll, 5_000);
+    const timer = setInterval(poll, 30_000);
 
     return () => {
-      window.removeEventListener('focus', handleDataUpdate);
       window.removeEventListener('app-data-updated', handleDataUpdate);
       clearInterval(timer);
     };
@@ -187,8 +202,19 @@ export default function FeedPage() {
   }, [viewMode, selectedReelIndex]);
 
   // ── Data Filtering ─────────────────────────────────────────────────────────────
-  // Only promotional / standalone reels (never products)
-  const allPetReels = products.filter(p => isReelItem(p));
+  // All video reels: standalone promotional reels and any listings with video reels
+  const allPetReels = products.filter(p => {
+    if (isReelItem(p)) return true;
+    if (Array.isArray(p.reels) && p.reels.length > 0 && Boolean(p.reels[0]?.videoUrl)) return true;
+    if (Boolean(p.primaryReel?.videoUrl)) return true;
+    if (Boolean(getPlayableVideoUrl(p))) return true;
+    return false;
+  });
+
+  const displayPetReels = allPetReels.length > 0 
+    ? allPetReels 
+    : (products.length > 0 ? products : FALLBACK_GUPPY_PRODUCTS);
+
   // Only pets / products currently listed for sale
   const onSaleReels = products.filter(p => isProductItem(p) && p.isOnSale !== false);
 
@@ -229,7 +255,7 @@ export default function FeedPage() {
           </button>
         </div>
 
-        {allPetReels.map((product, i) => (
+        {displayPetReels.map((product, i) => (
           <div
             key={product._id}
             className="reel-wrapper"
@@ -247,6 +273,41 @@ export default function FeedPage() {
   return (
     <div style={{ padding: '16px 16px 100px', maxWidth: 680, margin: '0 auto', background: '#F3F8F5', minHeight: '100dvh' }}>
       
+      {/* Floating New Listings notification pill */}
+      {showNewReels && (
+        <div style={{
+          position: 'sticky',
+          top: 72,
+          zIndex: 50,
+          display: 'flex',
+          justifyContent: 'center',
+          marginBottom: 16,
+        }}>
+          <button
+            onClick={() => {
+              setShowNewReels(false);
+              loadFeed(1, 10);
+            }}
+            style={{
+              background: '#0D5148',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: 999,
+              padding: '8px 18px',
+              fontSize: '0.82rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: '0 4px 16px rgba(13, 81, 72, 0.35)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+            }}
+          >
+            ✨ New pet listings available · Tap to refresh
+          </button>
+        </div>
+      )}
+
       {/* 1. Header Hero Section */}
       <div style={{ marginBottom: 20 }}>
         <p className="section-label">TRUSTED BY LOCAL PET LOVERS</p>
@@ -514,7 +575,7 @@ export default function FeedPage() {
           </button>
         </div>
 
-        {loading ? (
+        {loading && products.length === 0 ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spinner size={36} /></div>
         ) : onSaleReels.length === 0 ? (
           <div style={{
@@ -579,7 +640,7 @@ export default function FeedPage() {
             <h2 className="serif-heading" style={{ fontSize: '1.35rem' }}>Watch pet reels</h2>
           </div>
           <button
-            onClick={() => handleOpenReels(allPetReels[0], allPetReels)}
+            onClick={() => handleOpenReels(displayPetReels[0], displayPetReels)}
             style={{ background: 'none', border: 'none', color: '#0D5148', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
           >
             View all <ChevronRight size={16} />
@@ -587,7 +648,7 @@ export default function FeedPage() {
         </div>
 
         <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-          {allPetReels.map((product) => (
+          {displayPetReels.map((product) => (
             <div
               key={product._id}
               className="card"
@@ -605,7 +666,7 @@ export default function FeedPage() {
                 item={product}
                 activeVideoId={activeVideoId}
                 setActiveVideoId={setActiveVideoId}
-                onVideoClick={(item) => handleOpenReels(item, allPetReels)}
+                onVideoClick={(item) => handleOpenReels(item, displayPetReels)}
                 mediaHeight={230}
                 sectionName="Watch Pet Reels"
               >

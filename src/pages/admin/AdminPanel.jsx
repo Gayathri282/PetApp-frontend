@@ -46,7 +46,10 @@ export default function AdminPanel() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [previewVideo, setPreviewVideo] = useState(null);
+  const [modalVideoItem, setModalVideoItem] = useState(null);
+  const [modalVideoIndex, setModalVideoIndex] = useState(0);
   const [expandedVideoId, setExpandedVideoId] = useState(null);
+  const [productVideoIndices, setProductVideoIndices] = useState({});
   const [takedownModal, setTakedownModal] = useState(null); // { id, name, type }
   const [takedownReason, setTakedownReason] = useState('');
   const [takingDown, setTakingDown] = useState(false);
@@ -144,15 +147,11 @@ export default function AdminPanel() {
     return () => { isCancelled = true; };
   }, [tab, reelFilter, productFilter, userFilter, searchQuery]);
 
-  // Video Preview Handler (Inline panel toggle)
-  const handleOpenVideoPreview = (item) => {
-    const url = getPlayableVideoUrl(item);
-    console.log('🎥 [ADMIN VIDEO PREVIEW] Reel:', item.name, 'Resolved Video URL:', url);
-    if (!url) {
-      toast.info('No playable video file attached to this reel');
-      return;
-    }
-    setExpandedVideoId(prev => prev === item._id ? null : item._id);
+  // Video Preview Handler (Opens full video modal with multi-video support)
+  const handleOpenVideoPreview = (item, initialIndex = 0) => {
+    if (!item) return;
+    setModalVideoIndex(initialIndex);
+    setModalVideoItem(item);
   };
 
   // Moderation Action Handlers
@@ -198,18 +197,49 @@ export default function AdminPanel() {
     setTakedownModal({ id, name, type });
   };
 
+  const handleDeleteProduct = async (id, name) => {
+    if (!window.confirm(`Are you sure you want to delete "${name || 'Product'}"? This will permanently remove it.`)) return;
+    try {
+      await adminDeleteProduct(id, 'Deleted by admin');
+      setProducts(prev => prev.filter(p => p._id !== id));
+      if (modalVideoItem?._id === id) setModalVideoItem(null);
+      loadStats();
+      window.dispatchEvent(new CustomEvent('app-data-updated'));
+      toast.success('Product deleted successfully');
+    } catch (err) {
+      console.error('[ADMIN DELETE PRODUCT]', err?.response?.status, err?.response?.data || err.message);
+      toast.error(err?.response?.data?.message || `Failed to delete product (${err?.response?.status || 'network error'})`);
+    }
+  };
+
+  const handleDeleteReel = async (id, name) => {
+    if (!window.confirm(`Are you sure you want to delete "${name || 'Reel'}"? This will permanently remove it.`)) return;
+    try {
+      await adminDeleteReel(id, 'Deleted by admin');
+      setReels(prev => prev.filter(r => r._id !== id));
+      if (modalVideoItem?._id === id) setModalVideoItem(null);
+      loadStats();
+      window.dispatchEvent(new CustomEvent('app-data-updated'));
+      toast.success('Reel deleted successfully');
+    } catch (err) {
+      console.error('[ADMIN DELETE REEL]', err?.response?.status, err?.response?.data || err.message);
+      toast.error(err?.response?.data?.message || `Failed to delete reel (${err?.response?.status || 'network error'})`);
+    }
+  };
+
   const confirmTakedown = async () => {
-    if (!takedownReason.trim() && takedownModal.type !== 'delete_reel') return;
     setTakingDown(true);
     try {
-      const reason = takedownReason.trim() || 'Violation of community guidelines';
+      const reason = takedownReason.trim() || 'Moderation action taken by admin';
       if (takedownModal.type === 'delete_reel') {
         await adminDeleteReel(takedownModal.id, reason);
-        setReels(prev => prev.map(r => r._id === takedownModal.id ? { ...r, status: 'deleted' } : r));
+        setReels(prev => prev.filter(r => r._id !== takedownModal.id));
+        if (modalVideoItem?._id === takedownModal.id) setModalVideoItem(null);
         toast.success('Reel deleted by admin.');
       } else if (takedownModal.type === 'delete_product') {
         await adminDeleteProduct(takedownModal.id, reason);
-        setProducts(prev => prev.map(p => p._id === takedownModal.id ? { ...p, status: 'deleted' } : p));
+        setProducts(prev => prev.filter(p => p._id !== takedownModal.id));
+        if (modalVideoItem?._id === takedownModal.id) setModalVideoItem(null);
         toast.success('Product deleted by admin.');
       } else if (takedownModal.type === 'delete_user') {
         await adminDeleteUser(takedownModal.id, reason);
@@ -219,7 +249,8 @@ export default function AdminPanel() {
       loadStats();
       window.dispatchEvent(new CustomEvent('app-data-updated'));
       setTakedownModal(null);
-    } catch {
+    } catch (err) {
+      console.error('Moderation action failed:', err);
       toast.error('Moderation action failed.');
     } finally {
       setTakingDown(false);
@@ -573,7 +604,7 @@ export default function AdminPanel() {
                           )}
                           {r.status !== 'deleted' && (
                             <button
-                              onClick={() => openTakedownModal(r._id, r.name, 'delete_reel')}
+                              onClick={() => handleDeleteReel(r._id, r.name)}
                               style={{ background: '#ef4444', color: '#FFFFFF', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
                             >
                               Delete Reel
@@ -619,74 +650,198 @@ export default function AdminPanel() {
                   No products match filter: <strong>{productFilter}</strong>
                 </p>
               )}
-              {products.map((p) => (
-                <div key={p._id} className="card" style={{ padding: 16, background: '#FFFFFF', border: '1px solid #D6E3DE' }}>
-                  <div style={{ display: 'flex', gap: 12 }}>
-                    <div
-                      style={{ width: 72, height: 90, borderRadius: 12, overflow: 'hidden', background: '#E8F1ED', flexShrink: 0 }}
-                    >
-                      {p.images?.[0] ? (
-                        <img src={getFullSrc(p.images[0])} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      ) : p.reels?.[0]?.videoUrl ? (
-                        <video src={getFullSrc(p.reels[0].videoUrl)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      ) : (
-                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Package size={20} color="#0D5148" /></div>
-                      )}
+              {products.map((p) => {
+                const reelsList = Array.isArray(p.reels) && p.reels.length > 0 ? p.reels : [];
+                const activeSubIdx = productVideoIndices[p._id] || 0;
+                const currentReel = reelsList[activeSubIdx] || reelsList[0];
+                const videoUrl = currentReel?.videoUrl ? getFullSrc(currentReel.videoUrl) : (getPlayableVideoUrl(p) || (p.primaryReel?.videoUrl ? getFullSrc(p.primaryReel.videoUrl) : ''));
+                const posterUrl = currentReel?.thumbnail ? getFullSrc(currentReel.thumbnail) : (p.images?.[0] ? getFullSrc(p.images[0]) : getPosterUrl(p));
+                const hasVideo = Boolean(videoUrl || reelsList.length > 0 || p.reels?.[0]?.videoUrl);
+
+                return (
+                  <div
+                    key={p._id}
+                    className="card"
+                    onClick={(e) => {
+                      if (e.target.closest('button, video, a')) return;
+                      handleOpenVideoPreview(p);
+                    }}
+                    style={{ padding: 16, background: '#FFFFFF', border: '1px solid #D6E3DE', cursor: 'pointer' }}
+                  >
+                    <div style={{ display: 'flex', gap: 12 }}>
+                      <div
+                        style={{
+                          width: 84,
+                          height: 110,
+                          borderRadius: 12,
+                          overflow: 'hidden',
+                          background: '#000000',
+                          flexShrink: 0,
+                          position: 'relative',
+                          cursor: 'pointer',
+                        }}
+                        title="Click to preview product video(s)"
+                      >
+                        {posterUrl ? (
+                          <img src={posterUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : videoUrl ? (
+                          <video src={videoUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted />
+                        ) : (
+                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#E8F1ED' }}>
+                            <Package size={24} color="#0D5148" />
+                          </div>
+                        )}
+
+                        {hasVideo && (
+                          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <PlayIcon size={24} color="#ffffff" fill="#ffffff" />
+                          </div>
+                        )}
+
+                        {reelsList.length > 1 && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              bottom: 4,
+                              right: 4,
+                              background: 'rgba(0,0,0,0.75)',
+                              color: '#FFFFFF',
+                              fontSize: '0.62rem',
+                              fontWeight: 800,
+                              padding: '2px 6px',
+                              borderRadius: 4,
+                            }}
+                          >
+                            {reelsList.length} vids
+                          </div>
+                        )}
+                      </div>
+
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                          <h4 style={{ fontSize: '0.96rem', fontWeight: 700, color: '#12332F', margin: 0 }}>{p.name}</h4>
+                          <span style={{
+                            fontSize: '0.65rem',
+                            padding: '3px 8px',
+                            borderRadius: 999,
+                            fontWeight: 800,
+                            textTransform: 'uppercase',
+                            background: p.status === 'approved' ? '#dcfce7' : p.status === 'pending' ? '#ffedd5' : '#fee2e2',
+                            color: p.status === 'approved' ? '#166534' : p.status === 'pending' ? '#c2410c' : '#991b1b',
+                          }}>
+                            {p.status}
+                          </span>
+                        </div>
+                        <p style={{ fontSize: '0.78rem', color: '#60736F', margin: '2px 0' }}>
+                          Category: <strong>{p.category}</strong> • Price: <strong>₹{p.price}</strong>
+                        </p>
+                        <p style={{ fontSize: '0.75rem', color: '#60736F', margin: '0 0 8px' }}>
+                          Seller: {p.vendor?.name || 'Vendor'} • Submitted: {new Date(p.createdAt).toLocaleDateString()}
+                        </p>
+
+                        {/* Product Actions */}
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          {true && (
+                            <button
+                              onClick={() => handleOpenVideoPreview(p)}
+                              style={{
+                                background: expandedVideoId === p._id ? '#0D5148' : '#E8F1ED',
+                                color: expandedVideoId === p._id ? '#FFFFFF' : '#0D5148',
+                                border: '1px solid #B8D5CB',
+                                borderRadius: 8,
+                                padding: '6px 12px',
+                                fontSize: '0.75rem',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 4
+                              }}
+                            >
+                              <PlayIcon size={13} fill={expandedVideoId === p._id ? '#FFFFFF' : '#0D5148'} />
+                              {expandedVideoId === p._id ? 'Hide Video' : `Watch Video (${reelsList.length || 1})`}
+                            </button>
+                          )}
+                          {p.status !== 'approved' && (
+                            <button
+                              onClick={() => handleProductAction(p._id, 'approved')}
+                              style={{ background: '#0D5148', color: '#FFFFFF', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+                            >
+                              Approve
+                            </button>
+                          )}
+                          {p.status !== 'rejected' && (
+                            <button
+                              onClick={() => handleProductAction(p._id, 'rejected')}
+                              style={{ background: '#f97316', color: '#FFFFFF', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+                            >
+                              Reject
+                            </button>
+                          )}
+                          {p.status !== 'deleted' && (
+                            <button
+                              onClick={() => handleDeleteProduct(p._id, p.name)}
+                              style={{ background: '#ef4444', color: '#FFFFFF', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+                            >
+                              Delete Product
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </div>
 
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                        <h4 style={{ fontSize: '0.96rem', fontWeight: 700, color: '#12332F', margin: 0 }}>{p.name}</h4>
-                        <span style={{
-                          fontSize: '0.65rem',
-                          padding: '3px 8px',
-                          borderRadius: 999,
-                          fontWeight: 800,
-                          textTransform: 'uppercase',
-                          background: p.status === 'approved' ? '#dcfce7' : p.status === 'pending' ? '#ffedd5' : '#fee2e2',
-                          color: p.status === 'approved' ? '#166534' : p.status === 'pending' ? '#c2410c' : '#991b1b',
-                        }}>
-                          {p.status}
-                        </span>
-                      </div>
-                      <p style={{ fontSize: '0.78rem', color: '#60736F', margin: '2px 0' }}>
-                        Category: <strong>{p.category}</strong> • Price: <strong>₹{p.price}</strong>
-                      </p>
-                      <p style={{ fontSize: '0.75rem', color: '#60736F', margin: '0 0 8px' }}>
-                        Seller: {p.vendor?.name || 'Vendor'} • Submitted: {new Date(p.createdAt).toLocaleDateString()}
-                      </p>
+                    {/* Inline Video Player Panel for Products */}
+                    {expandedVideoId === p._id && videoUrl && (
+                      <div style={{ marginTop: 14, borderRadius: 12, overflow: 'hidden', background: '#000000', border: '1px solid #0D5148' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 14px', background: '#0D5148', color: '#FFFFFF', fontSize: '0.8rem', fontWeight: 700 }}>
+                          <span>🎥 Product Reel: {p.name} {reelsList.length > 1 ? `(Video ${activeSubIdx + 1}/${reelsList.length})` : ''}</span>
+                          <button
+                            onClick={() => setExpandedVideoId(null)}
+                            style={{ background: 'transparent', border: 'none', color: '#FFFFFF', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem' }}
+                          >
+                            ✕ Close
+                          </button>
+                        </div>
 
-                      {/* Product Actions */}
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        {p.status !== 'approved' && (
-                          <button
-                            onClick={() => handleProductAction(p._id, 'approved')}
-                            style={{ background: '#0D5148', color: '#FFFFFF', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
-                          >
-                            Approve
-                          </button>
+                        {/* Multi-video switcher tabs if product has multiple reels */}
+                        {reelsList.length > 1 && (
+                          <div style={{ display: 'flex', gap: 6, padding: '8px 12px', background: '#111827', overflowX: 'auto', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                            {reelsList.map((r, vidIdx) => (
+                              <button
+                                key={vidIdx}
+                                onClick={() => setProductVideoIndices(prev => ({ ...prev, [p._id]: vidIdx }))}
+                                style={{
+                                  background: activeSubIdx === vidIdx ? '#0D5148' : '#1F2937',
+                                  color: '#FFFFFF',
+                                  border: activeSubIdx === vidIdx ? '1px solid #10B981' : '1px solid transparent',
+                                  borderRadius: 6,
+                                  padding: '4px 10px',
+                                  fontSize: '0.74rem',
+                                  fontWeight: 700,
+                                  cursor: 'pointer',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {vidIdx === 0 ? 'Main Video' : `Video ${vidIdx + 1}`}
+                              </button>
+                            ))}
+                          </div>
                         )}
-                        {p.status !== 'rejected' && (
-                          <button
-                            onClick={() => handleProductAction(p._id, 'rejected')}
-                            style={{ background: '#f97316', color: '#FFFFFF', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
-                          >
-                            Reject
-                          </button>
-                        )}
-                        {p.status !== 'deleted' && (
-                          <button
-                            onClick={() => openTakedownModal(p._id, p.name, 'delete_product')}
-                            style={{ background: '#ef4444', color: '#FFFFFF', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
-                          >
-                            Delete Product
-                          </button>
-                        )}
+
+                        <video
+                          key={`${videoUrl}-${activeSubIdx}`}
+                          src={videoUrl}
+                          poster={posterUrl}
+                          controls
+                          autoPlay
+                          playsInline
+                          style={{ width: '100%', maxHeight: 420, display: 'block', objectFit: 'contain', background: '#000000' }}
+                        />
                       </div>
-                    </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
@@ -797,39 +952,190 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {/* Video Preview Modal */}
-      {previewVideo && (
-        <Modal title={`Preview Reel: ${previewVideo.name}`} onClose={() => setPreviewVideo(null)}>
-          <div style={{ padding: 16, textAlign: 'center' }}>
-            <div style={{ width: '100%', height: 380, borderRadius: 16, overflow: 'hidden', background: '#000000', marginBottom: 16, position: 'relative' }}>
-              {previewVideo.url ? (
-                <video
-                  src={previewVideo.url}
-                  poster={previewVideo.poster}
-                  controls
-                  autoPlay
-                  playsInline
-                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                />
-              ) : (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94A3B8' }}>
-                  No playable video stream found
+      {/* Multi-Video Preview Modal with Real-Time Moderation Controls */}
+      {modalVideoItem && (() => {
+        const reelsList = Array.isArray(modalVideoItem.reels) && modalVideoItem.reels.length > 0
+          ? modalVideoItem.reels
+          : [modalVideoItem];
+        const activeIdx = Math.min(modalVideoIndex, reelsList.length - 1);
+        const currentReel = reelsList[activeIdx] || reelsList[0];
+        const videoUrl = currentReel?.videoUrl 
+          ? getFullSrc(currentReel.videoUrl) 
+          : (getPlayableVideoUrl(currentReel) || getPlayableVideoUrl(modalVideoItem) || '');
+        const posterUrl = currentReel?.thumbnail 
+          ? getFullSrc(currentReel.thumbnail) 
+          : (modalVideoItem.images?.[0] ? getFullSrc(modalVideoItem.images[0]) : getPosterUrl(modalVideoItem));
+        const isItemReel = modalVideoItem.type === 'reel' || modalVideoItem.category === 'promotional';
+
+        return (
+          <Modal title={`Preview: ${modalVideoItem.name}`} onClose={() => setModalVideoItem(null)}>
+            <div style={{ padding: 16 }}>
+              {/* Multi-video switch pills if > 1 video */}
+              {reelsList.length > 1 && (
+                <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 10, marginBottom: 8, scrollbarWidth: 'none' }}>
+                  {reelsList.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setModalVideoIndex(i)}
+                      style={{
+                        padding: '6px 14px',
+                        borderRadius: 999,
+                        border: 'none',
+                        background: activeIdx === i ? '#0D5148' : '#E8F1ED',
+                        color: activeIdx === i ? '#FFFFFF' : '#0D5148',
+                        fontSize: '0.78rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      🎬 {i === 0 ? 'Main Video' : `Video ${i + 1}`}
+                    </button>
+                  ))}
                 </div>
               )}
+
+              {/* Video Player */}
+              <div style={{ width: '100%', height: 380, borderRadius: 16, overflow: 'hidden', background: '#000000', marginBottom: 12, position: 'relative' }}>
+                {videoUrl ? (
+                  <video
+                    key={`${videoUrl}-${activeIdx}`}
+                    src={videoUrl}
+                    poster={posterUrl}
+                    controls
+                    autoPlay
+                    playsInline
+                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                  />
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94A3B8' }}>
+                    No playable video stream found
+                  </div>
+                )}
+              </div>
+
+              {/* Next/Prev Video Navigation for multi-video items */}
+              {reelsList.length > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                  <button
+                    disabled={activeIdx <= 0}
+                    onClick={() => setModalVideoIndex(prev => Math.max(0, prev - 1))}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: 8,
+                      border: '1px solid #D6E3DE',
+                      background: activeIdx <= 0 ? '#F3F8F5' : '#FFFFFF',
+                      color: activeIdx <= 0 ? '#9CA3AF' : '#0D5148',
+                      fontWeight: 700,
+                      fontSize: '0.78rem',
+                      cursor: activeIdx <= 0 ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    ← Prev Video
+                  </button>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#60736F' }}>
+                    Video {activeIdx + 1} of {reelsList.length}
+                  </span>
+                  <button
+                    disabled={activeIdx >= reelsList.length - 1}
+                    onClick={() => setModalVideoIndex(prev => Math.min(reelsList.length - 1, prev + 1))}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: 8,
+                      border: '1px solid #D6E3DE',
+                      background: activeIdx >= reelsList.length - 1 ? '#F3F8F5' : '#FFFFFF',
+                      color: activeIdx >= reelsList.length - 1 ? '#9CA3AF' : '#0D5148',
+                      fontWeight: 700,
+                      fontSize: '0.78rem',
+                      cursor: activeIdx >= reelsList.length - 1 ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    Next Video →
+                  </button>
+                </div>
+              )}
+
+              {/* Product Info Bar */}
+              <div style={{ background: '#F3F8F5', borderRadius: 12, padding: 12, marginBottom: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '0.92rem', fontWeight: 700, color: '#12332F' }}>{modalVideoItem.name}</h4>
+                  <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: '#60736F' }}>
+                    Seller: {modalVideoItem.vendor?.name || 'Vendor'} • Price: ₹{modalVideoItem.price || 0}
+                  </p>
+                </div>
+                <span style={{
+                  fontSize: '0.7rem',
+                  padding: '4px 10px',
+                  borderRadius: 999,
+                  fontWeight: 800,
+                  textTransform: 'uppercase',
+                  background: modalVideoItem.status === 'approved' ? '#dcfce7' : modalVideoItem.status === 'pending' ? '#ffedd5' : '#fee2e2',
+                  color: modalVideoItem.status === 'approved' ? '#166534' : modalVideoItem.status === 'pending' ? '#c2410c' : '#991b1b',
+                }}>
+                  {modalVideoItem.status}
+                </span>
+              </div>
+
+              {/* Direct Moderation Actions in Modal */}
+              <div style={{ display: 'flex', gap: 8 }}>
+                {modalVideoItem.status !== 'approved' && (
+                  <button
+                    className="btn-primary"
+                    style={{ flex: 1, padding: '9px 0', fontSize: '0.82rem' }}
+                    onClick={async () => {
+                      if (isItemReel) {
+                        await handleReelAction(modalVideoItem._id, 'approved');
+                      } else {
+                        await handleProductAction(modalVideoItem._id, 'approved');
+                      }
+                      setModalVideoItem(prev => prev ? { ...prev, status: 'approved' } : null);
+                    }}
+                  >
+                    <Check size={16} /> Approve
+                  </button>
+                )}
+                {modalVideoItem.status !== 'rejected' && (
+                  <button
+                    style={{ flex: 1, padding: '9px 0', fontSize: '0.82rem', background: '#f97316', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                    onClick={async () => {
+                      if (isItemReel) {
+                        await handleReelAction(modalVideoItem._id, 'rejected');
+                      } else {
+                        await handleProductAction(modalVideoItem._id, 'rejected');
+                      }
+                      setModalVideoItem(prev => prev ? { ...prev, status: 'rejected' } : null);
+                    }}
+                  >
+                    <X size={16} /> Reject
+                  </button>
+                )}
+                <button
+                  className="btn-danger"
+                  style={{ flex: 1, padding: '9px 0', fontSize: '0.82rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                  onClick={() => {
+                    if (isItemReel) {
+                      handleDeleteReel(modalVideoItem._id, modalVideoItem.name);
+                    } else {
+                      handleDeleteProduct(modalVideoItem._id, modalVideoItem.name);
+                    }
+                  }}
+                >
+                  <Trash2 size={16} /> Delete
+                </button>
+              </div>
             </div>
-            <button className="btn-primary" style={{ width: '100%' }} onClick={() => setPreviewVideo(null)}>Close Preview</button>
-          </div>
-        </Modal>
-      )}
+          </Modal>
+        );
+      })()}
 
       {/* Takedown / Reason Modal */}
       {takedownModal && (
         <Modal title={`Action Notice: ${takedownModal.name}`} onClose={() => setTakedownModal(null)}>
           <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <p style={{ fontSize: '0.85rem', color: '#60736F' }}>Please state the moderation reason for this action:</p>
+            <p style={{ fontSize: '0.85rem', color: '#60736F' }}>Please state the moderation reason for this action (optional):</p>
             <textarea
               className="input-field"
-              placeholder="e.g. Violation of community rules, spam..."
+              placeholder="e.g. Violation of community rules, spam (optional)..."
               value={takedownReason}
               onChange={(e) => setTakedownReason(e.target.value)}
               style={{ background: '#FFFFFF', border: '1px solid #D6E3DE', color: '#111111' }}
