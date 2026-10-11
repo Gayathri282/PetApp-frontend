@@ -7,7 +7,7 @@ import PetVideoCard from '../components/video/PetVideoCard';
 import ReelsViewer from '../components/reel/ReelsViewer';
 import Modal from '../components/ui/Modal';
 import Spinner from '../components/ui/Spinner';
-import { getFeed, getLatestTimestamp, getHomepageShowcase } from '../api';
+import { getFeed, getApprovedReels, getLatestTimestamp, getHomepageShowcase } from '../api';
 import { CATEGORIES, HOME_CATEGORY_COUNT } from '../data/categories';
 import { FALLBACK_GUPPY_PRODUCTS, GUPPY_VARIETIES_LIST, SAMPLE_PROMOTIONAL_REELS } from '../data/guppyProducts';
 import { getPlayableVideoUrl, getPosterUrl, getFullSrc, logVideoDiagnostics } from '../utils/media';
@@ -29,6 +29,7 @@ function CategoryImage({ cat, style }) {
 export default function FeedPage() {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
+  const [approvedReels, setApprovedReels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -141,22 +142,35 @@ export default function FeedPage() {
     }
   }, []);
 
+  const loadApprovedReels = useCallback(async () => {
+    try {
+      const { data } = await getApprovedReels();
+      if (data?.reels && Array.isArray(data.reels)) {
+        setApprovedReels(data.reels);
+      }
+    } catch (e) {
+      console.error('Failed to load approved reels:', e);
+    }
+  }, []);
+
   useEffect(() => {
     isFetching.current = false;
     loadFeed(1, 10);
+    loadApprovedReels();
     getHomepageShowcase()
       .then(res => setAdminShowcase(res.data.showcase || { featuredCategories: [], featuredBreeds: [] }))
       .catch(() => {});
     return () => {
       isFetching.current = false;
     };
-  }, [loadFeed]);
+  }, [loadFeed, loadApprovedReels]);
 
   useEffect(() => { if (page > 1) loadFeed(page); }, [page, loadFeed]);
 
   useEffect(() => {
     const handleDataUpdate = () => {
       loadFeed(1, 10);
+      loadApprovedReels();
     };
 
     const poll = async () => {
@@ -202,10 +216,26 @@ export default function FeedPage() {
   }, [viewMode, selectedReelIndex]);
 
   // ── Data Filtering ─────────────────────────────────────────────────────────────
-  // Section 8 ("Watch pet reels") ONLY shows true promotional reels, NEVER products:
-  const uploadedPetReels = products.filter(p => isReelItem(p));
-  const trendingPetReels = uploadedPetReels.length > 0 
-    ? uploadedPetReels 
+  // Section 8 ("Watch pet reels") ONLY shows reels APPROVED by admin:
+  // Never show products, and never show pending or rejected reels!
+  const allApprovedReels = [
+    ...approvedReels.filter(r => isReelItem(r) && r.status === 'approved'),
+    ...products.filter(p => isReelItem(p) && p.status === 'approved'),
+  ];
+
+  // Deduplicate by _id
+  const uniqueApprovedReels = [];
+  const seenReelIds = new Set();
+  for (const r of allApprovedReels) {
+    const rid = String(r._id || r.id);
+    if (!seenReelIds.has(rid)) {
+      seenReelIds.add(rid);
+      uniqueApprovedReels.push(r);
+    }
+  }
+
+  const trendingPetReels = uniqueApprovedReels.length > 0 
+    ? uniqueApprovedReels 
     : SAMPLE_PROMOTIONAL_REELS;
 
   // Only pets / products currently listed for sale

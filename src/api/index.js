@@ -36,6 +36,9 @@ export const updateProfile = (data) => api.put('/auth/me', data);
 export const getFeed = (page = 1, limit = 10) =>
   api.get(`/api/products/feed?page=${page}&limit=${limit}`);
 
+export const getApprovedReels = () =>
+  api.get('/api/products/approved-reels');
+
 export const getLatestTimestamp = () =>
   api.get('/api/products/latest-ts');
 
