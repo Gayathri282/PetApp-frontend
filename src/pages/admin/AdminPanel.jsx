@@ -92,7 +92,7 @@ export default function AdminPanel() {
       try {
         if (tab === 'reels') {
           const { data } = await adminGetReels(reelFilter, searchQuery);
-          if (!isCancelled) setReels(data.reels || []);
+          if (!isCancelled) setReels((data.reels || []).filter(r => r.type === 'reel' || r.category === 'promotional'));
         } else if (tab === 'products') {
           const { data } = await getAllAdminProducts(productFilter, searchQuery);
           if (!isCancelled) setProducts(data.products || []);
